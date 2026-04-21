@@ -1,0 +1,34 @@
+@prefix geo: <http://www.opengis.net/ont/geosparql#> .
+@prefix htv: <http://www.w3.org/2011/http#> .
+@prefix ogc: <http://www.ogc.org/> .
+@prefix rml: <http://w3id.org/rml/> .
+@prefix void: <http://rdfs.org/ns/void#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ogc:clms_ba_global_300m_monthly_v3_ncTriplesMap2 a rml:TriplesMap ;
+    rml:logicalSource ogc:LogicalSource_clms_ba_global_300m_monthly_v3_nc ;
+    rml:predicateObjectMap [ rml:objectMap [ rml:parentTriplesMap ogc:clms_ba_global_300m_monthly_v3_ncTriplesMap ] ;
+            rml:predicate geo:member ] ;
+    rml:subjectMap [ rml:class geo:FeatureCollection ;
+            rml:constant ogc:clms_ba_global_300m_monthly_v3_nc_collection ] .
+
+ogc:FuenteAPI_clms_ba_global_300m_monthly_v3_nc htv:absoluteURI "https://stac.dataspace.copernicus.eu/v1//collections/clms_ba_global_300m_monthly_v3_nc/items?f=json&limit=10000" .
+
+ogc:clms_ba_global_300m_monthly_v3_ncTriplesMap a rml:TriplesMap ;
+    rml:logicalSource ogc:LogicalSource_clms_ba_global_300m_monthly_v3_nc ;
+    rml:predicateObjectMap [ rml:objectMap [ void:filterx "bbox=@{1}" ;
+                    rml:datatype geo:geoJSONLiteral ;
+                    rml:reference "geometry" ] ;
+            rml:predicate geo:hasGeometry ],
+        [ rml:objectMap [ rml:datatype xsd:string ;
+                    rml:reference "geometry_name" ] ;
+            rml:predicate ogc:geometryName ] ;
+    rml:subjectMap [ rml:class ogc:clms_ba_global_300m_monthly_v3_nc ;
+            rml:template "https://stac.dataspace.copernicus.eu/v1//collections/clms_ba_global_300m_monthly_v3_nc/items/{id}" ] .
+
+ogc:LogicalSource_clms_ba_global_300m_monthly_v3_nc a rml:logicalSource ;
+    void:nextPage "$.links[?(@.rel==\"next\")].href" ;
+    rml:iterator "$.features.*" ;
+    rml:referenceFormulation rml:HTTPAPI ;
+    rml:source ogc:FuenteAPI_clms_ba_global_300m_monthly_v3_nc .
+

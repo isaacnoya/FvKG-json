@@ -1,0 +1,120 @@
+@prefix geo: <http://www.opengis.net/ont/geosparql#> .
+@prefix ogc: <http://www.ogc.org/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ogc:ccm-optical_collection a geo:FeatureCollection ;
+    rdfs:label "Copernicus Contributing Missions Optical" .
+
+ogc:ccm-sar_collection a geo:FeatureCollection ;
+    rdfs:label "Copernicus Contributing Missions SAR" .
+
+ogc:clms_ba_global_300m_daily_v3_cog_collection a geo:FeatureCollection ;
+    rdfs:label "CLMS BA Global 300m daily V3 (COG)" .
+
+ogc:clms_ba_global_300m_daily_v3_nc_collection a geo:FeatureCollection ;
+    rdfs:label "CLMS BA Global 300m daily V3 (NetCDF)" .
+
+ogc:clms_ba_global_300m_daily_v4_cog_collection a geo:FeatureCollection ;
+    rdfs:label "CLMS BA Global 300m daily V4 (COG)" .
+
+ogc:clms_ba_global_300m_daily_v4_nc_collection a geo:FeatureCollection ;
+    rdfs:label "CLMS BA Global 300m daily V4 (NetCDF)" .
+
+ogc:clms_ba_global_300m_monthly_v3_cog_collection a geo:FeatureCollection ;
+    rdfs:label "CLMS BA Global 300m monthly V3 (COG)" .
+
+ogc:clms_ba_global_300m_monthly_v3_nc a owl:class ;
+    rdfs:label "CLMS BA Global 300m monthly V3 (NetCDF)" ;
+    rdfs:comment "Maps burn scars, surfaces which have been sufficiently affected by fire to display significant changes in the vegetation cover (destruction of dry material, reduction or loss of green material) and in the ground surface (temporarily darker because of ash). Monthly datasets are available at global scale, in the spatial resolution of 300 m, and with a time lag of two months. They cover the period from 2019 to 2025." ;
+    rdfs:subClassOf geo:Feature .
+
+ogc:clms_ba_global_300m_monthly_v3_nc_collection a geo:FeatureCollection ;
+    rdfs:label "CLMS BA Global 300m monthly V3 (NetCDF)" .
+
+ogc:clms_ba_global_300m_monthly_v4_cog a owl:class ;
+    rdfs:label "CLMS BA Global 300m monthly V4 (COG)" ;
+    rdfs:comment "Maps burn scars, surfaces which have been sufficiently affected by fire to display significant changes in the vegetation cover (destruction of dry material, reduction or loss of green material) and in the ground surface (temporarily darker because of ash). In addition to the date of burn, the Burnt Areas version 4.0 provides the burnt fraction of the pixel. Monthly datasets are available at global scale, in the spatial resolution of 300 m, and with a time lag of few months. They cover the period from July 2018 to present." ;
+    rdfs:subClassOf geo:Feature .
+
+ogc:clms_ba_global_300m_monthly_v4_cog_collection a geo:FeatureCollection ;
+    rdfs:label "CLMS BA Global 300m monthly V4 (COG)" .
+
+ogc:clms_ba_global_300m_monthly_v4_nc a owl:class ;
+    rdfs:label "CLMS BA Global 300m monthly V4 (NetCDF)" ;
+    rdfs:comment "Maps burn scars, surfaces which have been sufficiently affected by fire to display significant changes in the vegetation cover (destruction of dry material, reduction or loss of green material) and in the ground surface (temporarily darker because of ash). In addition to the date of burn, the Burnt Areas version 4.0 provides the burnt fraction of the pixel. Monthly datasets are available at global scale, in the spatial resolution of 300 m, and with a time lag of few months. They cover the period from July 2018 to present." ;
+    rdfs:subClassOf geo:Feature .
+
+ogc:clms_ba_global_300m_monthly_v4_nc_collection a geo:FeatureCollection ;
+    rdfs:label "CLMS BA Global 300m monthly V4 (NetCDF)" .
+
+ogc:datetime a rdf:Property ;
+    rdfs:label "datetime" ;
+    rdfs:domain ogc:ccm-optical,
+        ogc:ccm-sar,
+        ogc:clms_ba_global_300m_daily_v3_cog,
+        ogc:clms_ba_global_300m_daily_v3_nc,
+        ogc:clms_ba_global_300m_daily_v4_cog,
+        ogc:clms_ba_global_300m_daily_v4_nc,
+        ogc:clms_ba_global_300m_monthly_v3_cog ;
+    rdfs:range xsd:string .
+
+ogc:geometry a rdf:Property ;
+    rdfs:label "geometry" ;
+    rdfs:domain ogc:ccm-optical,
+        ogc:ccm-sar,
+        ogc:clms_ba_global_300m_daily_v3_cog,
+        ogc:clms_ba_global_300m_daily_v3_nc,
+        ogc:clms_ba_global_300m_daily_v4_cog,
+        ogc:clms_ba_global_300m_daily_v4_nc,
+        ogc:clms_ba_global_300m_monthly_v3_cog ;
+    rdfs:range xsd:string .
+
+ogc:id a rdf:Property ;
+    rdfs:label "id" ;
+    rdfs:domain ogc:ccm-optical,
+        ogc:ccm-sar,
+        ogc:clms_ba_global_300m_daily_v3_cog,
+        ogc:clms_ba_global_300m_daily_v3_nc,
+        ogc:clms_ba_global_300m_daily_v4_cog,
+        ogc:clms_ba_global_300m_daily_v4_nc,
+        ogc:clms_ba_global_300m_monthly_v3_cog ;
+    rdfs:range xsd:string .
+
+ogc:ccm-optical a owl:class ;
+    rdfs:label "Copernicus Contributing Missions Optical" ;
+    rdfs:comment "Optical data from the Copernicus Contributing Missions (CCM) consist of high-resolution satellite imagery provided by commercial mission operators. These datasets support the Copernicus programme in areas such as land monitoring, emergency response, security, and marine environment. The imagery covers a broad spectral range and is tailored for diverse operational and analytical applications." ;
+    rdfs:subClassOf geo:Feature .
+
+ogc:ccm-sar a owl:class ;
+    rdfs:label "Copernicus Contributing Missions SAR" ;
+    rdfs:comment "Synthetic Aperture Radar (SAR) data from the Copernicus Contributing Missions (CCM) provide high-resolution radar imagery, unaffected by weather conditions or daylight. These datasets support Copernicus services in land and marine monitoring, change detection, emergency management, and geophysical observation. With its all-weather, day-and-night imaging capability, SAR is a vital source of spatial information for operational applications." ;
+    rdfs:subClassOf geo:Feature .
+
+ogc:clms_ba_global_300m_daily_v3_cog a owl:class ;
+    rdfs:label "CLMS BA Global 300m daily V3 (COG)" ;
+    rdfs:comment "Maps burn scars, surfaces which have been sufficiently affected by fire to display significant changes in the vegetation cover (destruction of dry material, reduction or loss of green material) and in the ground surface (temporarily darker because of ash). Daily datasets are available at global scale, in the spatial resolution of 300 m, and within 24 hours after the satellite acquisition. They cover the period from 2023 to 2025." ;
+    rdfs:subClassOf geo:Feature .
+
+ogc:clms_ba_global_300m_daily_v3_nc a owl:class ;
+    rdfs:label "CLMS BA Global 300m daily V3 (NetCDF)" ;
+    rdfs:comment "Maps burn scars, surfaces which have been sufficiently affected by fire to display significant changes in the vegetation cover (destruction of dry material, reduction or loss of green material) and in the ground surface (temporarily darker because of ash). Daily datasets are available at global scale, in the spatial resolution of 300 m, and within 24 hours after the satellite acquisition. They cover the period from 2023 to 2025." ;
+    rdfs:subClassOf geo:Feature .
+
+ogc:clms_ba_global_300m_daily_v4_cog a owl:class ;
+    rdfs:label "CLMS BA Global 300m daily V4 (COG)" ;
+    rdfs:comment "Maps burn scars, surfaces which have been sufficiently affected by fire to display significant changes in the vegetation cover (destruction of dry material, reduction or loss of green material) and in the ground surface (temporarily darker because of ash). Daily datasets are available at global scale, in the spatial resolution of 300 m, and within 24 hours after the satellite acquisition. They cover the period from January 2025 to present." ;
+    rdfs:subClassOf geo:Feature .
+
+ogc:clms_ba_global_300m_daily_v4_nc a owl:class ;
+    rdfs:label "CLMS BA Global 300m daily V4 (NetCDF)" ;
+    rdfs:comment "Maps burn scars, surfaces which have been sufficiently affected by fire to display significant changes in the vegetation cover (destruction of dry material, reduction or loss of green material) and in the ground surface (temporarily darker because of ash). Daily datasets are available at global scale, in the spatial resolution of 300 m, and within 24 hours after the satellite acquisition. They cover the period from January 2025 to present." ;
+    rdfs:subClassOf geo:Feature .
+
+ogc:clms_ba_global_300m_monthly_v3_cog a owl:class ;
+    rdfs:label "CLMS BA Global 300m monthly V3 (COG)" ;
+    rdfs:comment "Maps burn scars, surfaces which have been sufficiently affected by fire to display significant changes in the vegetation cover (destruction of dry material, reduction or loss of green material) and in the ground surface (temporarily darker because of ash). Monthly datasets are available at global scale, in the spatial resolution of 300 m, and with a time lag of two months. They cover the period from 2019 to 2025." ;
+    rdfs:subClassOf geo:Feature .
+

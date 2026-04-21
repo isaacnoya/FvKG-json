@@ -25,6 +25,7 @@ mappings = getMappingsFromTxT("/Users/kekojohns/Library/CloudStorage/OneDrive-Pe
 
 """
 #TODO:  
+    -Buscar caso de uso
     -Solucionar lo de la coordenada de referencia (ns q es), mirar https://pypi.org/project/pyproj/
     -mejorar visualizacion
     -Mejorar compatibleMapping como en Query-Specific Pruning of RML Mappings.
@@ -255,24 +256,20 @@ if __name__ == "__main__":
     PREFIX ex: <http://example.com/>
     PREFIX qb: <http://purl.org/linked-data/cube#>
 
-    SELECT ?obsValue ?n ?year WHERE {
-        ?o a qb:Observation ;
-            sdmx-measure:obsValue ?obsValue ;
-            qb:slice ?slice ;
-            sdmx-dimension:year ?year .
-        ?slice ine:municipality ?n ;
-            sdmx-dimension:sex "Total" .
-
+    SELECT ?w ?t WHERE {
         ?s a ogc:administrativeunit ;
-            ogc:nameunit ?n ;
+            ogc:nameunit "Galicia" ;
             geo:hasGeometry ?gs .
+
+        ?w a <http://www.ogc.org/agua:Zi_arpsi> ;
+            geo:hasGeometry ?gw .
+
+        ?t a ogc:damorweir ;
+            geo:hasGeometry ?gt .
         
-        ?t a ogc:railwaystationnode ;
-            geo:hasGeometry ?gt ;
-            ogc:nombre "Estación de Casal" .
-
-
-        FILTER(geof:sfContains(?gs, ?gt))
+        FILTER (geof:sfWithin(?gw, ?gs))
+        FILTER (geof:sfWithin(?gt, ?gs))
+        FILTER (geof:sfDistance(?gw, ?gt) < 5000)
     }
     """
 
