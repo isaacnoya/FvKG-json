@@ -25,7 +25,7 @@ mappings = getMappingsFromTxT("/Users/kekojohns/Library/CloudStorage/OneDrive-Pe
 
 """
 #TODO:  
-    -Buscar caso de uso
+    -Fixear que no filtra si en el FILTER hay una geometria literal
     -Meter medidores de tiempo por etapas
     -El order tiene que ponderar el numero de elementos de la coleccion ?
 
@@ -260,16 +260,18 @@ if __name__ == "__main__":
     PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
     PREFIX ex: <http://example.com/>
     PREFIX qb: <http://purl.org/linked-data/cube#>
+    PREFIX dbo: <http://dbpedia.org/ontology/>
+    PREFIX geolinkeddata: <http://geo.linkeddata.es/ontology/> 
 
-SELECT ?x ?y WHERE {
-    ?x a ogc:railwaystationnode ;
-        geo:hasGeometry ?geom .
-FILTER ( 
-  geof:sfContains(
-    "POLYGON((-9.085693 42.592935, -7.668457 42.592935, -7.668457 43.244952, -9.085693 43.244952, -9.085693 42.592935))"^^geo:wktLiteral, 
-    ?geom)
-   )
-}
+    SELECT ?x WHERE {
+        ?x a geolinkeddata:Surgencias ;
+            geo:hasGeometry ?geom .
+    FILTER ( 
+    geof:sfContains(
+        "POLYGON((-9.085693 42.592935, -7.668457 42.592935, -7.668457 43.244952, -9.085693 43.244952, -9.085693 42.592935))"^^geo:wktLiteral, 
+        ?geom)
+    )
+    }
 
     """
 

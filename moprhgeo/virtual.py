@@ -272,8 +272,11 @@ def injectBindings(ctx, url):
             valor_ctx = ctx[Variable(var_name)]
             geoBindings_value = []
             for i in geoBindings.get(Variable(var_name), []):
-                v, _, distance = i.partition(":-:") if ":-:" in i else (i, None, 0)
-                geoBindings_value.append((ctx[Variable(v)], distance)) if ctx[Variable(v)] is not None else None
+                if isinstance(i, Variable):
+                    v, _, distance = i.partition(":-:") if ":-:" in i else (i, None, 0)
+                    geoBindings_value.append((ctx[Variable(v)], distance)) if ctx[Variable(v)] is not None else None
+                elif isinstance(i, rdflib.term.Literal):
+                    geoBindings_value.append((i, 0))
             
             if valor_ctx is not None:
                 nuevo_valor = value.replace(match.group(0), str(valor_ctx)) 

@@ -10,12 +10,11 @@ DBO = Namespace("http://dbpedia.org/ontology/")
 load_dotenv()
     
 def searchLLM(term, type="class",description="", model="openai/gpt-oss-120b"):  
-
+    #return None
     api_key = os.getenv("GROQ_API_KEY")
 
     client = Groq(api_key=api_key)
     
-    # El "System Prompt" es clave para que el LLM no alucine y devuelva JSON puro
     prompt_sistema = """
     You are an expert in Semantic Web and Linked Data.
     Your task is to map user {type} to Wikidata and DBpedia.
@@ -64,7 +63,10 @@ def existe_en_wikidata(id_recurso):
     """
     sparql.setQuery(query)
     sparql.setReturnFormat(JSON)
-    resultado = sparql.query().convert()
+    try:
+        resultado = sparql.query().convert()
+    except Exception as e:
+        return False
     return resultado["boolean"]
 
 def existe_en_dbpedia(recurso_ontologia):
@@ -79,8 +81,11 @@ def existe_en_dbpedia(recurso_ontologia):
     """
     sparql.setQuery(query)
     sparql.setReturnFormat(JSON)
-    resultado = sparql.query().convert()
-    return resultado["boolean"]
+    try:
+        resultado = sparql.query().convert()
+        return resultado["boolean"]
+    except Exception as e:
+        return False
 
 def buscar_dbpedia_label(label):
     """Busca una clase o propiedad en DBpedia por su label."""
@@ -93,24 +98,27 @@ def buscar_dbpedia_label(label):
     """
     sparql.setQuery(query)
     sparql.setReturnFormat(JSON)
-    resultado = sparql.query().convert()
+    try:
+        resultado = sparql.query().convert()
+    except Exception as e:
+        return None
     if resultado["results"]["bindings"]:
         return resultado["results"]["bindings"][0]["resource"]["value"]
     return None
 
-# Ejemplos de uso
-def searchNotLocal(term, description="", type="class"):
+def searchNotLocal(term, description="", type="class", model="llama-3.3-70b-versatile"):
     if not (result:= buscar_dbpedia_label(term)):
-        result = searchLLM(term, type=type, description=description)
-        
+        result = searchLLM(term, type=type, description=description, model=model)
+        if not result:
+            return None
+    
         dbpedia_resource = result['dbpedia_uri'].split('/')[-1] if result['dbpedia_uri'] else None
-
         if existe_en_dbpedia(dbpedia_resource) and existe_en_wikidata(result['wikidata_qid']):
             return DBO[dbpedia_resource]
         else:
             return None
     else:
-        return result
+        return URIRef(result['iri'])
 
 import torch
 from owlready2 import *
@@ -143,16 +151,9 @@ class VectorialOntologyMatcher:
         return f"{entity_type}: {entity.name}. Etiqueta: {label}. Descripción: {comment}".strip()
 
     def _build_index(self):
-        """Codifica clases, propiedades de objeto y de datos."""
-        print(f"Indexando entidades de {self.onto.name}...")
         all_texts = []
-        
-        # Recopilamos Clases, ObjectProperties y DataProperties
-        entities_to_index = [
-            (list(self.onto.classes()), "Clase"),
-            (list(self.onto.object_properties()), "Propiedad de Objeto"),
-            (list(self.onto.data_properties()), "Propiedad de Datos")
-        ]
+        self.entity_uris = [] # Limpiamos para evitar duplicados si se llama dos veces
+        self.entity_metadata = []
 
         for onto in self.ontos:
             entities_to_index = [
@@ -187,15 +188,14 @@ class VectorialOntologyMatcher:
         self.entity_uris = data['uris']
         self.entity_metadata = data['metadata']
 
-    def search(self, name, description, top_k=1):
+    def search(self, name, description, top_k=1, threshold=0.7):
         """Busca en el espacio vectorial y devuelve los más cercanos."""
         query_text = f"{name}: {description}"
         query_embedding = self.model.encode(query_text, convert_to_tensor=True)
 
         hits = util.semantic_search(query_embedding, self.ontology_embeddings, top_k=top_k)[0]
 
-        results = []
-        if hits[0]['score'] > 0.7:  # Umbral de confianza
+        if hits[0]['score'] > threshold:  # Umbral de confianza
             idx = hits[0]['corpus_id']
 
             return {
@@ -211,7 +211,7 @@ if __name__ == "__main__":
     oe = VectorialOntologyMatcher(["/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/ontologiasReferencia/hydrOntology_GeoLinkedData.owl"])
     title = "HY-P Cruce"
     description = "Objeto artificial que permite el paso del agua por encima o por debajo de un obstáculo. Puede ser de tipo acueducto, puente, alcantarilla o sifón."
-    resultado = oe.search(title, description)
+    resultado = oe.search(title, description, threshold=0.7)
     if resultado:
         sameAs = resultado['iri']
     if not resultado:

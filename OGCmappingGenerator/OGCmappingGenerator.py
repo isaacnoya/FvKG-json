@@ -32,15 +32,16 @@ namespaces = {
 }
 
 class Collection:
-    def __init__(self, id, title, description, spatial, url, oe: VectorialOntologyMatcher):
+    def __init__(self, id, title, description, spatial, url, oe: VectorialOntologyMatcher, search_not_local=False):
         self.id = id
         self.title = title
         self.description = description
         self.bbox = spatial["bbox"] if spatial and "bbox" in spatial else None
         self.crs = spatial["crs"] if spatial and "crs" in spatial else None
         self.url = url
-        self.properties = self._set_properties()
         self.oe = oe
+        self.search_not_local = search_not_local
+        self.properties = self._set_properties()
         self.sameAs = self.sameAsF()
 
     def _set_properties(self): 
@@ -49,17 +50,23 @@ class Collection:
         ret = ret[0] if ret else {}
         l = []
         for i, v in ret.items():
+            sameAs = self.oe.search(i, "", threshold=0.7) if self.oe else None
+            """
+            if not sameAs and self.search_not_local: # demasiado costoso hacer la busqueda de cada propiedad.
+                sameAs = searchNotLocal(i, "", "property")
+            """
             l.append({
                 "title": i,
-                "type": v.get("type", "string")  # default to string if type is not provided        
+                "type": v.get("type", "string"),  # default to string if type is not provided     
+                "sameAs": URIRef(sameAs['iri']) if sameAs else None
             })
         return l
     
     def sameAsF(self):
-        resultado = self.oe.search(self.title, self.description)
+        resultado = self.oe.search(self.title, self.description, threshold=0.7)
         if resultado:
-            return resultado['iri']
-        if not resultado:
+            return URIRef(resultado['iri'])
+        if not resultado and self.search_not_local:
             return searchNotLocal(self.title, self.description, "class")
 
 
@@ -128,7 +135,7 @@ def add_subject_map_BN(triples_map, g_mappings):
 
 
 
-def get_collections(urlBase, referenceOntologies=[]):
+def get_collections(urlBase, oe: VectorialOntologyMatcher, search_not_local=False):
     try:
         response = requests.get(urlBase+"/collections?f=json")
     except requests.exceptions.RequestException as e:
@@ -143,7 +150,8 @@ def get_collections(urlBase, referenceOntologies=[]):
             description=c["description"] if "description" in c else None,
             spatial=c["extent"]["spatial"] if "extent" in c and "spatial" in c["extent"] else None,
             url=urlBase+"/collections/"+c["id"],
-            oe=oe
+            oe=oe,
+            search_not_local=search_not_local
         ))
     return collections
 
@@ -174,7 +182,7 @@ def generate_ontology(collections: list[Collection], output_ontology):
             wkt_literal = Literal(f"<{c.crs}> POLYGON((" + ",".join(map(str, c.bbox[0])) + "))", datatype=GEO.wktLiteral)
             ontology.add((bbox_blank_node, GEO.asWKT, wkt_literal))
         for prop in c.properties: 
-            property_uri = OGC[prop["title"]] 
+            property_uri = OGC[prop["title"]] if not prop["sameAs"] else prop["sameAs"]
             ontology.add((property_uri, RDF.type, RDF.Property)) 
             ontology.add((property_uri, RDFS.label, Literal(prop["title"]))) 
             ontology.add((property_uri, RDFS.range, XSD[prop["type"]])) if prop["type"]!="number" else ontology.add((property_uri, RDFS.range, XSD["float"]))
@@ -191,10 +199,16 @@ def generate_mapping(collection, output_mappings_folder, urlBase):
     g_mappings.add((triples_map, RDF.type, RML.TriplesMap))
 
     g_mappings.add((triples_map, RML.logicalSource, OGC["LogicalSource_" + collection.id]))
-    add_subject_map(triples_map, OGC[collection.id], g_mappings, template=ogc_api_url+f"/collections/{collection.id}" + "/items/{id}")
+    if not collection.sameAs:
+        add_subject_map(triples_map, OGC[collection.id], g_mappings, template=ogc_api_url+f"/collections/{collection.id}" + "/items/{id}")
+    else:
+        add_subject_map(triples_map, collection.sameAs, g_mappings, template=ogc_api_url+f"/collections/{collection.id}" + "/items/{id}")
 
     for prop in collection.properties: 
-        add_pom_ref(triples_map, OGC[prop["title"]], f"properties.{prop['title']}", g_mappings, datatype=XSD[prop["type"]], filter=f"{prop['title']}"+"=@{1}") if prop["type"]!="number" else add_pom_ref(triples_map, OGC[prop["title"]], f"properties.{prop['title']}", g_mappings, datatype=XSD["float"], filter=f"{prop['title']}"+"=@{1}")
+        if prop["sameAs"]:
+            add_pom_ref(triples_map, URIRef(prop["sameAs"]), f"properties.{prop['title']}", g_mappings, datatype=XSD[prop["type"]], filter=f"{prop['title']}"+"=@{1}") if prop["type"]!="number" else add_pom_ref(triples_map, URIRef(prop["sameAs"]), f"properties.{prop['title']}", g_mappings, datatype=XSD["float"], filter=f"{prop['title']}"+"=@{1}")
+        else:
+            add_pom_ref(triples_map, OGC[prop["title"]], f"properties.{prop['title']}", g_mappings, datatype=XSD[prop["type"]], filter=f"{prop['title']}"+"=@{1}") if prop["type"]!="number" else add_pom_ref(triples_map, OGC[prop["title"]], f"properties.{prop['title']}", g_mappings, datatype=XSD["float"], filter=f"{prop['title']}"+"=@{1}")
     add_pom_ref(triples_map, GEO.hasGeometry, "geometry", g_mappings,  filter="bbox=@{1}", datatype=GEO.geoJSONLiteral)
     add_pom_ref(triples_map, OGC.geometryName, "geometry_name", g_mappings, datatype=XSD.string)
 
@@ -213,6 +227,7 @@ if __name__ == "__main__":
     argparser = argparse.ArgumentParser(description="OGC Mapping Generator")
     argparser.add_argument("OGC_API_URL", help="URL of the Features OGC root endpoint")
     argparser.add_argument("--output_folder", "-o", default="output", help="Output folder name (default: output)")
+    argparser.add_argument("-n", default=False, help="Search in not local ontologies (Wikidata, DBpedia) if no match is found in the local vectorial search. WARNING: can be very slow!")
     argparser.add_argument("-r", "--rontologias", nargs="+", help="Rutas a los archivos .owl")
 
     args = argparser.parse_args()
@@ -223,7 +238,7 @@ if __name__ == "__main__":
     oe = VectorialOntologyMatcher(args.rontologias)
 
     print(f"Fetching collections from OGC API at {ogc_api_url}...")
-    collections = get_collections(ogc_api_url, oe)
+    collections = get_collections(ogc_api_url, oe, args.n)
 
     print(f"Generating ontology for {len(collections)} collections...")
     generate_ontology(collections, output_ontology)
