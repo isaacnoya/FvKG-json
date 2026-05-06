@@ -1,0 +1,3 @@
+https://api-features.idee.es
+https://api-features.ign.es
+https://wmts.mapama.gob.es/sig-api/ogc/features/v1

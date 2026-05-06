@@ -40,8 +40,7 @@ class VirtualMapping:
         else:
             self.o = None
 
-        if source != None:
-            self.source = source
+        self.source = source
         
         self.iterator = iterator
         self.nextPage = nextPage
@@ -99,9 +98,8 @@ class VirtualMapping:
             self.s,
             self.p,
             self.o,
-            getattr(self, "source", None),
-            self.bindingVariables
-        ))
+            getattr(self, "source", None)
+            ))
     def __eq__(self, other):
         if not isinstance(other, VirtualMapping):
             return False
@@ -109,8 +107,8 @@ class VirtualMapping:
             getattr(self, "s", None) == getattr(other, "s", None) and
             getattr(self, "p", None) == getattr(other, "p", None) and
             getattr(self, "o", None) == getattr(other, "o", None) and
-            getattr(self, "source", None) == getattr(other, "source", None) and
-            getattr(self, "bindingVariables", None) == getattr(other, "bindingVariables", None)
+            getattr(self, "source", None) == getattr(other, "source", None) 
+            #and getattr(self, "bindingVariables", None) == getattr(other, "bindingVariables", None)
         )
         
 class TriplePattern:
@@ -139,5 +137,4 @@ class MappingContext(rdflib.plugins.sparql.sparql.QueryContext):
 
 
     
-
 

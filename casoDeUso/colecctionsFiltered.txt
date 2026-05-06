@@ -1,0 +1,8 @@
+damorweir
+drainagebasin
+falls
+lock
+standingwater
+wetland
+administrativeunit
+agua:Zif_riesgo_pob_q500

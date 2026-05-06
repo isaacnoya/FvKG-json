@@ -19,7 +19,9 @@ def getMappings(mapping_file):
     mappings = rdflib.Graph()
     mappings = rdf_class_to_pom(mappings.parse(mapping_file, format="turtle"))
 
-    # select all mapping rules with the form (url, iterator, subject, predicate, object)
+    # select all mapping rules with the form (subject, predicate, object/reference).
+    # Source-related fields are optional because some RML files only need the
+    # term maps for mapping selection.
     mappingRuleQuery = prepareQuery("""
     PREFIX rml: <http://w3id.org/rml/>
     PREFIX htv: <http://www.w3.org/2011/http#>
@@ -27,12 +29,26 @@ def getMappings(mapping_file):
 
     SELECT ?subject ?predicate ?object ?reference ?url ?iterator ?nextPage ?filterx ?projectx ?limit ?nElements WHERE {
         ?tm a rml:TriplesMap ;
-            rml:logicalSource ?ls ;
             rml:predicateObjectMap ?pom .
-        ?ls rml:source ?source ;
-            rml:iterator ?iterator .
-        ?source htv:absoluteURI ?url .
-        ?pom rml:predicate ?predicate .
+        OPTIONAL {
+            ?tm rml:logicalSource ?ls .
+            OPTIONAL {
+                ?ls rml:source ?source .
+                OPTIONAL { ?source htv:absoluteURI ?url . }
+            }
+            OPTIONAL { ?ls rml:iterator ?iterator . }
+            OPTIONAL { ?ls void:nextPage ?nextPage . }
+            OPTIONAL {
+                ?ls void:limit ?limit .
+                ?ls void:nElements ?nElements .
+            }
+        } .
+        {
+            ?pom rml:predicate ?predicate .
+        } UNION {
+            ?pom rml:predicateMap ?pm .
+            ?pm rml:constant ?predicate .
+        }
         ?tm rml:subjectMap ?sm .
         OPTIONAL {
             ?sm rml:template ?subject .
@@ -47,13 +63,16 @@ def getMappings(mapping_file):
                     ?om void:projectx ?projectx 
         } .
         OPTIONAL {
-                    ?ls void:nextPage ?nextPage
+            { ?pom rml:object ?object }
+            UNION {
+                ?pom rml:objectMap ?omObject .
+                ?omObject rml:constant ?object .
+            }
+            UNION {
+                ?pom rml:objectMap ?omObject .
+                ?omObject rml:template ?object .
+            }
         } .
-        OPTIONAL {
-                    ?ls void:limit ?limit .
-                    ?ls void:nElements ?nElements .
-        } .
-        OPTIONAL { ?pom rml:object ?object } .
         OPTIONAL { 
                 ?pom rml:objectMap ?om .                    
                 ?om rml:reference ?reference .
@@ -72,13 +91,22 @@ def getMappings(mapping_file):
 
     SELECT ?subject ?predicate ?object ?reference ?url ?iterator ?nextPage ?childJoinCond ?parentJoinCond ?parentURL ?parentIterator WHERE {
         ?tm a rml:TriplesMap ;
-            rml:logicalSource ?ls ;
             rml:predicateObjectMap ?pom .
-        ?ls rml:source ?source ;
-            rml:iterator ?iterator .
-                                         
-        ?source htv:absoluteURI ?url .
-        ?pom rml:predicate ?predicate .
+        OPTIONAL {
+            ?tm rml:logicalSource ?ls .
+            OPTIONAL {
+                ?ls rml:source ?source .
+                OPTIONAL { ?source htv:absoluteURI ?url . }
+            }
+            OPTIONAL { ?ls rml:iterator ?iterator . }
+            OPTIONAL { ?ls void:nextPage ?nextPage . }
+        } .
+        {
+            ?pom rml:predicate ?predicate .
+        } UNION {
+            ?pom rml:predicateMap ?pm .
+            ?pm rml:constant ?predicate .
+        }
                                          
         ?tm rml:subjectMap ?sm .
         OPTIONAL {
@@ -102,18 +130,21 @@ def getMappings(mapping_file):
         OPTIONAL {
             ?parentSM rml:constant ?object .
         } .
-        ?parentTM rml:logicalSource ?parentLS .
-        ?parentLS rml:source ?parentSource ;
-            rml:iterator ?parentIterator .
-        ?parentSource htv:absoluteURI ?parentURL                              
-                                        
- .
+        OPTIONAL {
+            ?parentTM rml:logicalSource ?parentLS .
+            OPTIONAL {
+                ?parentLS rml:source ?parentSource .
+                OPTIONAL { ?parentSource htv:absoluteURI ?parentURL . }
+            }
+            OPTIONAL { ?parentLS rml:iterator ?parentIterator . }
+        } .
     }
     """)
     for m in mappings.query(mappingsParentTPQuery):
         s, p, o, ref, url, iterator, nextPage, childJoinCond, parentJoinCond, parentURL, parentIterator = m
         vb = VirtualMapping(s, p, o, ref, url, iterator, nextPage)
-        vb.setParentTriplesMapInfo(childJoinCond, parentJoinCond, parentURL, parentIterator)
+        if parentURL is not None:
+            vb.setParentTriplesMapInfo(childJoinCond, parentJoinCond, parentURL, parentIterator)
         mrules.append(vb) if vb.o is not None else None
                                          
     return mrules
@@ -129,6 +160,22 @@ def getMappingsFromTxT(file_name):
                     all_rules.extend(rules)                    
     except FileNotFoundError:
         print(f"Error: No se encontró el archivo de rutas en {mapping_file}")
+    except Exception as e:
+        print(f"Ocurrió un error inesperado: {e}")
+        
+    return all_rules
+
+def getMappingsFromFolder(folder_path):
+    import os
+    all_rules = []
+    try:
+        for file_name in os.listdir(folder_path):
+            if file_name.endswith('.ttl'):
+                mapping_file = os.path.join(folder_path, file_name)
+                rules = getMappings(mapping_file)
+                all_rules.extend(rules)
+    except FileNotFoundError:
+        print(f"Error: No se encontró el directorio {folder_path}")
     except Exception as e:
         print(f"Ocurrió un error inesperado: {e}")
         

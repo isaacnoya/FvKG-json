@@ -5,7 +5,7 @@ import rdflib
 from rdflib import Namespace, Literal, BNode, URIRef
 import os
 import tqdm
-from ontology_searh import VectorialOntologyMatcher, searchNotLocal
+from ontology_searh import VectorialOntologyMatcher, searchNotLocal, llm_propose
 
 EX = Namespace("http://example.com/")
 HTV = Namespace("http://www.w3.org/2011/http#")
@@ -32,7 +32,7 @@ namespaces = {
 }
 
 class Collection:
-    def __init__(self, id, title, description, spatial, url, oe: VectorialOntologyMatcher, search_not_local=False):
+    def __init__(self, id, title, description, spatial, url, oe: VectorialOntologyMatcher, search_not_local=False, model=None):
         self.id = id
         self.title = title
         self.description = description
@@ -41,16 +41,17 @@ class Collection:
         self.url = url
         self.oe = oe
         self.search_not_local = search_not_local
+        self.model = model
         self.properties = self._set_properties()
         self.sameAs = self.sameAsF()
 
     def _set_properties(self): 
-        r = requests.get(self.url+ "/queryables" + "?f=json").json()
+        r = requests.get(self.url + "/collections/" + self.id + "/queryables" + "?f=json").json()
         ret = JSONPath("$.properties").parse(r)
         ret = ret[0] if ret else {}
         l = []
         for i, v in ret.items():
-            sameAs = self.oe.search(i, "", threshold=0.7) if self.oe else None
+            sameAs = self.oe.search(i, "", threshold=0.8) if self.oe else None
             """
             if not sameAs and self.search_not_local: # demasiado costoso hacer la busqueda de cada propiedad.
                 sameAs = searchNotLocal(i, "", "property")
@@ -63,11 +64,12 @@ class Collection:
         return l
     
     def sameAsF(self):
-        resultado = self.oe.search(self.title, self.description, threshold=0.7)
-        if resultado:
-            return URIRef(resultado['iri'])
+        resultado = self.oe.search(self.title, self.description, threshold=0.7) if self.oe else None
         if not resultado and self.search_not_local:
-            return searchNotLocal(self.title, self.description, "class")
+            resultado = searchNotLocal(self.title, self.description, "class", model=self.model)
+        if isinstance(resultado, dict):
+            return URIRef(resultado['iri'])
+        return URIRef(resultado) if resultado else None
 
 
 def add_logical_sources(inputId, urlAPI, ns, g_mappings):
@@ -135,7 +137,7 @@ def add_subject_map_BN(triples_map, g_mappings):
 
 
 
-def get_collections(urlBase, oe: VectorialOntologyMatcher, search_not_local=False):
+def get_collections(urlBase, oe: VectorialOntologyMatcher, search_not_local=False, model=None):
     try:
         response = requests.get(urlBase+"/collections?f=json")
     except requests.exceptions.RequestException as e:
@@ -149,12 +151,34 @@ def get_collections(urlBase, oe: VectorialOntologyMatcher, search_not_local=Fals
             title=c["title"],
             description=c["description"] if "description" in c else None,
             spatial=c["extent"]["spatial"] if "extent" in c and "spatial" in c["extent"] else None,
-            url=urlBase+"/collections/"+c["id"],
+            url=urlBase,
             oe=oe,
-            search_not_local=search_not_local
+            search_not_local=search_not_local,
+            model=model
         ))
     return collections
 
+def get_collections_filtered(urlBase, oe: VectorialOntologyMatcher, collectionsFiltered, search_not_local=False, model=None):
+    try:
+        response = requests.get(urlBase+"/collections?f=json")
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching collections: {e}")
+        return []
+    collections_json = JSONPath("$.collections.*").parse(response.json())
+    collections = []
+    for c in tqdm.tqdm(collections_json, desc="Processing collections", unit="collection"):
+        if c["id"] in collectionsFiltered:
+            collections.append(Collection(
+                id=c["id"],
+                title=c["title"],
+                description=c["description"] if "description" in c else None,
+                spatial=c["extent"]["spatial"] if "extent" in c and "spatial" in c["extent"] else None,
+                url=urlBase,
+                oe=oe,
+                search_not_local=search_not_local,  
+                model=model
+            ))
+    return collections
 
 def generate_ontology(collections: list[Collection], output_ontology):
     ontology = rdflib.Graph()
@@ -187,6 +211,32 @@ def generate_ontology(collections: list[Collection], output_ontology):
             ontology.add((property_uri, RDFS.label, Literal(prop["title"]))) 
             ontology.add((property_uri, RDFS.range, XSD[prop["type"]])) if prop["type"]!="number" else ontology.add((property_uri, RDFS.range, XSD["float"]))
             ontology.add((property_uri, RDFS.domain, class_uri))
+
+    for c in collections:
+        if c.sameAs or not c.search_not_local:
+            continue
+
+        proposal = llm_propose(
+            ontology,
+            c.title,
+            type="class",
+            description=c.description or "",
+            model=c.model,
+            prefix=str(OGC)
+        )
+        if not proposal:
+            continue
+
+        class_uri = OGC[c.id]
+        proposed_uri = URIRef(proposal["iri"])
+        parent_uri = URIRef(proposal["parent_iri"])
+        ontology.add((proposed_uri, RDF.type, OWL.Class))
+        ontology.add((proposed_uri, RDFS.subClassOf, parent_uri))
+        ontology.add((proposed_uri, RDFS.label, Literal(proposal.get("label", c.title))))
+        if proposal.get("comment"):
+            ontology.add((proposed_uri, RDFS.comment, Literal(proposal["comment"])))
+        ontology.add((class_uri, OWL.equivalentClass, proposed_uri))
+        c.sameAs = proposed_uri
     
     ontology.serialize(destination=output_ontology, format="turtle")
 
@@ -200,9 +250,9 @@ def generate_mapping(collection, output_mappings_folder, urlBase):
 
     g_mappings.add((triples_map, RML.logicalSource, OGC["LogicalSource_" + collection.id]))
     if not collection.sameAs:
-        add_subject_map(triples_map, OGC[collection.id], g_mappings, template=ogc_api_url+f"/collections/{collection.id}" + "/items/{id}")
+        add_subject_map(triples_map, OGC[collection.id], g_mappings, template=collection.url + f"/collections/{collection.id}" + "/items/{id}")
     else:
-        add_subject_map(triples_map, collection.sameAs, g_mappings, template=ogc_api_url+f"/collections/{collection.id}" + "/items/{id}")
+        add_subject_map(triples_map, collection.sameAs, g_mappings, template=collection.url + f"/collections/{collection.id}" + "/items/{id}")
 
     for prop in collection.properties: 
         if prop["sameAs"]:
@@ -225,33 +275,69 @@ def generate_mapping(collection, output_mappings_folder, urlBase):
 
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser(description="OGC Mapping Generator")
-    argparser.add_argument("OGC_API_URL", help="URL of the Features OGC root endpoint")
+    argparser.add_argument("-u", "--ogc_api_url", help="URL of the Features OGC root endpoint OR text file with multiple OGC API endpoints (one per line)")
     argparser.add_argument("--output_folder", "-o", default="output", help="Output folder name (default: output)")
-    argparser.add_argument("-n", default=False, help="Search in not local ontologies (Wikidata, DBpedia) if no match is found in the local vectorial search. WARNING: can be very slow!")
-    argparser.add_argument("-r", "--rontologias", nargs="+", help="Rutas a los archivos .owl")
+    argparser.add_argument("-n", action="store_true", help="Search in not local ontologies (Wikidata, DBpedia) if no match is found in the local vectorial search. WARNING: can be very slow!")
+    argparser.add_argument("-c","--collections", default=None, help="File with urls of the collections to process")
+    argparser.add_argument("-r", "--rontologias", default=None, help="Rutas a los archivos .owl")
+    argparser.add_argument("-l", "--llm_model", default="qwen/qwen3-32b", help="LLM model to use for ontology search")
+    argparser.add_argument("-v", "--vectorial_model", default="paraphrase-multilingual-MiniLM-L12-v2", help="Sentence Transformer model to use for ontology alignment")
 
     args = argparser.parse_args()
-    ogc_api_url = args.OGC_API_URL
+
+    if not args.ogc_api_url and not args.collections:
+        print("Error: You must provide either an OGC API URL or a file with collection URLs.")
+        exit(1)
+
+    ogc_api_url = args.ogc_api_url if args.ogc_api_url and not os.path.isfile(args.ogc_api_url) else None
+    if not ogc_api_url and args.ogc_api_url and os.path.isfile(args.ogc_api_url):
+        with open(args.ogc_api_url, "r") as f:
+            ogc_api_urls = [line.strip() for line in f if line.strip()]  
+    if args.collections:
+        with open(args.collections, "r") as f:
+            collectionsFiltered = [line.strip() for line in f if line.strip()]
     os.makedirs(args.output_folder, exist_ok=True)
     output_ontology = args.output_folder + "/ontology.ttl"
 
-    oe = VectorialOntologyMatcher(args.rontologias)
+    ontologies = []
+    if args.rontologias:
+        if os.path.isfile(args.rontologias):
+            ontologies.append(args.rontologias)
+        else:
+            for file in os.listdir(args.rontologias):
+                if file.endswith(".owl") or file.endswith(".ttl") or file.endswith(".rdf"):
+                    ontologies.append(os.path.join(args.rontologias, file))
 
-    print(f"Fetching collections from OGC API at {ogc_api_url}...")
-    collections = get_collections(ogc_api_url, oe, args.n)
+    oe = VectorialOntologyMatcher(ontologies, model=args.vectorial_model) if ontologies else None
+
+    print(f"Fetching collections from OGC API(s)...")
+    if not args.collections:
+        if ogc_api_url:
+            collections = get_collections(ogc_api_url, oe, args.n, model=args.llm_model)
+        elif ogc_api_urls:
+            collections = []
+            for url in ogc_api_urls:
+                print(f"Processing OGC API: {url}")
+                collections.extend(get_collections(url, oe, args.n, model=args.llm_model))
+    else:
+        if ogc_api_url:
+            collections = get_collections_filtered(ogc_api_url, oe, collectionsFiltered, args.n, model=args.llm_model)
+        elif ogc_api_urls:
+            collections = []
+            for url in ogc_api_urls:
+                print(f"Processing OGC API: {url}")
+                collections.extend(get_collections_filtered(url, oe, collectionsFiltered, args.n, model=args.llm_model))
 
     print(f"Generating ontology for {len(collections)} collections...")
     generate_ontology(collections, output_ontology)
 
     output_mappings_folder = args.output_folder + "/mappings"
     os.makedirs(output_mappings_folder, exist_ok=True) 
-    
 
     print("Generating RML mappings...")
     for collection in collections:
         generate_mapping(collection, output_mappings_folder, ogc_api_url)
     print("All done!")
     
-
 
 

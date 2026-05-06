@@ -3,13 +3,14 @@ import json
 from groq import Groq
 from dotenv import load_dotenv
 import requests
-from rdflib import Namespace, Literal, BNode, URIRef
+from rdflib import Graph, Namespace, Literal, URIRef
+from rdflib.namespace import OWL, RDF, RDFS
 
 DBO = Namespace("http://dbpedia.org/ontology/")
 
 load_dotenv()
     
-def searchLLM(term, type="class",description="", model="openai/gpt-oss-120b"):  
+def searchLLM(term, type="class",description="", model=None):  
     #return None
     api_key = os.getenv("GROQ_API_KEY")
 
@@ -43,6 +44,96 @@ def searchLLM(term, type="class",description="", model="openai/gpt-oss-120b"):
         # Parsear la respuesta
         respuesta_json = json.loads(chat_completion.choices[0].message.content)
         return respuesta_json
+
+    except Exception as e:
+        print(f"Error con Groq: {e}")
+        return None
+    
+
+def _compact_ontology_classes(ontology, max_classes=80):
+    """Build a compact class list so the LLM can choose a valid parent."""
+    class_uris = set(ontology.subjects(RDF.type, OWL.Class))
+    class_uris.update(ontology.subjects(RDF.type, RDFS.Class))
+    class_uris.update(ontology.subjects(RDFS.subClassOf, None))
+    class_uris.update(ontology.objects(None, RDFS.subClassOf))
+
+    classes = []
+    for class_uri in sorted(class_uris, key=str):
+        label = ontology.value(class_uri, RDFS.label)
+        comment = ontology.value(class_uri, RDFS.comment)
+        classes.append({
+            "iri": str(class_uri),
+            "label": str(label) if label else "",
+            "comment": str(comment) if comment else ""
+        })
+        if len(classes) >= max_classes:
+            break
+    return classes
+
+
+def _safe_fragment(term):
+    fragment = "".join(char if char.isalnum() else "_" for char in term.strip())
+    fragment = "_".join(part for part in fragment.split("_") if part)
+    return fragment or "NewClass"
+
+
+def llm_propose(ontology, term, type="class", description="", model=None, prefix="http://example.org/ontology#"):
+    api_key = os.getenv("GROQ_API_KEY")
+    client = Groq(api_key=api_key)
+    existing_classes = _compact_ontology_classes(ontology) if isinstance(ontology, Graph) else []
+    default_iri = f"{prefix}{_safe_fragment(term)}"
+    prompt_sistema = f"""
+    You are an expert in Semantic Web and Linked Data.
+    Your task is to propose an extension of the ontology to include the following {type}: '{term}' with the following description: '{description}'.
+    Choose the most specific parent class from the ontology classes provided by the user.
+    Respond ONLY in JSON format with the following structure:
+    {{
+        "iri": "{default_iri}",
+        "parent_iri": "existing ontology class IRI",
+        "label": "{term}",
+        "comment": "{description}"
+    }}
+    The parent_iri value MUST be one of the existing ontology class IRIs provided by the user.
+    """
+    prompt_usuario = json.dumps({
+        "task": f"Propose where to attach the {type} in the ontology.",
+        "term": term,
+        "description": description,
+        "default_iri": default_iri,
+        "existing_classes": existing_classes
+    }, ensure_ascii=False)
+    try:
+        chat_completion = client.chat.completions.create(
+            messages=[
+                {"role": "system", "content": prompt_sistema},
+                {"role": "user", "content": prompt_usuario}
+            ],
+            model=model, # Usamos el modelo grande para mejor precisión
+            temperature=0.1, # Temperatura baja para que sea determinista
+            response_format={"type": "json_object"} # Forzamos salida JSON
+        )
+
+        respuesta_json = json.loads(chat_completion.choices[0].message.content)
+        respuesta_json.setdefault("iri", default_iri)
+        respuesta_json.setdefault("label", term)
+        respuesta_json.setdefault("comment", description)
+
+        parent_iri = respuesta_json.get("parent_iri")
+        valid_parent_iris = {c["iri"] for c in existing_classes}
+        if parent_iri not in valid_parent_iris:
+            print(f"Parent IRI proposed by Groq is not in the ontology: {parent_iri}")
+            return None
+        
+        # Manual validation by the user
+        proposed_iri = respuesta_json.get("iri", "")
+        print(f"Proposed IRI: {proposed_iri}")
+        print(f"Proposed parent: {parent_iri}")
+        print(f"Proposed label: {respuesta_json.get('label', '')}")
+        user_input = input("Do you want to add this extension to the ontology? (yes/no): ").strip().lower()
+        if user_input == "yes":
+            return respuesta_json
+        else:
+            return None
 
     except Exception as e:
         print(f"Error con Groq: {e}")
@@ -118,15 +209,15 @@ def searchNotLocal(term, description="", type="class", model="llama-3.3-70b-vers
         else:
             return None
     else:
-        return URIRef(result['iri'])
+        return URIRef(result)
 
 import torch
 from owlready2 import *
 from sentence_transformers import SentenceTransformer, util
 
 class VectorialOntologyMatcher:
-    def __init__(self, owl_paths, index_cache="onto_index.pt"):
-        self.model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
+    def __init__(self, owl_paths, index_cache="onto_index.pt", model=None):
+        self.model = SentenceTransformer(model)
         self.cache_path = index_cache
         
         self.entity_uris = []
@@ -219,4 +310,3 @@ if __name__ == "__main__":
 
     print(f"Resultado de búsqueda: {sameAs}")
     pass
-

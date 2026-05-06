@@ -25,15 +25,24 @@ mappings = getMappingsFromTxT("/Users/kekojohns/Library/CloudStorage/OneDrive-Pe
 
 """
 #TODO:  
-    -Se podra paralelizar la unificacion?
+    -Mapping Generator:
+        Ajustar bien threshold
+        Mirar que con propiedades funciones bien
+        Hacerlo mas manual?
+    -PRUEBAS:
+        -FIXEAR que mi getMappings no pilla bien los parentTripleMaps de GFTS-Madrid
+        -Sobre las optimizaciones geoespaciales en los FILTER + bindings.
+            -Comparar tiempos con y sin optimizaciones.
     -Meter medidores de tiempo por etapas
-    -El order tiene que ponderar el numero de elementos de la coleccion ?
 
 #POSIBLES MEJORAS:
     -Hacer un selectNextSubQuery dinamico o
     -Mejorar el order. Si una geometria depende de otra que tiene mucho score, se deberia de subir mas el score que si depende de una con menos score.
     -Mejorar compatibleMapping como en Query-Specific Pruning of RML Mappings ?
     -Paralelizar sub-consultas independientes.
+    -El order tiene que ponderar el numero de elementos de la coleccion ?
+    -Se podra paralelizar la unificacion?
+
 
 
 +++ Query-Specific Pruning of RML Mappings:
@@ -44,12 +53,12 @@ mappings = getMappingsFromTxT("/Users/kekojohns/Library/CloudStorage/OneDrive-Pe
 +++ Solucionar termCompatibility, sobre todo para diferenciar templates de sujeto(deberian de ser subclase de URIRef) y referencias de objeto
 
 Optimizaciones implementadas (para acordarme):
-    -El select de mappings es flow unification, creo q es mejor q el estado del arte
+    -El select de mappings es flow unification, creo q es mejor q el estado del arte. SPOILER: no lo es, pero igual esta bien ponerlo, tambien las pruebas que hice
     -Binding restricted star shaped subqueries (tambien flow recursive unification)
     -Ordenacion de tripletas
     -Bindings geo con void:bbox
     -Objetos literales + void:filter
-    -queriesMade teniendo en cuenta el bbox (si se ha hecho la misma consulta pero con un bbox que contenga plenamente al bbox a consultar, no hace falta hacer la consulta), si no se overlapean al completo, saca los fragmentos.
+    -queriesMade teniendo en cuenta el bbox (si se ha hecho la misma consulta pero con un bbox que contenga plenamente al bbox a consultar, no hace falta hacer la consulta).
     -Lo de los triggers.
 Assumptions:
     -El join de los parentTriplesMap no se hace, sencillamente se evalua el subject template del padre en el child.
@@ -254,6 +263,7 @@ if __name__ == "__main__":
 
     query = """
     PREFIX ogc: <http://www.ogc.org/>
+    PREFIX geo: <http://www.opengis.net/ont/geosparql#> 
     PREFIX ine: <http://lod.ine.es/def/vocabulary/>
     PREFIX sdmx-measure: <http://purl.org/linked-data/sdmx/2009/measure#>
     PREFIX sdmx-dimension: <http://purl.org/linked-data/sdmx/2009/dimension#>
@@ -264,17 +274,13 @@ if __name__ == "__main__":
     PREFIX dbo: <http://dbpedia.org/ontology/>
     PREFIX geolinkeddata: <http://geo.linkeddata.es/ontology/> 
 
-    SELECT ?x ?y WHERE {
+    SELECT ?x WHERE {
         ?x a ogc:agua:Zi_arpsi ;
             geo:hasGeometry ?gx .
-        ?y a ogc:nuc ;
-            geo:hasGeometry ?gy .
         ?g a ogc:administrativeunit ;
             ogc:nameunit "Madrid" ;
-            ogc:nationallevelname "Municipio" ;
             geo:hasGeometry ?gg .
         FILTER(geof:sfContains(?gg, ?gx))
-        FILTER(geof:sfContains(?gy, ?gx))
     }
 
     """
