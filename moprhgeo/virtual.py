@@ -1,6 +1,6 @@
 from classes import *
 from utils import get_invariant, getBaseURL, merge_urls, normalize_hierarchical_data
-from geoFunctions import getBbox, bbox_contains
+from geoFunctions import getBbox, bbox_contains, bboxToGeometry
 
 import copy
 from mappings import get_compatible_mappings
@@ -221,7 +221,7 @@ def evalVirtualBGP(ctx: QueryContext, bgp: list[TriplePattern],  mappingGroups: 
     materializeCompatibleMappingGroup(ctx, tp, mappingGroups, triggers, queriesMade)    
     for ss, sp, so in ctx.graph.triples((_s, _p, _o)):  # type: ignore[union-attr, arg-type]
         if None in (_s, _p, _o):
-            c = ctx.push()
+            c = ctx.push()  
         else:
             c = ctx
 
@@ -324,12 +324,38 @@ def querieMade(queriesMade, url_next, suj):
     queriesMade.add((normalized_url, bbox, suj))
     return False
 
+def ogcCoverageMaterializer(ctx, mappings, url_next):
+    url_parts = list(urlparse(url_next))
+    query_params = parse_qsl(url_parts[4], keep_blank_values=True)
+    updated_params = []
+    bbox_values = None
+    for key, value in query_params:
+        if key.lower() == "bbox":
+            bbox_values = value.split(",")
+            if len(bbox_values) == 4:
+                value = ",".join((bbox_values[1], bbox_values[0], bbox_values[3], bbox_values[2]))
+        updated_params.append((key, value))
+
+    url_parts[4] = urlencode(updated_params)
+    url_next = urlunparse(url_parts)
+
+    for m in mappings:
+        #print(url_next)
+        if m.p == URIRef("http://www.opengis.net/ont/geosparql#hasGeometry") and isinstance(m.bindingVariables[2], Variable):
+            ctx.graph.add((URIRef(url_next), URIRef(m.p), bboxToGeometry(bbox_values))) if bbox_values else None
+        else:
+            ctx.graph.add((URIRef(url_next), URIRef(m.p), m.bindingVariables[2])) 
+    return ctx
+
 def materializeGroup(ctx, mappings, suj, queriesMade):
     url_next = merge_urls([m.source for m in mappings])
     url_next = injectBindings(ctx, url_next)
     
     if url_next is None or querieMade(queriesMade, url_next, suj):
         return ctx
+
+    if mappings[0].coverage: 
+        return ogcCoverageMaterializer(ctx, mappings, url_next)
 
     while url_next:
         try:

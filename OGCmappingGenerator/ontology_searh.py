@@ -1,14 +1,30 @@
 import os
 import json
+import re
 from groq import Groq
 from dotenv import load_dotenv
 import requests
 from rdflib import Graph, Namespace, Literal, URIRef
+import rdflib
 from rdflib.namespace import OWL, RDF, RDFS
 
 DBO = Namespace("http://dbpedia.org/ontology/")
 
 load_dotenv()
+
+
+def preprocess_local_search_text(text):
+    """Normalize API-style identifiers only for local embedding search."""
+    if not text:
+        return ""
+
+    text = str(text)
+    text = re.sub(r"(?<=[a-z0-9])(?=[A-Z])", " ", text)
+    text = re.sub(r"[_\-.:/\\]+", " ", text)
+    text = re.sub(r"\b(gdb|geomattr|attr|data|tbl|tmp|id|pk|fk)\b", " ", text, flags=re.IGNORECASE)
+    text = re.sub(r"\d+", " ", text)
+    text = re.sub(r"\s+", " ", text).strip()
+    return text
     
 def searchLLM(term, type="class", description="", model="llama-3.3-70b-versatile"):  
     api_key = os.getenv("GROQ_API_KEY")
@@ -48,25 +64,58 @@ def searchLLM(term, type="class", description="", model="llama-3.3-70b-versatile
         return None
     
 
-def _compact_ontology_classes(ontology, max_classes=80):
+def _compact_ontology_classes(ontology_path, max_classes=100):
     """Build a compact class list so the LLM can choose a valid parent."""
+    ontology = rdflib.Graph()
+    ontology.parse(ontology_path)
+
     class_uris = set(ontology.subjects(RDF.type, OWL.Class))
     class_uris.update(ontology.subjects(RDF.type, RDFS.Class))
     class_uris.update(ontology.subjects(RDFS.subClassOf, None))
     class_uris.update(ontology.objects(None, RDFS.subClassOf))
 
     classes = []
-    for class_uri in sorted(class_uris, key=str):
+    for class_uri in class_uris:        
         label = ontology.value(class_uri, RDFS.label)
         comment = ontology.value(class_uri, RDFS.comment)
         classes.append({
             "iri": str(class_uri),
             "label": str(label) if label else "",
             "comment": str(comment) if comment else ""
-        })
+        }) if not isinstance(class_uri, rdflib.BNode) else None
         if len(classes) >= max_classes:
             break
     return classes
+
+
+def _compact_graph_entities(ontology, max_entities=120):
+    """Build a compact entity list from an rdflib graph for axiom proposals."""
+    entities = set()
+    for entity_type in (OWL.Class, RDFS.Class, RDF.Property, OWL.ObjectProperty, OWL.DatatypeProperty):
+        entities.update(ontology.subjects(RDF.type, entity_type))
+    entities.update(ontology.subjects(RDFS.subClassOf, None))
+    entities.update(ontology.objects(None, RDFS.subClassOf))
+    entities.update(ontology.subjects(RDFS.domain, None))
+    entities.update(ontology.objects(None, RDFS.domain))
+    entities.update(ontology.subjects(RDFS.range, None))
+    entities.update(ontology.objects(None, RDFS.range))
+
+    compact_entities = []
+    for entity in entities:
+        if isinstance(entity, rdflib.BNode):
+            continue
+        label = ontology.value(entity, RDFS.label)
+        comment = ontology.value(entity, RDFS.comment)
+        rdf_types = [str(t) for t in ontology.objects(entity, RDF.type) if not isinstance(t, rdflib.BNode)]
+        compact_entities.append({
+            "iri": str(entity),
+            "label": str(label) if label else "",
+            "comment": str(comment) if comment else "",
+            "types": rdf_types[:3]
+        })
+        if len(compact_entities) >= max_entities:
+            break
+    return compact_entities
 
 
 def _safe_fragment(term):
@@ -75,18 +124,18 @@ def _safe_fragment(term):
     return fragment or "NewClass"
 
 
-def llm_propose(ontology, term, type="class", description="", model=None, prefix="http://example.org/ontology#"):
+def llm_propose(ontology, term, type="class", description="", model=None, prefix="http://example.org/ontology#", interactive=True):
     api_key = os.getenv("GROQ_API_KEY")
     client = Groq(api_key=api_key)
-    existing_classes = _compact_ontology_classes(ontology) if isinstance(ontology, Graph) else []
+    existing_classes = _compact_ontology_classes(ontology) 
     default_iri = f"{prefix}{_safe_fragment(term)}"
     prompt_sistema = f"""
     You are an expert in Semantic Web and Linked Data.
-    Your task is to propose an extension of the ontology to include the following {type}: '{term}' with the following description: '{description}'.
-    Choose the most specific parent class from the ontology classes provided by the user.
+    Your task is to identify the equivalent class in the ontology or, in case there isn't, propose an extension of the ontology to include the following {type}: '{term}' with the following description: '{description}'.
+    Choose the most specific parent class from the ontology classes provided by the user and use a generic label and comment for the new class based on the term and description.
     Respond ONLY in JSON format with the following structure:
     {{
-        "iri": "{default_iri}",
+        "iri": "proposed IRI",
         "parent_iri": "existing ontology class IRI",
         "label": "{term}",
         "comment": "{description}"
@@ -94,10 +143,9 @@ def llm_propose(ontology, term, type="class", description="", model=None, prefix
     The parent_iri value MUST be one of the existing ontology class IRIs provided by the user.
     """
     prompt_usuario = json.dumps({
-        "task": f"Propose where to attach the {type} in the ontology.",
+        "task": f"Propose where to attach the {type} in the ontology and a new IRI in that ontology for the attached concept",
         "term": term,
         "description": description,
-        "default_iri": default_iri,
         "existing_classes": existing_classes
     }, ensure_ascii=False)
     try:
@@ -123,17 +171,78 @@ def llm_propose(ontology, term, type="class", description="", model=None, prefix
             print("Continuing anyway")
             #return None
         
+        if not interactive:
+            return None
+
         # Manual validation by the user
         proposed_iri = respuesta_json.get("iri", "")
         print(f"Proposed IRI: {proposed_iri}")
         print(f"Proposed parent: {parent_iri}")
         print(f"Proposed label: {respuesta_json.get('label', '')}")
+        print(f"Proposed comment: {respuesta_json.get('comment', '')}")
         user_input = input("Do you want to add this extension to the ontology? (yes/no): ").strip().lower()
-        if user_input == "yes":
+        if user_input in {"yes", "y", "si", "sí", "s"}:
             return respuesta_json
         else:
             return None
 
+    except Exception as e:
+        print(f"Error con Groq: {e}")
+        return None
+
+
+def llm_propose_axiom(ontology, model=None, history=None):
+    api_key = os.getenv("GROQ_API_KEY")
+    client = Groq(api_key=api_key)
+    entities = _compact_graph_entities(ontology)
+    existing_axioms = []
+    for s, p, o in ontology.triples((None, None, None)):
+        if isinstance(s, rdflib.BNode) or isinstance(o, rdflib.BNode):
+            continue
+        existing_axioms.append({"subject": str(s), "predicate": str(p), "object": str(o)})
+        if len(existing_axioms) >= 120:
+            break
+
+    prompt_sistema = """
+    You are an expert in OWL, RDFS, GeoSPARQL, and ontology engineering.
+    Propose exactly one useful ontology axiom that connects existing concepts in the ontology.
+    Prefer conservative axioms such as rdfs:subClassOf, owl:equivalentClass, rdfs:domain, rdfs:range,
+    owl:disjointWith, or a meaningful existing object property.
+    Do not invent new class or property IRIs. Use only IRIs from the provided entity list for subject and object.
+    Respond ONLY with JSON using this structure:
+    {
+      "rationale": "short explanation",
+      "axioms": [
+        {
+          "subject": "existing subject IRI",
+          "predicate": "predicate IRI",
+          "object": "existing object IRI"
+        }
+      ]
+    }
+    """
+    prompt_usuario = json.dumps({
+        "task": "Propose one ontology axiom that connects existing ontology concepts.",
+        "entities": entities,
+        "existing_axioms_sample": existing_axioms,
+        "previous_user_decisions": history or []
+    }, ensure_ascii=False)
+
+    try:
+        chat_completion = client.chat.completions.create(
+            messages=[
+                {"role": "system", "content": prompt_sistema},
+                {"role": "user", "content": prompt_usuario}
+            ],
+            model=model,
+            temperature=0.2,
+            response_format={"type": "json_object"}
+        )
+        proposal = json.loads(chat_completion.choices[0].message.content)
+        axioms = proposal.get("axioms", [])
+        if not axioms:
+            return None
+        return proposal
     except Exception as e:
         print(f"Error con Groq: {e}")
         return None
@@ -280,22 +389,30 @@ class VectorialOntologyMatcher:
 
     def search(self, name, description, top_k=1, threshold=0.7):
         """Busca en el espacio vectorial y devuelve los más cercanos."""
-        query_text = f"{name}: {description}"
+        results = self.search_top(name, description, top_k=top_k, threshold=threshold)
+        return results[0] if results else None
+
+    def search_top(self, name, description, top_k=5, threshold=0.7):
+        """Busca en el espacio vectorial y devuelve hasta top_k candidatos."""
+        search_name = preprocess_local_search_text(name)
+        search_description = preprocess_local_search_text(description)
+        query_text = f"{search_name}: {search_description}"
         query_embedding = self.model.encode(query_text, convert_to_tensor=True)
 
         hits = util.semantic_search(query_embedding, self.ontology_embeddings, top_k=top_k)[0]
-
-        if hits[0]['score'] > threshold:  # Umbral de confianza
-            idx = hits[0]['corpus_id']
-
-            return {
+        results = []
+        for hit in hits:
+            if threshold is not None and hit["score"] <= threshold:
+                continue
+            idx = hit['corpus_id']
+            results.append({
                 "iri": self.entity_uris[idx],
                 "type": self.entity_metadata[idx]['type'],
                 "name": self.entity_metadata[idx]['name'],
-                "confidence": round(hits[0]['score'], 4)
-            }
-        else:
-            return None
+                "confidence": round(hit['score'], 4),
+                "query_text": query_text
+            })
+        return results
     
 if __name__ == "__main__":
     oe = VectorialOntologyMatcher(["/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/ontologiasReferencia/hydrOntology_GeoLinkedData.owl"])
@@ -303,9 +420,9 @@ if __name__ == "__main__":
     description = "Objeto artificial que permite el paso del agua por encima o por debajo de un obstáculo. Puede ser de tipo acueducto, puente, alcantarilla o sifón."
     resultado = oe.search(title, description, threshold=0.7)
     if resultado:
-        sameAs = resultado['iri']
+        equivalentClass = resultado['iri']
     if not resultado:
-        sameAs = searchNotLocal(title, description, "class")
+        equivalentClass = searchNotLocal(title, description, "class")
 
-    print(f"Resultado de búsqueda: {sameAs}")
+    print(f"Resultado de búsqueda: {equivalentClass}")
     pass

@@ -5,7 +5,8 @@ import rdflib
 from rdflib import Namespace, Literal, BNode, URIRef
 import os
 import tqdm
-from ontology_searh import VectorialOntologyMatcher, searchNotLocal, llm_propose
+from collections import defaultdict
+from ontology_searh import VectorialOntologyMatcher, searchNotLocal, llm_propose, llm_propose_axiom
 
 EX = Namespace("http://example.com/")
 HTV = Namespace("http://www.w3.org/2011/http#")
@@ -31,8 +32,122 @@ namespaces = {
     "geo": GEO, "ogc": OGC, "htv": HTV, "void": VOID, "geolinkeddata": GEOLINKEDDATA, "dbo": DBO
 }
 
+class GenerationStats:
+    def __init__(self):
+        self.entity_totals = defaultdict(int)
+        self.alignment_totals = defaultdict(lambda: defaultdict(int))
+        self.axiom_proposals = 0
+        self.axiom_accepted_proposals = 0
+        self.axiom_denied_proposals = 0
+        self.axiom_accepted_triples = 0
+        self.axiom_skipped_triples = 0
+        self.mappings_generated = 0
+
+    def count_entity(self, entity_type):
+        self.entity_totals[entity_type] += 1
+
+    def count_alignment(self, entity_type, source):
+        self.alignment_totals[entity_type][source] += 1
+
+    def aligned_total(self, entity_type):
+        return sum(self.alignment_totals[entity_type].values())
+
+    def print_summary(self):
+        print("\nGeneration statistics")
+        for entity_type in ("class", "property"):
+            total = self.entity_totals[entity_type]
+            aligned = self.aligned_total(entity_type)
+            print(f"  {entity_type.title()}s: {aligned}/{total} aligned")
+            for source in ("local", "notlocal", "proposal"):
+                print(f"    {source}: {self.alignment_totals[entity_type][source]}")
+            print(f"    unaligned: {total - aligned}")
+        print("  LLM axiom review:")
+        print(f"    proposals reviewed: {self.axiom_proposals}")
+        print(f"    proposals accepted: {self.axiom_accepted_proposals}")
+        print(f"    proposals denied: {self.axiom_denied_proposals}")
+        print(f"    triples accepted: {self.axiom_accepted_triples}")
+        print(f"    triples skipped: {self.axiom_skipped_triples}")
+        print(f"  RML mappings generated: {self.mappings_generated}")
+
+
+class AlignmentReviewer:
+    def __init__(self, interactive=True, local_top_k=5, stats=None):
+        self.interactive = interactive
+        self.local_top_k = local_top_k
+        self.stats = stats
+
+    def _ask_yes_no(self, prompt, default=False):
+        if not self.interactive:
+            return default
+        suffix = " [Y/n]: " if default else " [y/N]: "
+        while True:
+            try:
+                answer = input(prompt + suffix).strip().lower()
+            except EOFError:
+                return default
+            if not answer:
+                return default
+            if answer in {"y", "yes", "s", "si", "sí"}:
+                return True
+            if answer in {"n", "no"}:
+                return False
+            print("Please answer yes or no.")
+
+    def confirm_external(self, term, entity_type, iri):
+        print(f"\nExternal match found for {entity_type} '{term}':")
+        print(f"  {iri}")
+        return URIRef(iri) if self._ask_yes_no("Accept this external alignment?") else None
+
+    def choose_local(self, term, description, entity_type, oe):
+        if not oe:
+            return None
+        matches = oe.search_top(term, description or "", top_k=self.local_top_k, threshold=None)
+        if not matches:
+            return None
+        print(f"\nLocal ontology matches for {entity_type} '{term}':")
+        if matches[0].get("query_text"):
+            print(f"  Search text: {matches[0]['query_text']}")
+        for idx, match in enumerate(matches, start=1):
+            print(
+                f"  {idx}. {match['name']} ({match['type']}) "
+                f"confidence={match['confidence']} iri={match['iri']}"
+            )
+        if not self.interactive:
+            return None
+        while True:
+            try:
+                answer = input("Choose a match number to accept, or press Enter/0 to skip: ").strip()
+            except EOFError:
+                return None
+            if not answer or answer == "0":
+                return None
+            if answer.isdigit() and 1 <= int(answer) <= len(matches):
+                if self.stats:
+                    self.stats.count_alignment(entity_type, "local")
+                return URIRef(matches[int(answer) - 1]["iri"])
+            print(f"Please enter a number between 1 and {len(matches)}, or 0 to skip.")
+
+    def align(self, term, description, entity_type, oe=None, search_not_local=False, model=None):
+        if not self.interactive:
+            return None
+        
+        local = self.choose_local(term, description, entity_type, oe)
+        if local:
+            return local
+        
+        if search_not_local:
+            external = searchNotLocal(term, description or "", entity_type, model=model)
+            if external:
+                accepted = self.confirm_external(term, entity_type, external)
+                if accepted:
+                    if self.stats:
+                        self.stats.count_alignment(entity_type, "notlocal")
+                    return accepted
+        return None
+
+
 class Collection:
-    def __init__(self, id, title, description, spatial, url, oe: VectorialOntologyMatcher, search_not_local=False, model=None):
+    def __init__(self, id, title, description, spatial, url, oe: VectorialOntologyMatcher, search_not_local=False, model=None, flag_not_align=False, reviewer=None, stats=None):
         self.id = id
         self.title = title
         self.description = description
@@ -42,32 +157,49 @@ class Collection:
         self.oe = oe
         self.search_not_local = search_not_local
         self.model = model
+        self.flag_not_align = flag_not_align
+        self.reviewer = reviewer or AlignmentReviewer(interactive=False)
+        self.stats = stats
+        self.equivalentClass = self.equivalentClassF()
         self.properties = self._set_properties()
-        self.sameAs = self.sameAsF()
     def _set_properties(self): 
         r = requests.get(self.url + "/collections/" + self.id + "/queryables" + "?f=json").json()
         ret = JSONPath("$.properties").parse(r)
         ret = ret[0] if ret else {}
         l = []
         for i, v in ret.items():
-            sameAs = self.oe.search(i, "", threshold=0.7) if self.oe else None
-            sameAs = sameAs["iri"] if sameAs else None
-            if not sameAs and self.search_not_local and False: # demasiado costoso hacer la busqueda de cada propiedad.
-                sameAs = searchNotLocal(i, "", "property", model=self.model)
+            if self.stats:
+                self.stats.count_entity("property")
+            equivalentClass = None
+            if not self.flag_not_align:
+                equivalentClass = self.reviewer.align(
+                    i,
+                    "",
+                    "property",
+                    oe=self.oe,
+                    search_not_local=False,
+                    model=self.model
+                )
             l.append({
                 "title": i,
                 "type": v.get("type", "string"),   
-                "sameAs": URIRef(sameAs) if sameAs else None
+                "equivalentClass": URIRef(equivalentClass) if equivalentClass else None
             })
         return l
     
-    def sameAsF(self):
-        resultado = self.oe.search(self.title, self.description, threshold=0.7) if self.oe else None
-        if not resultado and self.search_not_local:
-            resultado = searchNotLocal(self.title, self.description, "class", model=self.model)
-        if isinstance(resultado, dict):
-            return URIRef(resultado['iri'])
-        return URIRef(resultado) if resultado else None
+    def equivalentClassF(self):
+        if self.stats:
+            self.stats.count_entity("class")
+        if self.flag_not_align:
+            return None
+        return self.reviewer.align(
+            self.title,
+            self.description,
+            "class",
+            oe=self.oe,
+            search_not_local=True,
+            model=self.model
+        )
 
 
 def add_logical_sources(inputId, urlAPI, ns, g_mappings):
@@ -135,7 +267,7 @@ def add_subject_map_BN(triples_map, g_mappings):
 
 
 
-def get_collections(urlBase, oe: VectorialOntologyMatcher, search_not_local=False, model=None):
+def get_collections(urlBase, oe: VectorialOntologyMatcher, search_not_local=False, model=None, flag_not_align=False, reviewer=None, stats=None):
     try:
         response = requests.get(urlBase+"/collections?f=json")
     except requests.exceptions.RequestException as e:
@@ -152,11 +284,14 @@ def get_collections(urlBase, oe: VectorialOntologyMatcher, search_not_local=Fals
             url=urlBase,
             oe=oe,
             search_not_local=search_not_local,
-            model=model
+            model=model,
+            flag_not_align=flag_not_align,
+            reviewer=reviewer,
+            stats=stats
         ))
     return collections
 
-def get_collections_filtered(urlBase, oe: VectorialOntologyMatcher, collectionsFiltered, search_not_local=False, model=None):
+def get_collections_filtered(urlBase, oe: VectorialOntologyMatcher, collectionsFiltered, search_not_local=False, model=None, flag_not_align=False, reviewer=None, stats=None):
     try:
         response = requests.get(urlBase+"/collections?f=json")
     except requests.exceptions.RequestException as e:
@@ -173,12 +308,97 @@ def get_collections_filtered(urlBase, oe: VectorialOntologyMatcher, collectionsF
                 spatial=c["extent"]["spatial"] if "extent" in c and "spatial" in c["extent"] else None,
                 url=urlBase,
                 oe=oe,
-                search_not_local=search_not_local,  
-                model=model
+                search_not_local=search_not_local,
+                model=model,
+                flag_not_align=flag_not_align,
+                reviewer=reviewer,
+                stats=stats
             ))
     return collections
 
-def generate_ontology(collections: list[Collection], output_ontology):
+def _format_axiom_proposal(proposal):
+    print("\nLLM proposed ontology axiom:")
+    if proposal.get("rationale"):
+        print(f"  Rationale: {proposal['rationale']}")
+    for idx, axiom in enumerate(proposal.get("axioms", []), start=1):
+        print(f"  {idx}. {axiom.get('subject')} {axiom.get('predicate')} {axiom.get('object')}")
+
+
+def _add_axiom_proposal(ontology, proposal, stats=None):
+    added = []
+    known_resources = set()
+    for s, p, o in ontology.triples((None, None, None)):
+        if isinstance(s, URIRef):
+            known_resources.add(str(s))
+        if isinstance(o, URIRef):
+            known_resources.add(str(o))
+
+    for axiom in proposal.get("axioms", []):
+        subject = axiom.get("subject")
+        predicate = axiom.get("predicate")
+        obj = axiom.get("object")
+        if not subject or not predicate or not obj:
+            print("Skipping malformed axiom.")
+            if stats:
+                stats.axiom_skipped_triples += 1
+            continue
+        if subject not in known_resources or obj not in known_resources:
+            print("Skipping axiom with unknown subject or object IRI.")
+            if stats:
+                stats.axiom_skipped_triples += 1
+            continue
+        triple = (URIRef(subject), URIRef(predicate), URIRef(obj))
+        ontology.add(triple)
+        added.append(triple)
+        if stats:
+            stats.axiom_accepted_triples += 1
+    return added
+
+
+def review_llm_axioms(ontology, model=None, interactive=True, stats=None):
+    if not interactive:
+        return
+
+    history = []
+    print("\nStarting LLM ontology axiom review loop.")
+    print("For each proposal choose: accept, deny, or finish.")
+
+    while True:
+        proposal = llm_propose_axiom(ontology, model=model, history=history)
+        if not proposal:
+            print("No axiom proposal was produced.")
+            if not AlignmentReviewer(interactive=True)._ask_yes_no("Try again?"):
+                break
+            continue
+
+        if stats:
+            stats.axiom_proposals += 1
+        _format_axiom_proposal(proposal)
+        while True:
+            try:
+                answer = input("Accept, deny, or finish? [a/d/f]: ").strip().lower()
+            except EOFError:
+                return
+            if answer in {"a", "accept", "yes", "y", "s", "si", "sí"}:
+                added = _add_axiom_proposal(ontology, proposal, stats=stats)
+                history.append({"decision": "accepted", "proposal": proposal})
+                if stats:
+                    stats.axiom_accepted_proposals += 1
+                print(f"Accepted {len(added)} axiom triple(s).")
+                break
+            if answer in {"d", "deny", "no", "n"}:
+                history.append({"decision": "denied", "proposal": proposal})
+                if stats:
+                    stats.axiom_denied_proposals += 1
+                print("Denied. Asking the LLM for another proposal.")
+                break
+            if answer in {"f", "finish", "q", "quit", "stop"}:
+                print("Finished ontology axiom review.")
+                return
+            print("Please answer accept, deny, or finish.")
+
+
+def generate_ontology(collections: list[Collection], output_ontology, reference_ontology, interactive=True, model=None, stats=None):
     ontology = rdflib.Graph()
     # bindear geosparql y geo al grafo
     ontology.bind("geo", GEO)
@@ -193,8 +413,8 @@ def generate_ontology(collections: list[Collection], output_ontology):
         ontology.add((class_uri, RDFS.label, Literal(c.title))) 
         ontology.add((collection_uri, RDFS.label, Literal(c.title))) 
 
-        if c.sameAs:
-            ontology.add((class_uri, OWL.sameAs, URIRef(c.sameAs)))
+        if c.equivalentClass:
+            ontology.add((class_uri, OWL.equivalentClass, URIRef(c.equivalentClass)))
 
         if c.description: 
             ontology.add((class_uri, RDFS.comment, Literal(c.description))) 
@@ -204,24 +424,25 @@ def generate_ontology(collections: list[Collection], output_ontology):
             wkt_literal = Literal(f"<{c.crs}> POLYGON((" + ",".join(map(str, c.bbox[0])) + "))", datatype=GEO.wktLiteral)
             ontology.add((bbox_blank_node, GEO.asWKT, wkt_literal))
         for prop in c.properties: 
-            property_uri = OGC[prop["title"]] if not prop["sameAs"] else prop["sameAs"]
+            property_uri = OGC[prop["title"]] if not prop["equivalentClass"] else prop["equivalentClass"]
             ontology.add((property_uri, RDF.type, RDF.Property)) 
             ontology.add((property_uri, RDFS.label, Literal(prop["title"]))) 
             ontology.add((property_uri, RDFS.range, XSD[prop["type"]])) if prop["type"]!="number" else ontology.add((property_uri, RDFS.range, XSD["float"]))
             ontology.add((property_uri, RDFS.domain, class_uri))
 
     for c in collections:
-        if c.sameAs or not c.search_not_local:
+        if c.equivalentClass or not c.search_not_local or not interactive:
             continue
 
         proposal = llm_propose(
-            ontology,
+            reference_ontology,
             c.title,
             type="class",
             description=c.description or "",
             model=c.model,
-            prefix=str(OGC)
-        )
+            prefix=str(OGC),
+            interactive=interactive
+        ) if reference_ontology else None
         if not proposal:
             continue
 
@@ -234,7 +455,11 @@ def generate_ontology(collections: list[Collection], output_ontology):
         if proposal.get("comment"):
             ontology.add((proposed_uri, RDFS.comment, Literal(proposal["comment"])))
         ontology.add((class_uri, OWL.equivalentClass, proposed_uri))
-        c.sameAs = proposed_uri
+        c.equivalentClass = proposed_uri
+        if stats:
+            stats.count_alignment("class", "proposal")
+
+    review_llm_axioms(ontology, model=model, interactive=interactive, stats=stats)
     
     ontology.serialize(destination=output_ontology, format="turtle")
 
@@ -247,14 +472,14 @@ def generate_mapping(collection, output_mappings_folder, urlBase):
     g_mappings.add((triples_map, RDF.type, RML.TriplesMap))
 
     g_mappings.add((triples_map, RML.logicalSource, OGC["LogicalSource_" + collection.id]))
-    if not collection.sameAs:
+    if not collection.equivalentClass:
         add_subject_map(triples_map, OGC[collection.id], g_mappings, template=collection.url + f"/collections/{collection.id}" + "/items/{id}")
     else:
-        add_subject_map(triples_map, collection.sameAs, g_mappings, template=collection.url + f"/collections/{collection.id}" + "/items/{id}")
+        add_subject_map(triples_map, collection.equivalentClass, g_mappings, template=collection.url + f"/collections/{collection.id}" + "/items/{id}")
 
     for prop in collection.properties: 
-        if prop["sameAs"]:
-            add_pom_ref(triples_map, URIRef(prop["sameAs"]), f"properties.{prop['title']}", g_mappings, datatype=XSD[prop["type"]], filter=f"{prop['title']}"+"=@{1}") if prop["type"]!="number" else add_pom_ref(triples_map, URIRef(prop["sameAs"]), f"properties.{prop['title']}", g_mappings, datatype=XSD["float"], filter=f"{prop['title']}"+"=@{1}")
+        if prop["equivalentClass"]:
+            add_pom_ref(triples_map, URIRef(prop["equivalentClass"]), f"properties.{prop['title']}", g_mappings, datatype=XSD[prop["type"]], filter=f"{prop['title']}"+"=@{1}") if prop["type"]!="number" else add_pom_ref(triples_map, URIRef(prop["equivalentClass"]), f"properties.{prop['title']}", g_mappings, datatype=XSD["float"], filter=f"{prop['title']}"+"=@{1}")
         else:
             add_pom_ref(triples_map, OGC[prop["title"]], f"properties.{prop['title']}", g_mappings, datatype=XSD[prop["type"]], filter=f"{prop['title']}"+"=@{1}") if prop["type"]!="number" else add_pom_ref(triples_map, OGC[prop["title"]], f"properties.{prop['title']}", g_mappings, datatype=XSD["float"], filter=f"{prop['title']}"+"=@{1}")
     add_pom_ref(triples_map, GEO.hasGeometry, "geometry", g_mappings,  filter="bbox=@{1}", datatype=GEO.geoJSONLiteral)
@@ -275,11 +500,13 @@ if __name__ == "__main__":
     argparser = argparse.ArgumentParser(description="OGC Mapping Generator")
     argparser.add_argument("-u", "--ogc_api_url", help="URL of the Features OGC root endpoint OR text file with multiple OGC API endpoints (one per line)")
     argparser.add_argument("--output_folder", "-o", default="output", help="Output folder name (default: output)")
-    argparser.add_argument("-n", action="store_true", help="Search in not local ontologies (Wikidata, DBpedia) if no match is found in the local vectorial search. WARNING: can be very slow!")
+    argparser.add_argument("-n", action="store_true", help="Search Wikidata/DBpedia before local vectorial search. WARNING: can be very slow!")
     argparser.add_argument("-c","--collections", default=None, help="File with urls of the collections to process")
     argparser.add_argument("-r", "--rontologias", default=None, help="Rutas a los archivos .owl")
     argparser.add_argument("-l", "--llm_model", default="openai/gpt-oss-120b", help="LLM model to use for ontology search")
     argparser.add_argument("-v", "--vectorial_model", default="paraphrase-multilingual-MiniLM-L12-v2", help="Sentence Transformer model to use for ontology alignment")
+    argparser.add_argument("-f", "--flag-not-align", action="store_true", help="Flag to not perform ontology alignment and just generate mappings with the original collection properties")
+    argparser.add_argument("--no-interactive", action="store_true", help="Disable human confirmation prompts and skip automatic alignments")
 
     args = argparser.parse_args()
 
@@ -287,6 +514,8 @@ if __name__ == "__main__":
         print("Error: You must provide either an OGC API URL or a file with collection URLs.")
         exit(1)
 
+    ogc_api_urls = []
+    collectionsFiltered = []
     ogc_api_url = args.ogc_api_url if args.ogc_api_url and not os.path.isfile(args.ogc_api_url) else None
     if not ogc_api_url and args.ogc_api_url and os.path.isfile(args.ogc_api_url):
         with open(args.ogc_api_url, "r") as f:
@@ -306,28 +535,30 @@ if __name__ == "__main__":
                 if file.endswith(".owl") or file.endswith(".ttl") or file.endswith(".rdf"):
                     ontologies.append(os.path.join(args.rontologias, file))
 
-    oe = VectorialOntologyMatcher(ontologies, model=args.vectorial_model) if ontologies else None
+    stats = GenerationStats()
+    oe = VectorialOntologyMatcher(ontologies, model=args.vectorial_model) if ontologies and not args.flag_not_align else None
+    reviewer = AlignmentReviewer(interactive=not args.no_interactive, stats=stats)
 
     print(f"Fetching collections from OGC API(s)...")
     if not args.collections:
         if ogc_api_url:
-            collections = get_collections(ogc_api_url, oe, args.n, model=args.llm_model)
+            collections = get_collections(ogc_api_url, oe, args.n, model=args.llm_model, flag_not_align=args.flag_not_align, reviewer=reviewer, stats=stats)
         elif ogc_api_urls:
             collections = []
             for url in ogc_api_urls:
                 print(f"Processing OGC API: {url}")
-                collections.extend(get_collections(url, oe, args.n, model=args.llm_model))
+                collections.extend(get_collections(url, oe, args.n, model=args.llm_model, flag_not_align=args.flag_not_align, reviewer=reviewer, stats=stats))
     else:
         if ogc_api_url:
-            collections = get_collections_filtered(ogc_api_url, oe, collectionsFiltered, args.n, model=args.llm_model)
+            collections = get_collections_filtered(ogc_api_url, oe, collectionsFiltered, args.n, model=args.llm_model, flag_not_align=args.flag_not_align, reviewer=reviewer, stats=stats)
         elif ogc_api_urls:
             collections = []
             for url in ogc_api_urls:
                 print(f"Processing OGC API: {url}")
-                collections.extend(get_collections_filtered(url, oe, collectionsFiltered, args.n, model=args.llm_model))
+                collections.extend(get_collections_filtered(url, oe, collectionsFiltered, args.n, model=args.llm_model, flag_not_align=args.flag_not_align, reviewer=reviewer, stats=stats))
 
     print(f"Generating ontology for {len(collections)} collections...")
-    generate_ontology(collections, output_ontology)
+    generate_ontology(collections, output_ontology, ontologies[0], interactive=not args.no_interactive, model=args.llm_model, stats=stats) if ontologies and not args.flag_not_align else generate_ontology(collections, output_ontology, None, interactive=not args.no_interactive, model=args.llm_model, stats=stats)
 
     output_mappings_folder = args.output_folder + "/mappings"
     os.makedirs(output_mappings_folder, exist_ok=True) 
@@ -335,7 +566,7 @@ if __name__ == "__main__":
     print("Generating RML mappings...")
     for collection in collections:
         generate_mapping(collection, output_mappings_folder, ogc_api_url)
+        stats.mappings_generated += 1
+    stats.print_summary()
     print("All done!")
     
-
-

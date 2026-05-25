@@ -9,7 +9,6 @@ def rdf_class_to_pom(mapping_graph):
     """
     Replace rr:class definitions by predicate object maps.
     """
-
     query = 'SELECT ?tm ?c WHERE { ' \
             f'?tm <{RML_SUBJECT_MAP}> ?sm . ' \
             f'?sm <{RML_CLASS}> ?c . }}'

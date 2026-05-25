@@ -5,16 +5,10 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-<http://geo.linkeddata.es/ontology/conduce> a rdf:Property ;
-    rdfs:label "condicion" ;
-    rdfs:domain ogc:damorweir,
-        ogc:lock ;
-    rdfs:range xsd:string .
-
-<http://geo.linkeddata.es/ontology/es_conectado_con> a rdf:Property ;
-    rdfs:label "otras_cons" ;
-    rdfs:domain <http://www.ogc.org/agua:Zif_riesgo_pob_q500> ;
-    rdfs:range xsd:string .
+<http://geo.linkeddata.es/ontology/altitud> a rdf:Property ;
+    rdfs:label "elevacion" ;
+    rdfs:domain ogc:standingwater ;
+    rdfs:range xsd:float .
 
 <http://geo.linkeddata.es/ontology/hydro-ontology.owl#geometría> a rdf:Property ;
     rdfs:label "geometry" ;
@@ -24,22 +18,25 @@
         ogc:falls,
         ogc:lock,
         ogc:standingwater,
+        ogc:watercourselinksequence,
         ogc:wetland ;
     rdfs:range xsd:string .
 
-<http://geo.linkeddata.es/ontology/permite> a rdf:Property ;
-    rdfs:label "nameunit" ;
-    rdfs:domain ogc:administrativeunit ;
-    rdfs:range xsd:string .
+<http://geo.linkeddata.es/ontology/longitud> a rdf:Property ;
+    rdfs:label "longitud" ;
+    rdfs:domain ogc:watercourselinksequence ;
+    rdfs:range xsd:float .
 
-<http://geo.linkeddata.es/ontology/transmite> a rdf:Property ;
-    rdfs:label "fuente",
-        "fuented" ;
+<http://geo.linkeddata.es/ontology/origina> a rdf:Property ;
+    rdfs:label "nativeness",
+        "origen",
+        "origend" ;
     rdfs:domain ogc:damorweir,
         ogc:drainagebasin,
         ogc:falls,
         ogc:lock,
         ogc:standingwater,
+        ogc:watercourselinksequence,
         ogc:wetland ;
     rdfs:range xsd:string .
 
@@ -78,6 +75,12 @@ ogc:codnut3 a rdf:Property ;
     rdfs:domain ogc:administrativeunit ;
     rdfs:range xsd:string .
 
+ogc:condicion a rdf:Property ;
+    rdfs:label "condicion" ;
+    rdfs:domain ogc:damorweir,
+        ogc:lock ;
+    rdfs:range xsd:string .
+
 ogc:condiciond a rdf:Property ;
     rdfs:label "condiciond" ;
     rdfs:domain ogc:damorweir,
@@ -107,11 +110,6 @@ ogc:drainsbasin a rdf:Property ;
     rdfs:domain ogc:standingwater ;
     rdfs:range xsd:string .
 
-ogc:elevacion a rdf:Property ;
-    rdfs:label "elevacion" ;
-    rdfs:domain ogc:standingwater ;
-    rdfs:range xsd:float .
-
 ogc:falls_collection a geo:FeatureCollection ;
     rdfs:label "HY-P Cascada" ;
     geo:hasBoundingBox [ geo:asWKT "<http://www.opengis.net/def/crs/OGC/1.3/CRS84> POLYGON((-19,27,5,44))"^^geo:wktLiteral ] .
@@ -128,6 +126,29 @@ ogc:fecha_alta a rdf:Property ;
         ogc:falls,
         ogc:lock,
         ogc:standingwater,
+        ogc:watercourselinksequence,
+        ogc:wetland ;
+    rdfs:range xsd:string .
+
+ogc:fuente a rdf:Property ;
+    rdfs:label "fuente" ;
+    rdfs:domain ogc:damorweir,
+        ogc:drainagebasin,
+        ogc:falls,
+        ogc:lock,
+        ogc:standingwater,
+        ogc:watercourselinksequence,
+        ogc:wetland ;
+    rdfs:range xsd:string .
+
+ogc:fuented a rdf:Property ;
+    rdfs:label "fuented" ;
+    rdfs:domain ogc:damorweir,
+        ogc:drainagebasin,
+        ogc:falls,
+        ogc:lock,
+        ogc:standingwater,
+        ogc:watercourselinksequence,
         ogc:wetland ;
     rdfs:range xsd:string .
 
@@ -148,7 +169,13 @@ ogc:hydroid_localid a rdf:Property ;
         ogc:falls,
         ogc:lock,
         ogc:standingwater,
+        ogc:watercourselinksequence,
         ogc:wetland ;
+    rdfs:range xsd:string .
+
+ogc:id_curso a rdf:Property ;
+    rdfs:label "id_curso" ;
+    rdfs:domain ogc:watercourselinksequence ;
     rdfs:range xsd:string .
 
 ogc:id_demarc a rdf:Property ;
@@ -158,6 +185,7 @@ ogc:id_demarc a rdf:Property ;
         ogc:falls,
         ogc:lock,
         ogc:standingwater,
+        ogc:watercourselinksequence,
         ogc:wetland ;
     rdfs:range xsd:string .
 
@@ -168,6 +196,7 @@ ogc:id_demarcd a rdf:Property ;
         ogc:falls,
         ogc:lock,
         ogc:standingwater,
+        ogc:watercourselinksequence,
         ogc:wetland ;
     rdfs:range xsd:string .
 
@@ -192,6 +221,11 @@ ogc:id_poblaci a rdf:Property ;
     rdfs:domain <http://www.ogc.org/agua:Zif_riesgo_pob_q500> ;
     rdfs:range xsd:string .
 
+ogc:id_red a rdf:Property ;
+    rdfs:label "id_red" ;
+    rdfs:domain ogc:watercourselinksequence ;
+    rdfs:range xsd:string .
+
 ogc:inspireid_localid a rdf:Property ;
     rdfs:label "inspireid_localid" ;
     rdfs:domain ogc:damorweir,
@@ -199,6 +233,7 @@ ogc:inspireid_localid a rdf:Property ;
         ogc:falls,
         ogc:lock,
         ogc:standingwater,
+        ogc:watercourselinksequence,
         ogc:wetland ;
     rdfs:range xsd:string .
 
@@ -232,6 +267,11 @@ ogc:n_hab_muni a rdf:Property ;
     rdfs:domain <http://www.ogc.org/agua:Zif_riesgo_pob_q500> ;
     rdfs:range xsd:float .
 
+ogc:nameunit a rdf:Property ;
+    rdfs:label "nameunit" ;
+    rdfs:domain ogc:administrativeunit ;
+    rdfs:range xsd:string .
+
 ogc:nationalcode a rdf:Property ;
     rdfs:label "nationalcode" ;
     rdfs:domain ogc:administrativeunit ;
@@ -249,12 +289,7 @@ ogc:nationallevelname a rdf:Property ;
 
 ogc:nativeness a rdf:Property ;
     rdfs:label "nativeness" ;
-    rdfs:domain ogc:damorweir,
-        ogc:drainagebasin,
-        ogc:falls,
-        ogc:lock,
-        ogc:standingwater,
-        ogc:wetland ;
+    rdfs:domain ogc:drainagebasin ;
     rdfs:range xsd:string .
 
 ogc:nil_elevacion a rdf:Property ;
@@ -269,6 +304,7 @@ ogc:nil_nombre a rdf:Property ;
         ogc:falls,
         ogc:lock,
         ogc:standingwater,
+        ogc:watercourselinksequence,
         ogc:wetland ;
     rdfs:range xsd:boolean .
 
@@ -279,6 +315,7 @@ ogc:nil_varios a rdf:Property ;
         ogc:falls,
         ogc:lock,
         ogc:standingwater,
+        ogc:watercourselinksequence,
         ogc:wetland ;
     rdfs:range xsd:boolean .
 
@@ -294,6 +331,7 @@ ogc:nilreason_nombre a rdf:Property ;
         ogc:falls,
         ogc:lock,
         ogc:standingwater,
+        ogc:watercourselinksequence,
         ogc:wetland ;
     rdfs:range xsd:string .
 
@@ -304,6 +342,7 @@ ogc:nilreason_varios a rdf:Property ;
         ogc:falls,
         ogc:lock,
         ogc:standingwater,
+        ogc:watercourselinksequence,
         ogc:wetland ;
     rdfs:range xsd:string .
 
@@ -329,6 +368,7 @@ ogc:nombre a rdf:Property ;
         ogc:falls,
         ogc:lock,
         ogc:standingwater,
+        ogc:watercourselinksequence,
         ogc:wetland ;
     rdfs:range xsd:string .
 
@@ -372,12 +412,6 @@ ogc:orden_esqd a rdf:Property ;
     rdfs:domain ogc:drainagebasin ;
     rdfs:range xsd:string .
 
-ogc:origen a rdf:Property ;
-    rdfs:label "origen" ;
-    rdfs:domain ogc:drainagebasin,
-        ogc:standingwater ;
-    rdfs:range xsd:string .
-
 ogc:origen_z a rdf:Property ;
     rdfs:label "origen_z" ;
     rdfs:domain ogc:standingwater ;
@@ -390,8 +424,12 @@ ogc:origen_zd a rdf:Property ;
 
 ogc:origend a rdf:Property ;
     rdfs:label "origend" ;
-    rdfs:domain ogc:drainagebasin,
-        ogc:standingwater ;
+    rdfs:domain ogc:drainagebasin ;
+    rdfs:range xsd:string .
+
+ogc:otras_cons a rdf:Property ;
+    rdfs:label "otras_cons" ;
+    rdfs:domain <http://www.ogc.org/agua:Zif_riesgo_pob_q500> ;
     rdfs:range xsd:string .
 
 ogc:persist a rdf:Property ;
@@ -413,6 +451,7 @@ ogc:resolucion a rdf:Property ;
         ogc:falls,
         ogc:lock,
         ogc:standingwater,
+        ogc:watercourselinksequence,
         ogc:wetland ;
     rdfs:range xsd:integer .
 
@@ -423,6 +462,7 @@ ogc:script a rdf:Property ;
         ogc:falls,
         ogc:lock,
         ogc:standingwater,
+        ogc:watercourselinksequence,
         ogc:wetland ;
     rdfs:range xsd:string .
 
@@ -439,6 +479,11 @@ ogc:superficie a rdf:Property ;
     rdfs:label "superficie" ;
     rdfs:domain <http://www.ogc.org/agua:Zif_riesgo_pob_q500> ;
     rdfs:range xsd:float .
+
+ogc:tipo a rdf:Property ;
+    rdfs:label "tipo" ;
+    rdfs:domain ogc:wetland ;
+    rdfs:range xsd:string .
 
 ogc:tipo_aest a rdf:Property ;
     rdfs:label "tipo_aest" ;
@@ -465,6 +510,10 @@ ogc:tipo_zhum a rdf:Property ;
     rdfs:domain ogc:wetland ;
     rdfs:range xsd:string .
 
+ogc:watercourselinksequence_collection a geo:FeatureCollection ;
+    rdfs:label "HY-N Secuencia de enlaces de curso de agua" ;
+    geo:hasBoundingBox [ geo:asWKT "<http://www.opengis.net/def/crs/OGC/1.3/CRS84> POLYGON((-19,27,5,44))"^^geo:wktLiteral ] .
+
 ogc:wetland_collection a geo:FeatureCollection ;
     rdfs:label "HY-P Humedal" ;
     geo:hasBoundingBox [ geo:asWKT "<http://www.opengis.net/def/crs/OGC/1.3/CRS84> POLYGON((-19,27,5,44))"^^geo:wktLiteral ] .
@@ -474,10 +523,25 @@ ogc:z_coron a rdf:Property ;
     rdfs:domain ogc:damorweir ;
     rdfs:range xsd:float .
 
-owl:Thing a rdf:Property ;
-    rdfs:label "tipo" ;
-    rdfs:domain ogc:wetland ;
-    rdfs:range xsd:string .
+<http://geo.linkeddata.es/ontology/Aguas_Estancadas> a owl:Class ;
+    rdfs:label "HY-P Aguas estancadas" ;
+    rdfs:comment "Masa de agua que está rodeada por completo de tierra." ;
+    rdfs:subClassOf <http://geo.linkeddata.es/ontology/Aguas_Quietas_Naturales> .
+
+<http://geo.linkeddata.es/ontology/CuencaDeCaptacion> a owl:Class ;
+    rdfs:label "HY-P Cuenca de captación" ;
+    rdfs:comment "Zona que tiene un desagüe común para su escorrentía." ;
+    rdfs:subClassOf <http://geo.linkeddata.es/ontology/Cuenca_Hidrográfica> .
+
+<http://geo.linkeddata.es/ontology/HY_N_Secuencia_de_enlaces_de_curso_de_agua> a owl:Class ;
+    rdfs:label "HY-N Secuencia de enlaces de curso de agua" ;
+    rdfs:comment "Secuencia de enlaces de curso de agua que representa una trayectoria sin ramificación a través de una red hidrográfica." ;
+    rdfs:subClassOf <http://geo.linkeddata.es/ontology/Río> .
+
+<http://geo.linkeddata.es/ontology/Presa> a owl:Class ;
+    rdfs:label "HY-P Presa o represa" ;
+    rdfs:comment "Barrera permanente a través de un curso de agua, utilizada para almacenar agua o controlar su flujo." ;
+    rdfs:subClassOf <http://geo.linkeddata.es/ontology/Embalse> .
 
 ogc:administrativeunit a owl:class ;
     rdfs:label "AU Unidades administrativas" ;
@@ -493,31 +557,39 @@ ogc:lock a owl:class ;
     rdfs:comment "Recinto con un par o una serie de puertas utilizado para hacer subir o bajar a los buques que pasan de un nivel de agua a otro." ;
     rdfs:subClassOf geo:Feature .
 
+ogc:watercourselinksequence a owl:class ;
+    rdfs:label "HY-N Secuencia de enlaces de curso de agua" ;
+    rdfs:comment "Secuencia de enlaces de curso de agua que representa una trayectoria sin ramificación a través de una red hidrográfica." ;
+    rdfs:subClassOf geo:Feature ;
+    owl:equivalentClass <http://geo.linkeddata.es/ontology/HY_N_Secuencia_de_enlaces_de_curso_de_agua> .
+
 ogc:falls a owl:class ;
     rdfs:label "HY-P Cascada" ;
     rdfs:comment "Parte de un curso de agua que desciende verticalmente al caer desde una altura." ;
     rdfs:subClassOf geo:Feature ;
-    owl:sameAs <http://geo.linkeddata.es/ontology/Cascada> .
+    owl:equivalentClass <http://geo.linkeddata.es/ontology/Cascada> .
 
 ogc:wetland a owl:class ;
     rdfs:label "HY-P Humedal" ;
     rdfs:comment "Zona poco drenada o inundada periódicamente cuyo suelo se encuentra saturado de agua y admite vegetación." ;
     rdfs:subClassOf geo:Feature ;
-    owl:sameAs <http://geo.linkeddata.es/ontology/Humedal> .
+    owl:equivalentClass <http://geo.linkeddata.es/ontology/Humedal> .
 
 ogc:drainagebasin a owl:class ;
     rdfs:label "HY-P Cuenca de captación" ;
     rdfs:comment "Zona que tiene un desagüe común para su escorrentía." ;
-    rdfs:subClassOf geo:Feature .
+    rdfs:subClassOf geo:Feature ;
+    owl:equivalentClass <http://geo.linkeddata.es/ontology/CuencaDeCaptacion> .
 
 ogc:damorweir a owl:class ;
     rdfs:label "HY-P Presa o represa" ;
     rdfs:comment "Barrera permanente a través de un curso de agua, utilizada para almacenar agua o controlar su flujo." ;
-    rdfs:subClassOf geo:Feature .
+    rdfs:subClassOf geo:Feature ;
+    owl:equivalentClass <http://geo.linkeddata.es/ontology/Presa> .
 
 ogc:standingwater a owl:class ;
     rdfs:label "HY-P Aguas estancadas" ;
     rdfs:comment "Masa de agua que está rodeada por completo de tierra." ;
     rdfs:subClassOf geo:Feature ;
-    owl:sameAs <http://geo.linkeddata.es/ontology/Surgencias> .
+    owl:equivalentClass <http://geo.linkeddata.es/ontology/Aguas_Estancadas> .
 

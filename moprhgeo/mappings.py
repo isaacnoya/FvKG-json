@@ -30,19 +30,19 @@ def getMappings(mapping_file):
     SELECT ?subject ?predicate ?object ?reference ?url ?iterator ?nextPage ?filterx ?projectx ?limit ?nElements WHERE {
         ?tm a rml:TriplesMap ;
             rml:predicateObjectMap ?pom .
+        ?tm rml:logicalSource ?ls .
+        ?ls rml:referenceFormulation rml:HTTPAPI .
         OPTIONAL {
-            ?tm rml:logicalSource ?ls .
-            OPTIONAL {
-                ?ls rml:source ?source .
-                OPTIONAL { ?source htv:absoluteURI ?url . }
-            }
-            OPTIONAL { ?ls rml:iterator ?iterator . }
-            OPTIONAL { ?ls void:nextPage ?nextPage . }
-            OPTIONAL {
-                ?ls void:limit ?limit .
-                ?ls void:nElements ?nElements .
-            }
+            ?ls rml:source ?source .
+            OPTIONAL { ?source htv:absoluteURI ?url . }
+        }
+        OPTIONAL { ?ls rml:iterator ?iterator . }
+        OPTIONAL { ?ls void:nextPage ?nextPage . }
+        OPTIONAL {
+            ?ls void:limit ?limit .
+            ?ls void:nElements ?nElements .
         } .
+            
         {
             ?pom rml:predicate ?predicate .
         } UNION {
@@ -146,7 +146,48 @@ def getMappings(mapping_file):
         if parentURL is not None:
             vb.setParentTriplesMapInfo(childJoinCond, parentJoinCond, parentURL, parentIterator)
         mrules.append(vb) if vb.o is not None else None
-                                         
+
+    mappingCoverageQuery = prepareQuery("""
+    PREFIX rml: <http://w3id.org/rml/>
+    PREFIX htv: <http://www.w3.org/2011/http#>
+    PREFIX void: <http://rdfs.org/ns/void#> 
+    PREFIX ogc: <http://www.ogc.org/>
+    PREFIX rdfs: <https://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    SELECT ?s ?p ?o ?url ?filterx WHERE {
+        ?tm a rml:TriplesMap ;
+            rml:logicalSource ?ls ;
+            rml:predicateObjectMap ?pom .
+        ?ls rml:referenceFormulation rml:CoverageForm ;
+            rml:source ?source .
+        ?source htv:absoluteURI ?url .
+                                        
+        ?pom rml:predicate ?p .
+                                        
+        OPTIONAL {
+            ?pom rml:objectMap ?om .
+            ?om void:filterx ?filterx .
+        }
+        OPTIONAL {
+            { ?pom rml:object ?object }
+            UNION {
+                ?pom rml:objectMap ?omObject .
+                ?omObject rml:constant ?object .
+            }
+            UNION {
+                ?pom rml:objectMap ?omObject .
+                ?omObject rml:template ?object .
+            }
+        } .
+        ?tm rml:subjectMap ?sm .
+        ?sm rml:template ?s .
+    }
+                                        
+
+    """)
+    for m in mappings.query(mappingCoverageQuery):
+        s, p, o, url, filterx = m
+        vb = VirtualMapping(s, p, o, "", url, filterx=filterx, coverage=True)
+        mrules.append(vb) if vb.o is not None else None
     return mrules
 
 def getMappingsFromTxT(file_name):

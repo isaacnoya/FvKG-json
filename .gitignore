@@ -13,6 +13,7 @@ pruebas.ipynb
 tfm.txt
 OGCmappingGenerator/.env
 moprhgeo/mappings.txt
+moprhgeo/output.ttl
 .vscode/*
 .vscode
 .DS_Store

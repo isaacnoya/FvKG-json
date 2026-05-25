@@ -15,7 +15,7 @@ from rdflib.plugins.sparql.evalutils import (
 )
 
 from virtual import getStarShapedSubqueries, candidateMappingSelection, materializeVirtualMappingGroup, getMappingsFromBGP, evalVirtualBGP, getMappingGroups, orderTriplesStatic
-from mappings import getMappingsFromTxT, getMappingsFromFolder
+from mappings import getMappingsFromTxT, getMappingsFromFolder, getMappings
 from classes import TriplePattern, MappingContext, geoBindings
 from geoFunctions import GEOF_SFCONTAINS, geof_sfContains, GEOF_DISTANCE, geof_distance, GEOF_WITHIN, geof_within, GEOF_INTESECT, geof_intersects, GEOF_OVERLAPS, geof_overlaps, GEOF_CROSSES, geof_crosses
 
@@ -45,6 +45,7 @@ mappings = getMappingsFromFolder("/Users/kekojohns/Library/CloudStorage/OneDrive
     -El order tiene que ponderar el numero de elementos de la coleccion ?
     -Se podra paralelizar la unificacion?
     -Pushdown de los filter sobre valores literales para que ya ni se metan en el triple store.
+    -Usar caches
 
 
 +++ Query-Specific Pruning of RML Mappings:
@@ -277,17 +278,27 @@ if __name__ == "__main__":
     PREFIX dbo: <http://dbpedia.org/ontology/>
     PREFIX geolinkeddata: <http://geo.linkeddata.es/ontology/> 
 
-    SELECT ?obsValue ?year WHERE {
-        ?o a qb:Observation ;
-            sdmx-measure:obsValue ?obsValue ;
-            qb:slice ?slice ;
-            sdmx-dimension:year ?year .
+    SELECT ?t WHERE {
+        ?y a ogc:namedplace ;
+            ogc:etiqueta "Ciudad de los Ángeles" ;
+            ogc:tipo "Barrio" ;
+            geo:hasGeometry ?gy .
+
+        ?t a ogc:copernicus_wcs ;
+            ogc:coverage "NATURAL-COLOR" ;
+            geo:hasGeometry ?gt .
+
+        FILTER(geof:sfIntersects(?gt, ?gy))
     }
     """
 
-    #qres = g.query(query)
-    qres = g.query(Path("/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/casoDeUso/queries/q04.rq").read_text(encoding="utf-8"))
+    qres = g.query(query)
+    #qres = g.query(Path("/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/casoDeUso/queries/q04.rq").read_text(encoding="utf-8"))
+    g_out = rdflib.Graph()
 
     for r in qres:
+        #g_out.add(r)
         print(r)
         pass
+
+    #g_out.serialize("output.ttl", format="turtle")

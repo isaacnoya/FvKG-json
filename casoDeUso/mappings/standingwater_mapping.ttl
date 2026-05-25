@@ -17,142 +17,142 @@ ogc:FuenteAPI_standingwater htv:absoluteURI "https://api-features.idee.es/collec
 
 ogc:standingwaterTriplesMap a rml:TriplesMap ;
     rml:logicalSource ogc:LogicalSource_standingwater ;
-    rml:predicateObjectMap [ rml:objectMap [ void:filterx "fecha_alta=@{1}" ;
-                    rml:datatype xsd:string ;
-                    rml:reference "properties.fecha_alta" ] ;
-            rml:predicate ogc:fecha_alta ],
-        [ rml:objectMap [ void:filterx "origen=@{1}" ;
-                    rml:datatype xsd:string ;
-                    rml:reference "properties.origen" ] ;
-            rml:predicate ogc:origen ],
-        [ rml:objectMap [ void:filterx "nombre=@{1}" ;
-                    rml:datatype xsd:string ;
-                    rml:reference "properties.nombre" ] ;
-            rml:predicate ogc:nombre ],
-        [ rml:objectMap [ void:filterx "hydroid_localid=@{1}" ;
+    rml:predicateObjectMap [ rml:objectMap [ void:filterx "hydroid_localid=@{1}" ;
                     rml:datatype xsd:string ;
                     rml:reference "properties.hydroid_localid" ] ;
             rml:predicate ogc:hydroid_localid ],
-        [ rml:objectMap [ void:filterx "drainsbasin=@{1}" ;
-                    rml:datatype xsd:string ;
-                    rml:reference "properties.drainsbasin" ] ;
-            rml:predicate ogc:drainsbasin ],
-        [ rml:objectMap [ void:filterx "persist=@{1}" ;
-                    rml:datatype xsd:string ;
-                    rml:reference "properties.persist" ] ;
-            rml:predicate ogc:persist ],
-        [ rml:objectMap [ void:filterx "script=@{1}" ;
-                    rml:datatype xsd:string ;
-                    rml:reference "properties.script" ] ;
-            rml:predicate ogc:script ],
-        [ rml:objectMap [ void:filterx "origen_zd=@{1}" ;
-                    rml:datatype xsd:string ;
-                    rml:reference "properties.origen_zd" ] ;
-            rml:predicate ogc:origen_zd ],
-        [ rml:objectMap [ void:filterx "inspireid_localid=@{1}" ;
-                    rml:datatype xsd:string ;
-                    rml:reference "properties.inspireid_localid" ] ;
-            rml:predicate ogc:inspireid_localid ],
-        [ rml:objectMap [ void:filterx "persistd=@{1}" ;
-                    rml:datatype xsd:string ;
-                    rml:reference "properties.persistd" ] ;
-            rml:predicate ogc:persistd ],
-        [ rml:objectMap [ void:filterx "resolucion=@{1}" ;
-                    rml:datatype xsd:integer ;
-                    rml:reference "properties.resolucion" ] ;
-            rml:predicate ogc:resolucion ],
-        [ rml:objectMap [ void:filterx "nivel_agua=@{1}" ;
-                    rml:datatype xsd:string ;
-                    rml:reference "properties.nivel_agua" ] ;
-            rml:predicate ogc:nivel_agua ],
-        [ rml:objectMap [ void:filterx "fuented=@{1}" ;
-                    rml:datatype xsd:string ;
-                    rml:reference "properties.fuented" ] ;
-            rml:predicate geolinkeddata:transmite ],
-        [ rml:objectMap [ void:filterx "nativeness=@{1}" ;
-                    rml:datatype xsd:string ;
-                    rml:reference "properties.nativeness" ] ;
-            rml:predicate ogc:nativeness ],
-        [ rml:objectMap [ void:filterx "origend=@{1}" ;
-                    rml:datatype xsd:string ;
-                    rml:reference "properties.origend" ] ;
-            rml:predicate ogc:origend ],
-        [ rml:objectMap [ void:filterx "nil_elevacion=@{1}" ;
-                    rml:datatype xsd:string ;
-                    rml:reference "properties.nil_elevacion" ] ;
-            rml:predicate ogc:nil_elevacion ],
-        [ rml:objectMap [ void:filterx "nilreason_elevacion=@{1}" ;
-                    rml:datatype xsd:string ;
-                    rml:reference "properties.nilreason_elevacion" ] ;
-            rml:predicate ogc:nilreason_elevacion ],
-        [ rml:objectMap [ void:filterx "tipo_aestd=@{1}" ;
-                    rml:datatype xsd:string ;
-                    rml:reference "properties.tipo_aestd" ] ;
-            rml:predicate ogc:tipo_aestd ],
-        [ rml:objectMap [ void:filterx "origen_z=@{1}" ;
-                    rml:datatype xsd:string ;
-                    rml:reference "properties.origen_z" ] ;
-            rml:predicate ogc:origen_z ],
-        [ rml:objectMap [ void:filterx "bbox=@{1}" ;
-                    rml:datatype geo:geoJSONLiteral ;
-                    rml:reference "geometry" ] ;
-            rml:predicate geo:hasGeometry ],
-        [ rml:objectMap [ void:filterx "nil_nombre=@{1}" ;
-                    rml:datatype xsd:boolean ;
-                    rml:reference "properties.nil_nombre" ] ;
-            rml:predicate ogc:nil_nombre ],
-        [ rml:objectMap [ void:filterx "fuente=@{1}" ;
-                    rml:datatype xsd:string ;
-                    rml:reference "properties.fuente" ] ;
-            rml:predicate geolinkeddata:transmite ],
-        [ rml:objectMap [ void:filterx "nivel_aguad=@{1}" ;
-                    rml:datatype xsd:string ;
-                    rml:reference "properties.nivel_aguad" ] ;
-            rml:predicate ogc:nivel_aguad ],
-        [ rml:objectMap [ void:filterx "id_demarc=@{1}" ;
-                    rml:datatype xsd:string ;
-                    rml:reference "properties.id_demarc" ] ;
-            rml:predicate ogc:id_demarc ],
-        [ rml:objectMap [ rml:datatype xsd:string ;
-                    rml:reference "geometry_name" ] ;
-            rml:predicate ogc:geometryName ],
-        [ rml:objectMap [ void:filterx "nil_varios=@{1}" ;
-                    rml:datatype xsd:boolean ;
-                    rml:reference "properties.nil_varios" ] ;
-            rml:predicate ogc:nil_varios ],
-        [ rml:objectMap [ void:filterx "id_demarcd=@{1}" ;
-                    rml:datatype xsd:string ;
-                    rml:reference "properties.id_demarcd" ] ;
-            rml:predicate ogc:id_demarcd ],
-        [ rml:objectMap [ void:filterx "nilreason_varios=@{1}" ;
-                    rml:datatype xsd:string ;
-                    rml:reference "properties.nilreason_varios" ] ;
-            rml:predicate ogc:nilreason_varios ],
-        [ rml:objectMap [ void:filterx "elevacion=@{1}" ;
-                    rml:datatype xsd:float ;
-                    rml:reference "properties.elevacion" ] ;
-            rml:predicate ogc:elevacion ],
-        [ rml:objectMap [ void:filterx "tipo_aest=@{1}" ;
-                    rml:datatype xsd:string ;
-                    rml:reference "properties.tipo_aest" ] ;
-            rml:predicate ogc:tipo_aest ],
         [ rml:objectMap [ void:filterx "nilreason_nombre=@{1}" ;
                     rml:datatype xsd:string ;
                     rml:reference "properties.nilreason_nombre" ] ;
             rml:predicate ogc:nilreason_nombre ],
-        [ rml:objectMap [ void:filterx "geometry=@{1}" ;
+        [ rml:objectMap [ void:filterx "elevacion=@{1}" ;
+                    rml:datatype xsd:float ;
+                    rml:reference "properties.elevacion" ] ;
+            rml:predicate geolinkeddata:altitud ],
+        [ rml:objectMap [ void:filterx "nivel_agua=@{1}" ;
                     rml:datatype xsd:string ;
-                    rml:reference "properties.geometry" ] ;
-            rml:predicate <http://geo.linkeddata.es/ontology/hydro-ontology.owl#geometría> ],
+                    rml:reference "properties.nivel_agua" ] ;
+            rml:predicate ogc:nivel_agua ],
+        [ rml:objectMap [ void:filterx "nil_elevacion=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.nil_elevacion" ] ;
+            rml:predicate ogc:nil_elevacion ],
+        [ rml:objectMap [ void:filterx "id_demarcd=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.id_demarcd" ] ;
+            rml:predicate ogc:id_demarcd ],
+        [ rml:objectMap [ void:filterx "nilreason_elevacion=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.nilreason_elevacion" ] ;
+            rml:predicate ogc:nilreason_elevacion ],
+        [ rml:objectMap [ void:filterx "nil_nombre=@{1}" ;
+                    rml:datatype xsd:boolean ;
+                    rml:reference "properties.nil_nombre" ] ;
+            rml:predicate ogc:nil_nombre ],
+        [ rml:objectMap [ void:filterx "origen_z=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.origen_z" ] ;
+            rml:predicate ogc:origen_z ],
+        [ rml:objectMap [ void:filterx "origend=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.origend" ] ;
+            rml:predicate geolinkeddata:origina ],
+        [ rml:objectMap [ void:filterx "bbox=@{1}" ;
+                    rml:datatype geo:geoJSONLiteral ;
+                    rml:reference "geometry" ] ;
+            rml:predicate geo:hasGeometry ],
+        [ rml:objectMap [ void:filterx "nivel_aguad=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.nivel_aguad" ] ;
+            rml:predicate ogc:nivel_aguad ],
+        [ rml:objectMap [ void:filterx "origen=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.origen" ] ;
+            rml:predicate geolinkeddata:origina ],
+        [ rml:objectMap [ void:filterx "fecha_alta=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.fecha_alta" ] ;
+            rml:predicate ogc:fecha_alta ],
+        [ rml:objectMap [ void:filterx "inspireid_localid=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.inspireid_localid" ] ;
+            rml:predicate ogc:inspireid_localid ],
+        [ rml:objectMap [ void:filterx "tipo_aest=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.tipo_aest" ] ;
+            rml:predicate ogc:tipo_aest ],
+        [ rml:objectMap [ void:filterx "nombre=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.nombre" ] ;
+            rml:predicate ogc:nombre ],
+        [ rml:objectMap [ void:filterx "script=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.script" ] ;
+            rml:predicate ogc:script ],
+        [ rml:objectMap [ void:filterx "nilreason_varios=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.nilreason_varios" ] ;
+            rml:predicate ogc:nilreason_varios ],
+        [ rml:objectMap [ void:filterx "tipo_aestd=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.tipo_aestd" ] ;
+            rml:predicate ogc:tipo_aestd ],
+        [ rml:objectMap [ void:filterx "fuente=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.fuente" ] ;
+            rml:predicate ogc:fuente ],
+        [ rml:objectMap [ void:filterx "drainsbasin=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.drainsbasin" ] ;
+            rml:predicate ogc:drainsbasin ],
         [ rml:objectMap [ void:filterx "marea=@{1}" ;
                     rml:datatype xsd:boolean ;
                     rml:reference "properties.marea" ] ;
             rml:predicate ogc:marea ],
+        [ rml:objectMap [ void:filterx "id_demarc=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.id_demarc" ] ;
+            rml:predicate ogc:id_demarc ],
+        [ rml:objectMap [ void:filterx "nativeness=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.nativeness" ] ;
+            rml:predicate geolinkeddata:origina ],
+        [ rml:objectMap [ void:filterx "origen_zd=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.origen_zd" ] ;
+            rml:predicate ogc:origen_zd ],
+        [ rml:objectMap [ void:filterx "persistd=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.persistd" ] ;
+            rml:predicate ogc:persistd ],
+        [ rml:objectMap [ void:filterx "persist=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.persist" ] ;
+            rml:predicate ogc:persist ],
+        [ rml:objectMap [ void:filterx "resolucion=@{1}" ;
+                    rml:datatype xsd:integer ;
+                    rml:reference "properties.resolucion" ] ;
+            rml:predicate ogc:resolucion ],
+        [ rml:objectMap [ void:filterx "fuented=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.fuented" ] ;
+            rml:predicate ogc:fuented ],
+        [ rml:objectMap [ void:filterx "nil_varios=@{1}" ;
+                    rml:datatype xsd:boolean ;
+                    rml:reference "properties.nil_varios" ] ;
+            rml:predicate ogc:nil_varios ],
+        [ rml:objectMap [ void:filterx "geometry=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.geometry" ] ;
+            rml:predicate <http://geo.linkeddata.es/ontology/hydro-ontology.owl#geometría> ],
+        [ rml:objectMap [ rml:datatype xsd:string ;
+                    rml:reference "geometry_name" ] ;
+            rml:predicate ogc:geometryName ],
         [ rml:objectMap [ void:filterx "area=@{1}" ;
                     rml:datatype xsd:float ;
                     rml:reference "properties.area" ] ;
             rml:predicate ogc:area ] ;
-    rml:subjectMap [ rml:class geolinkeddata:Surgencias ;
+    rml:subjectMap [ rml:class geolinkeddata:Aguas_Estancadas ;
             rml:template "https://api-features.idee.es/collections/standingwater/items/{id}" ] .
 
 ogc:LogicalSource_standingwater a rml:logicalSource ;

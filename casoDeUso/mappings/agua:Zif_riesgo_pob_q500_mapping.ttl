@@ -1,5 +1,4 @@
 @prefix geo: <http://www.opengis.net/ont/geosparql#> .
-@prefix geolinkeddata: <http://geo.linkeddata.es/ontology/> .
 @prefix htv: <http://www.w3.org/2011/http#> .
 @prefix ogc: <http://www.ogc.org/> .
 @prefix rml: <http://w3id.org/rml/> .
@@ -17,65 +16,65 @@
 
 <http://www.ogc.org/agua:Zif_riesgo_pob_q500TriplesMap> a rml:TriplesMap ;
     rml:logicalSource <http://www.ogc.org/LogicalSource_agua:Zif_riesgo_pob_q500> ;
-    rml:predicateObjectMap [ rml:objectMap [ void:filterx "bbox=@{1}" ;
-                    rml:datatype geo:geoJSONLiteral ;
-                    rml:reference "geometry" ] ;
-            rml:predicate geo:hasGeometry ],
+    rml:predicateObjectMap [ rml:objectMap [ void:filterx "nom_munici=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.nom_munici" ] ;
+            rml:predicate ogc:nom_munici ],
         [ rml:objectMap [ void:filterx "fecha=@{1}" ;
                     rml:datatype xsd:integer ;
                     rml:reference "properties.fecha" ] ;
             rml:predicate ogc:fecha ],
-        [ rml:objectMap [ void:filterx "objectid=@{1}" ;
-                    rml:datatype xsd:integer ;
-                    rml:reference "properties.objectid" ] ;
-            rml:predicate ogc:objectid ],
-        [ rml:objectMap [ void:filterx "superficie=@{1}" ;
-                    rml:datatype xsd:float ;
-                    rml:reference "properties.superficie" ] ;
-            rml:predicate ogc:superficie ],
-        [ rml:objectMap [ void:filterx "n_hab_muni=@{1}" ;
-                    rml:datatype xsd:float ;
-                    rml:reference "properties.n_hab_muni" ] ;
-            rml:predicate ogc:n_hab_muni ],
-        [ rml:objectMap [ void:filterx "nom_munici=@{1}" ;
-                    rml:datatype xsd:string ;
-                    rml:reference "properties.nom_munici" ] ;
-            rml:predicate ogc:nom_munici ],
-        [ rml:objectMap [ rml:datatype xsd:string ;
-                    rml:reference "geometry_name" ] ;
-            rml:predicate ogc:geometryName ],
         [ rml:objectMap [ void:filterx "id_poblaci=@{1}" ;
                     rml:datatype xsd:string ;
                     rml:reference "properties.id_poblaci" ] ;
             rml:predicate ogc:id_poblaci ],
-        [ rml:objectMap [ void:filterx "otras_cons=@{1}" ;
-                    rml:datatype xsd:string ;
-                    rml:reference "properties.otras_cons" ] ;
-            rml:predicate geolinkeddata:es_conectado_con ],
-        [ rml:objectMap [ void:filterx "num_afe_mu=@{1}" ;
-                    rml:datatype xsd:float ;
-                    rml:reference "properties.num_afe_mu" ] ;
-            rml:predicate ogc:num_afe_mu ],
-        [ rml:objectMap [ void:filterx "gdb_geomattr_data=@{1}" ;
-                    rml:datatype xsd:string ;
-                    rml:reference "properties.gdb_geomattr_data" ] ;
-            rml:predicate ogc:gdb_geomattr_data ],
-        [ rml:objectMap [ void:filterx "shape=@{1}" ;
-                    rml:datatype xsd:string ;
-                    rml:reference "properties.shape" ] ;
-            rml:predicate ogc:shape ],
-        [ rml:objectMap [ void:filterx "id_municip=@{1}" ;
-                    rml:datatype xsd:string ;
-                    rml:reference "properties.id_municip" ] ;
-            rml:predicate ogc:id_municip ],
+        [ rml:objectMap [ void:filterx "objectid=@{1}" ;
+                    rml:datatype xsd:integer ;
+                    rml:reference "properties.objectid" ] ;
+            rml:predicate ogc:objectid ],
         [ rml:objectMap [ void:filterx "num_afe_zi=@{1}" ;
                     rml:datatype xsd:float ;
                     rml:reference "properties.num_afe_zi" ] ;
             rml:predicate ogc:num_afe_zi ],
+        [ rml:objectMap [ void:filterx "bbox=@{1}" ;
+                    rml:datatype geo:geoJSONLiteral ;
+                    rml:reference "geometry" ] ;
+            rml:predicate geo:hasGeometry ],
+        [ rml:objectMap [ void:filterx "otras_cons=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.otras_cons" ] ;
+            rml:predicate ogc:otras_cons ],
         [ rml:objectMap [ void:filterx "cod_arpsi=@{1}" ;
                     rml:datatype xsd:string ;
                     rml:reference "properties.cod_arpsi" ] ;
-            rml:predicate ogc:cod_arpsi ] ;
+            rml:predicate ogc:cod_arpsi ],
+        [ rml:objectMap [ void:filterx "id_municip=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.id_municip" ] ;
+            rml:predicate ogc:id_municip ],
+        [ rml:objectMap [ void:filterx "gdb_geomattr_data=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.gdb_geomattr_data" ] ;
+            rml:predicate ogc:gdb_geomattr_data ],
+        [ rml:objectMap [ void:filterx "num_afe_mu=@{1}" ;
+                    rml:datatype xsd:float ;
+                    rml:reference "properties.num_afe_mu" ] ;
+            rml:predicate ogc:num_afe_mu ],
+        [ rml:objectMap [ rml:datatype xsd:string ;
+                    rml:reference "geometry_name" ] ;
+            rml:predicate ogc:geometryName ],
+        [ rml:objectMap [ void:filterx "superficie=@{1}" ;
+                    rml:datatype xsd:float ;
+                    rml:reference "properties.superficie" ] ;
+            rml:predicate ogc:superficie ],
+        [ rml:objectMap [ void:filterx "shape=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.shape" ] ;
+            rml:predicate ogc:shape ],
+        [ rml:objectMap [ void:filterx "n_hab_muni=@{1}" ;
+                    rml:datatype xsd:float ;
+                    rml:reference "properties.n_hab_muni" ] ;
+            rml:predicate ogc:n_hab_muni ] ;
     rml:subjectMap [ rml:class <http://www.ogc.org/agua:Zif_riesgo_pob_q500> ;
             rml:template "https://wmts.mapama.gob.es/sig-api/ogc/features/v1/collections/agua:Zif_riesgo_pob_q500/items/{id}" ] .
 

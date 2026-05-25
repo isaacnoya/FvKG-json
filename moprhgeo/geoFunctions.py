@@ -63,7 +63,6 @@ def parse_geom(g):
 
 
 def parse_geom_and_crs(g):
-
     g = g.toPython() if type(g) is not str else g
     crs = None
 
@@ -260,3 +259,10 @@ def parse_bbox(value):
     if min_x >= max_x or min_y >= max_y:
         return None
     return (min_x, min_y, max_x, max_y)
+
+
+def bboxToGeometry(bbox):
+    if bbox is None:
+        return None
+    min_x, min_y, max_x, max_y = bbox
+    return Literal(f"POLYGON(({min_x} {min_y}, {min_x} {max_y}, {max_x} {max_y}, {max_x} {min_y}, {min_x} {min_y}))")
