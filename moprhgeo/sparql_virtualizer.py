@@ -25,17 +25,12 @@ EX = Namespace("http://example.com/")
 mappings = getMappingsFromFolder("/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/casoDeUso/mappings")
 """
 #TODO:  
-    -Mapping Generator:
-        Ajustar bien threshold
-        Mirar que con propiedades funciones bien
-        Hacerlo mas manual? si.
     -PRUEBAS:
+        0. Comparación de la selección de mappings
         1. Baseline --> getMappings por star-shaped y materializar
         2. MorphGEO --> getMappings por star-shaped y materializar + optimizaciones
         
         -FIXEAR que mi getMappings no pilla bien los parentTripleMaps de GFTS-Madrid
-        -Sobre las optimizaciones geoespaciales en los FILTER + bindings.
-            -Comparar tiempos con y sin optimizaciones.
 
 #POSIBLES MEJORAS:
     -Hacer un selectNextSubQuery dinamico o
@@ -278,18 +273,25 @@ if __name__ == "__main__":
     PREFIX dbo: <http://dbpedia.org/ontology/>
     PREFIX geolinkeddata: <http://geo.linkeddata.es/ontology/> 
 
-    SELECT ?t WHERE {
+    SELECT ?ny ?gt WHERE {
+        ?g a <http://example.org/ontology/AU_UnidadesAdministrativas> ;
+            ogc:nameunit "Santiago de Compostela" ;
+            ogc:nationallevelname "Municipio" ;
+            ogc:country "ES" ;
+            geo:hasGeometry ?gg .
+
         ?y a ogc:namedplace ;
-            ogc:etiqueta "Ciudad de los Ángeles" ;
+            ogc:etiqueta ?ny ;
             ogc:tipo "Barrio" ;
             geo:hasGeometry ?gy .
+        FILTER(geof:sfContains(?gg, ?gy))
 
         ?t a ogc:copernicus_wcs ;
             ogc:coverage "NATURAL-COLOR" ;
             geo:hasGeometry ?gt .
-
         FILTER(geof:sfIntersects(?gt, ?gy))
-    }
+    } 
+
     """
 
     qres = g.query(query)

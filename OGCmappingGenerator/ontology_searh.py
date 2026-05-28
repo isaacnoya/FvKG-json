@@ -21,8 +21,6 @@ def preprocess_local_search_text(text):
     text = str(text)
     text = re.sub(r"(?<=[a-z0-9])(?=[A-Z])", " ", text)
     text = re.sub(r"[_\-.:/\\]+", " ", text)
-    text = re.sub(r"\b(gdb|geomattr|attr|data|tbl|tmp|id|pk|fk)\b", " ", text, flags=re.IGNORECASE)
-    text = re.sub(r"\d+", " ", text)
     text = re.sub(r"\s+", " ", text).strip()
     return text
     
@@ -118,6 +116,30 @@ def _compact_graph_entities(ontology, max_entities=120):
     return compact_entities
 
 
+def _compact_graph_properties(ontology, max_properties=100):
+    """Build a compact property list from an rdflib graph for extension proposals."""
+    properties = set()
+    for property_type in (RDF.Property, OWL.ObjectProperty, OWL.DatatypeProperty):
+        properties.update(ontology.subjects(RDF.type, property_type))
+    properties.update(ontology.subjects(RDFS.subPropertyOf, None))
+    properties.update(ontology.objects(None, RDFS.subPropertyOf))
+
+    compact_properties = []
+    for property_uri in properties:
+        if isinstance(property_uri, rdflib.BNode):
+            continue
+        label = ontology.value(property_uri, RDFS.label)
+        comment = ontology.value(property_uri, RDFS.comment)
+        compact_properties.append({
+            "iri": str(property_uri),
+            "label": str(label) if label else "",
+            "comment": str(comment) if comment else ""
+        })
+        if len(compact_properties) >= max_properties:
+            break
+    return compact_properties
+
+
 def _safe_fragment(term):
     fragment = "".join(char if char.isalnum() else "_" for char in term.strip())
     fragment = "_".join(part for part in fragment.split("_") if part)
@@ -185,6 +207,74 @@ def llm_propose(ontology, term, type="class", description="", model=None, prefix
             return respuesta_json
         else:
             return None
+
+    except Exception as e:
+        print(f"Error con Groq: {e}")
+        return None
+
+
+def llm_propose_property(ontology, term, description="", datatype="", domain_iri="", model=None, prefix="http://example.org/ontology#", interactive=True):
+    api_key = os.getenv("GROQ_API_KEY")
+    client = Groq(api_key=api_key)
+    existing_properties = _compact_graph_properties(ontology)
+    default_iri = f"{prefix}{_safe_fragment(term)}"
+    prompt_sistema = f"""
+    You are an expert in Semantic Web, RDFS, and OWL ontology engineering.
+    The user has a first draft ontology and needs to represent a data property from an OGC API collection.
+    If there is no suitable existing property, propose a conservative ontology extension for this property.
+    Prefer attaching the new property with rdfs:subPropertyOf to the most specific compatible property from the provided list.
+    Respond ONLY in JSON format with this structure:
+    {{
+        "iri": "proposed property IRI",
+        "parent_iri": "existing property IRI or empty string",
+        "label": "{term}",
+        "comment": "{description}"
+    }}
+    The parent_iri value, when present, MUST be one of the existing property IRIs provided by the user.
+    """
+    prompt_usuario = json.dumps({
+        "task": "Propose an ontology property extension for an unaligned OGC API property.",
+        "term": term,
+        "description": description,
+        "datatype": datatype,
+        "domain_iri": domain_iri,
+        "existing_properties": existing_properties
+    }, ensure_ascii=False)
+    try:
+        chat_completion = client.chat.completions.create(
+            messages=[
+                {"role": "system", "content": prompt_sistema},
+                {"role": "user", "content": prompt_usuario}
+            ],
+            model=model,
+            temperature=0.1,
+            response_format={"type": "json_object"}
+        )
+
+        respuesta_json = json.loads(chat_completion.choices[0].message.content)
+        respuesta_json.setdefault("iri", default_iri)
+        respuesta_json.setdefault("label", term)
+        respuesta_json.setdefault("comment", description)
+        respuesta_json.setdefault("parent_iri", "")
+
+        parent_iri = respuesta_json.get("parent_iri")
+        valid_parent_iris = {p["iri"] for p in existing_properties}
+        if parent_iri and parent_iri not in valid_parent_iris:
+            print(f"Parent property IRI proposed by Groq is not in the ontology: {parent_iri}")
+            print("Continuing without parent property")
+            respuesta_json["parent_iri"] = ""
+
+        if not interactive:
+            return None
+
+        print(f"Proposed property IRI: {respuesta_json.get('iri', '')}")
+        print(f"Proposed parent property: {respuesta_json.get('parent_iri', '')}")
+        print(f"Proposed label: {respuesta_json.get('label', '')}")
+        print(f"Proposed comment: {respuesta_json.get('comment', '')}")
+        user_input = input("Do you want to add this property extension to the ontology? (yes/no): ").strip().lower()
+        if user_input in {"yes", "y", "si", "sí", "s"}:
+            return respuesta_json
+        return None
 
     except Exception as e:
         print(f"Error con Groq: {e}")
@@ -395,7 +485,7 @@ class VectorialOntologyMatcher:
     def search_top(self, name, description, top_k=5, threshold=0.7):
         """Busca en el espacio vectorial y devuelve hasta top_k candidatos."""
         search_name = preprocess_local_search_text(name)
-        search_description = preprocess_local_search_text(description)
+        search_description = description
         query_text = f"{search_name}: {search_description}"
         query_embedding = self.model.encode(query_text, convert_to_tensor=True)
 

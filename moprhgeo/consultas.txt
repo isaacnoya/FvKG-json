@@ -422,6 +422,17 @@ SELECT ?ny ?gy WHERE {
     FILTER(geof:sfContains(?gg, ?gy))
 }
 
+SELECT ?t WHERE {
+    ?y a ogc:namedplace ;
+        ogc:etiqueta "Ciudad de los Ángeles" ;
+        ogc:tipo "Barrio" ;
+        geo:hasGeometry ?gy .
+    ?t a ogc:copernicus_wcs ;
+        ogc:coverage "NATURAL-COLOR" ;
+        geo:hasGeometry ?gt .
+    FILTER(geof:sfIntersects(?gt, ?gy))
+}
+
 
 /Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/ineAPI/68065_det0_tip_mappings.rml.ttl
 /Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/mapama-features/mappings/agua:estado_masas_aguasub_mapping.ttl

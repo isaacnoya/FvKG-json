@@ -20,50 +20,50 @@ ogc:administrativeunitTriplesMap a rml:TriplesMap ;
                     rml:datatype xsd:string ;
                     rml:reference "properties.nationallevel" ] ;
             rml:predicate ogc:nationallevel ],
-        [ rml:objectMap [ void:filterx "gid=@{1}" ;
-                    rml:datatype xsd:integer ;
-                    rml:reference "properties.gid" ] ;
-            rml:predicate ogc:gid ],
-        [ rml:objectMap [ void:filterx "codnut1=@{1}" ;
-                    rml:datatype xsd:string ;
-                    rml:reference "properties.codnut1" ] ;
-            rml:predicate ogc:codnut1 ],
-        [ rml:objectMap [ void:filterx "nameunit=@{1}" ;
-                    rml:datatype xsd:string ;
-                    rml:reference "properties.nameunit" ] ;
-            rml:predicate ogc:nameunit ],
-        [ rml:objectMap [ void:filterx "nationallevelname=@{1}" ;
-                    rml:datatype xsd:string ;
-                    rml:reference "properties.nationallevelname" ] ;
-            rml:predicate ogc:nationallevelname ],
-        [ rml:objectMap [ rml:datatype xsd:string ;
-                    rml:reference "geometry_name" ] ;
-            rml:predicate ogc:geometryName ],
-        [ rml:objectMap [ void:filterx "nationalcode=@{1}" ;
-                    rml:datatype xsd:string ;
-                    rml:reference "properties.nationalcode" ] ;
-            rml:predicate ogc:nationalcode ],
         [ rml:objectMap [ void:filterx "codnut2=@{1}" ;
                     rml:datatype xsd:string ;
                     rml:reference "properties.codnut2" ] ;
             rml:predicate ogc:codnut2 ],
+        [ rml:objectMap [ void:filterx "nameunit=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.nameunit" ] ;
+            rml:predicate ogc:nameunit ],
         [ rml:objectMap [ void:filterx "bbox=@{1}" ;
                     rml:datatype geo:geoJSONLiteral ;
                     rml:reference "geometry" ] ;
             rml:predicate geo:hasGeometry ],
-        [ rml:objectMap [ void:filterx "geometry=@{1}" ;
+        [ rml:objectMap [ void:filterx "codnut1=@{1}" ;
                     rml:datatype xsd:string ;
-                    rml:reference "properties.geometry" ] ;
-            rml:predicate <http://geo.linkeddata.es/ontology/hydro-ontology.owl#geometría> ],
+                    rml:reference "properties.codnut1" ] ;
+            rml:predicate ogc:codnut1 ],
+        [ rml:objectMap [ void:filterx "gid=@{1}" ;
+                    rml:datatype xsd:integer ;
+                    rml:reference "properties.gid" ] ;
+            rml:predicate ogc:gid ],
+        [ rml:objectMap [ rml:datatype xsd:string ;
+                    rml:reference "geometry_name" ] ;
+            rml:predicate ogc:geometryName ],
         [ rml:objectMap [ void:filterx "country=@{1}" ;
                     rml:datatype xsd:string ;
                     rml:reference "properties.country" ] ;
             rml:predicate ogc:country ],
+        [ rml:objectMap [ void:filterx "nationalcode=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.nationalcode" ] ;
+            rml:predicate ogc:nationalcode ],
+        [ rml:objectMap [ void:filterx "geometry=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.geometry" ] ;
+            rml:predicate <http://geo.linkeddata.es/ontology/hydro-ontology.owl#geometría> ],
+        [ rml:objectMap [ void:filterx "nationallevelname=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.nationallevelname" ] ;
+            rml:predicate ogc:nationallevelname ],
         [ rml:objectMap [ void:filterx "codnut3=@{1}" ;
                     rml:datatype xsd:string ;
                     rml:reference "properties.codnut3" ] ;
             rml:predicate ogc:codnut3 ] ;
-    rml:subjectMap [ rml:class ogc:administrativeunit ;
+    rml:subjectMap [ rml:class <http://example.org/ontology/AU_UnidadesAdministrativas> ;
             rml:template "https://api-features.ign.es/collections/administrativeunit/items/{id}" ] .
 
 ogc:LogicalSource_administrativeunit a rml:logicalSource ;

@@ -6,7 +6,7 @@ from rdflib import Namespace, Literal, BNode, URIRef
 import os
 import tqdm
 from collections import defaultdict
-from ontology_searh import VectorialOntologyMatcher, searchNotLocal, llm_propose, llm_propose_axiom
+from ontology_searh import VectorialOntologyMatcher, searchNotLocal, llm_propose, llm_propose_axiom, llm_propose_property
 
 EX = Namespace("http://example.com/")
 HTV = Namespace("http://www.w3.org/2011/http#")
@@ -101,7 +101,12 @@ class AlignmentReviewer:
     def choose_local(self, term, description, entity_type, oe):
         if not oe:
             return None
-        matches = oe.search_top(term, description or "", top_k=self.local_top_k, threshold=None)
+        matches = oe.search_top(term, description or "", top_k=self.local_top_k * 3, threshold=None)
+        if entity_type == "property":
+            matches = [match for match in matches if "Propiedad" in match["type"]]
+        elif entity_type == "class":
+            matches = [match for match in matches if match["type"] == "Clase"]
+        matches = matches[:self.local_top_k]
         if not matches:
             return None
         print(f"\nLocal ontology matches for {entity_type} '{term}':")
@@ -122,8 +127,6 @@ class AlignmentReviewer:
             if not answer or answer == "0":
                 return None
             if answer.isdigit() and 1 <= int(answer) <= len(matches):
-                if self.stats:
-                    self.stats.count_alignment(entity_type, "local")
                 return URIRef(matches[int(answer) - 1]["iri"])
             print(f"Please enter a number between 1 and {len(matches)}, or 0 to skip.")
 
@@ -133,6 +136,8 @@ class AlignmentReviewer:
         
         local = self.choose_local(term, description, entity_type, oe)
         if local:
+            if self.stats:
+                self.stats.count_alignment(entity_type, "local")
             return local
         
         if search_not_local:
@@ -168,22 +173,10 @@ class Collection:
         ret = ret[0] if ret else {}
         l = []
         for i, v in ret.items():
-            if self.stats:
-                self.stats.count_entity("property")
-            equivalentClass = None
-            if not self.flag_not_align:
-                equivalentClass = self.reviewer.align(
-                    i,
-                    "",
-                    "property",
-                    oe=self.oe,
-                    search_not_local=False,
-                    model=self.model
-                )
             l.append({
                 "title": i,
                 "type": v.get("type", "string"),   
-                "equivalentClass": URIRef(equivalentClass) if equivalentClass else None
+                "equivalentClass": None
             })
         return l
     
@@ -398,6 +391,132 @@ def review_llm_axioms(ontology, model=None, interactive=True, stats=None):
             print("Please answer accept, deny, or finish.")
 
 
+def _property_description(occurrences):
+    first_collection, first_prop = occurrences[0]
+    collection_titles = ", ".join(c.title for c, _ in occurrences[:5])
+    parts = [f"Property used by collection(s): {collection_titles}."]
+    if len(occurrences) > 5:
+        parts.append(f"And {len(occurrences) - 5} more collection(s).")
+    if first_collection.description:
+        parts.append(first_collection.description)
+    parts.append(f"Datatype: {first_prop['type']}.")
+    return " ".join(parts)
+
+
+def _property_title_from_ontology(ontology, property_uri):
+    label = ontology.value(property_uri, RDFS.label)
+    if label:
+        return str(label)
+    return str(property_uri).rstrip("/#").split("/")[-1].split("#")[-1]
+
+
+def _collection_properties_by_ontology_uri(collections):
+    properties_by_uri = defaultdict(list)
+    for c in collections:
+        if c.flag_not_align:
+            continue
+        for prop in c.properties:
+            properties_by_uri[URIRef(OGC[prop["title"]])].append((c, prop))
+    return properties_by_uri
+
+
+def _datatype_uri(prop_type):
+    return XSD["float"] if prop_type == "number" else XSD[prop_type]
+
+
+def _add_property_alignment(ontology, collection, prop, aligned_uri, stats=None, source=None):
+    local_property_uri = OGC[prop["title"]]
+    aligned_uri = URIRef(aligned_uri)
+    class_uri = OGC[collection.id]
+
+    ontology.add((local_property_uri, OWL.equivalentProperty, aligned_uri))
+    ontology.add((aligned_uri, RDF.type, RDF.Property))
+    ontology.add((aligned_uri, RDFS.label, Literal(prop["title"])))
+    ontology.add((aligned_uri, RDFS.range, _datatype_uri(prop["type"])))
+    ontology.add((aligned_uri, RDFS.domain, class_uri))
+    prop["equivalentClass"] = aligned_uri
+    if stats and source:
+        stats.count_alignment("property", source)
+
+
+def _add_property_extension(ontology, collection, prop, proposal, stats=None):
+    proposed_uri = URIRef(proposal["iri"])
+    class_uri = OGC[collection.id]
+
+    ontology.add((proposed_uri, RDF.type, RDF.Property))
+    ontology.add((proposed_uri, RDFS.label, Literal(proposal.get("label", prop["title"]))))
+    ontology.add((proposed_uri, RDFS.range, _datatype_uri(prop["type"])))
+    ontology.add((proposed_uri, RDFS.domain, class_uri))
+    if proposal.get("comment"):
+        ontology.add((proposed_uri, RDFS.comment, Literal(proposal["comment"])))
+    if proposal.get("parent_iri"):
+        ontology.add((proposed_uri, RDFS.subPropertyOf, URIRef(proposal["parent_iri"])))
+
+    local_property_uri = OGC[prop["title"]]
+    ontology.add((local_property_uri, OWL.equivalentProperty, proposed_uri))
+    prop["equivalentClass"] = proposed_uri
+    if stats:
+        stats.count_alignment("property", "proposal")
+
+
+def review_property_alignments(collections, ontology, interactive=True, stats=None):
+    if not interactive:
+        return
+
+    print("\nStarting property alignment review after first ontology draft.")
+    collection_properties = _collection_properties_by_ontology_uri(collections)
+    ontology_properties = sorted(set(ontology.subjects(RDF.type, RDF.Property)), key=str)
+
+    for property_uri in ontology_properties:
+        occurrences = collection_properties.get(property_uri)
+        if not occurrences or all(prop["equivalentClass"] for _, prop in occurrences):
+            continue
+
+        representative_collection, representative_prop = occurrences[0]
+        property_title = _property_title_from_ontology(ontology, property_uri)
+        description = _property_description(occurrences)
+        print(f"\nReviewing property '{property_title}' used in {len(occurrences)} collection(s)")
+
+        review_flag = input("Do you want to review this property for possible alignment or extension? [Y/n]: ").strip().lower()
+        if review_flag in {"n", "no"}:
+            print("Skipping review for this property.")
+            continue
+
+        external = searchNotLocal(property_title, description, "property", model=representative_collection.model)
+        if external:
+            accepted = representative_collection.reviewer.confirm_external(property_title, "property", external)
+            if accepted:
+                for index, (c, prop) in enumerate(occurrences):
+                    _add_property_alignment(
+                        ontology,
+                        c,
+                        prop,
+                        accepted,
+                        stats=stats if index == 0 else None,
+                        source="notlocal"
+                    )
+                continue        
+        local = representative_collection.reviewer.choose_local(property_title, description, "property", representative_collection.oe)
+        if local:
+            for c, prop in occurrences:
+                _add_property_alignment(ontology, c, prop, local, stats=stats, source="local")
+            continue
+        
+        proposal = llm_propose_property(
+            ontology,
+            property_title,
+            description=description,
+            datatype=representative_prop["type"],
+            domain_iri=str(OGC[representative_collection.id]),
+            model=representative_collection.model,
+            prefix=f"{str(OGC)}extension/",
+            interactive=interactive
+        )
+        if proposal:
+            for index, (c, prop) in enumerate(occurrences):
+                _add_property_extension(ontology, c, prop, proposal, stats=stats if index == 0 else None)
+
+
 def generate_ontology(collections: list[Collection], output_ontology, reference_ontology, interactive=True, model=None, stats=None):
     ontology = rdflib.Graph()
     # bindear geosparql y geo al grafo
@@ -430,6 +549,14 @@ def generate_ontology(collections: list[Collection], output_ontology, reference_
             ontology.add((property_uri, RDFS.range, XSD[prop["type"]])) if prop["type"]!="number" else ontology.add((property_uri, RDFS.range, XSD["float"]))
             ontology.add((property_uri, RDFS.domain, class_uri))
 
+    if stats:
+        collection_property_uris = _collection_properties_by_ontology_uri(collections)
+        stats.entity_totals["property"] = len({
+            property_uri
+            for property_uri in ontology.subjects(RDF.type, RDF.Property)
+            if property_uri in collection_property_uris
+        })
+
     for c in collections:
         if c.equivalentClass or not c.search_not_local or not interactive:
             continue
@@ -459,6 +586,7 @@ def generate_ontology(collections: list[Collection], output_ontology, reference_
         if stats:
             stats.count_alignment("class", "proposal")
 
+    review_property_alignments(collections, ontology, interactive=interactive, stats=stats)
     review_llm_axioms(ontology, model=model, interactive=interactive, stats=stats)
     
     ontology.serialize(destination=output_ontology, format="turtle")

@@ -333,6 +333,18 @@ def ogcCoverageMaterializer(ctx, mappings, url_next):
         if key.lower() == "bbox":
             bbox_values = value.split(",")
             if len(bbox_values) == 4:
+                try:
+                    min_x, min_y, max_x, max_y = map(float, bbox_values)
+                    if min_x == max_x and min_y == max_y:
+                        offset = 0.01
+                        bbox_values = [
+                            str(min_x - offset),
+                            str(min_y - offset),
+                            str(max_x + offset),
+                            str(max_y + offset),
+                        ]
+                except ValueError:
+                    pass
                 value = ",".join((bbox_values[1], bbox_values[0], bbox_values[3], bbox_values[2]))
         updated_params.append((key, value))
 

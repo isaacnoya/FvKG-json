@@ -45,7 +45,6 @@ def get_invariant(mapping_template):
 
 
 def termMapCompatibility(t1, t2, pos=None):
-    #TODO: Arreglar esto que rompe por todos lados y no es nada claro
     i1 = get_invariant(t1)
     i2 = get_invariant(t2)
 
@@ -60,10 +59,14 @@ def termMapCompatibility(t1, t2, pos=None):
         return True
     #if not isinstance(t1, type(t2)) and not isinstance(t2, type(t1)):
     #    return False
+    if (i1 == i2):
+        return True
+    
     if ( i1 != i2 or not i1.startswith(i2) or not i2.startswith(i1)) :
         return False
 
-    return True
+    #retrun True
+    return False
 
 
 def is_compatible(pattern, mapping):
