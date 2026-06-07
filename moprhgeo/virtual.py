@@ -1,9 +1,4 @@
-from classes import *
-from utils import get_invariant, getBaseURL, merge_urls, normalize_hierarchical_data
-from geoFunctions import getBbox, bbox_contains, bboxToGeometry
-
 import copy
-from mappings import get_compatible_mappings
 import rdflib
 import requests
 from rdflib import Graph, URIRef, BNode, Literal, Namespace, Variable
@@ -22,6 +17,27 @@ from pathlib import Path
 from jsonpath import JSONPath
 from io import StringIO
 from typing import Generator
+
+try:
+    from .classes import *
+    from .geoFunctions import getBbox, bbox_contains, bboxToGeometry
+    from .mappings import get_compatible_mappings
+    from .utils import (
+        get_invariant,
+        getBaseURL,
+        merge_urls,
+        normalize_hierarchical_data,
+    )
+except ImportError:
+    from classes import *
+    from geoFunctions import getBbox, bbox_contains, bboxToGeometry
+    from mappings import get_compatible_mappings
+    from utils import (
+        get_invariant,
+        getBaseURL,
+        merge_urls,
+        normalize_hierarchical_data,
+    )
 
 EX = rdflib.Namespace("http://example.com/")
 
@@ -257,7 +273,10 @@ def isCompatibleMappingGroup(tp, mappings):
 
 import re
 from urllib.parse import urlparse, urlunparse, parse_qsl, urlencode
-from classes import geoBindings
+try:
+    from .classes import geoBindings
+except ImportError:
+    from classes import geoBindings
 
 def injectBindings(ctx, url):
     url_parts = list(urlparse(url))

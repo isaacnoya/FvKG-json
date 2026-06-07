@@ -1,7 +1,7 @@
 @prefix dct: <http://purl.org/dc/terms/> .
 @prefix htv: <http://www.w3.org/2011/http#> .
-@prefix ine: <https://lod.ine.es/def/vocabulary/> .
-@prefix inelod: <https://lod.ine.es/recurso/cubes/> .
+@prefix ine: <http://lod.ine.es/def/vocabulary/> .
+@prefix inelod: <http://lod.ine.es/recurso/cubes/> .
 @prefix qb: <http://purl.org/linked-data/cube#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix rml: <http://w3id.org/rml/> .
@@ -36,7 +36,7 @@ inelod:68065_det0_tip_Observations a rml:TriplesMap ;
                     rml:parentTriplesMap inelod:68065_det0_tip_Series ] ;
             rml:predicate qb:slice ] ;
     rml:subjectMap [ rml:class qb:Observation ;
-            rml:template "https://lod.ine.es/voc/cubes/obs/{Data.*.Valor}_{Data.*.CodigoPeriodo}" ] .
+            rml:template "http://lod.ine.es/recurso/cubes/68065_det0_tipo{COD}{Data.*.CodigoPeriodo}" ] .
 
 inelod:68065_det0_tip_TriplesMapDSD a rml:TriplesMap ;
     rml:logicalSource inelod:LS_Root ;
@@ -82,7 +82,7 @@ inelod:SliceKey_DSD_TriplesMap a rml:TriplesMap ;
                     rml:parentTriplesMap inelod:SliceKey_TriplesMap ] ;
             rml:predicate qb:sliceKey ] ;
     rml:subjectMap [ rml:class qb:DataStructureDefinition ;
-            rml:template "https://lod.ine.es/recurso/cubes/slice_dsd/{Id}" ] .
+            rml:template "http://lod.ine.es/recurso/cubes/slice_dsd/{Id}" ] .
 
 inelod:68065_det0_tip_Series a rml:TriplesMap ;
     rml:logicalSource inelod:LS_Root ;
@@ -105,7 +105,7 @@ inelod:68065_det0_tip_Series a rml:TriplesMap ;
         [ rml:objectMap [ rml:reference "MetaData[?(@.Variable.Id==19)].Nombre" ] ;
             rml:predicate ine:municipality ] ;
     rml:subjectMap [ rml:class qb:slice ;
-            rml:template "https://lod.ine.es/recurso/cubes/series/{COD}" ] .
+            rml:template "http://lod.ine.es/recurso/cubes/series/{COD}" ] .
 
 inelod:68065_det0_tip_TriplesMapDSD_bndim1 a rml:TriplesMap ;
     rml:logicalSource inelod:LS_Root ;
@@ -166,7 +166,7 @@ inelod:SliceKey_TriplesMap a rml:TriplesMap ;
         [ rml:object ine:municipality ;
             rml:predicate qb:componentProperty ] ;
     rml:subjectMap [ rml:class qb:SliceKey ;
-            rml:template "https://lod.ine.es/recurso/cubes/slice_key/{Id}" ] .
+            rml:template "http://lod.ine.es/recurso/cubes/slice_key/{Id}" ] .
 
 inelod:FuenteAPI_68065_det0_tip_det0_tip htv:absoluteURI "https://servicios.ine.es/wstempus/jsCache/ES/DATOS_TABLA/68065?det=2&tip=M" .
 
@@ -174,4 +174,3 @@ inelod:LS_Root a rml:logicalSource ;
     rml:iterator "$.*" ;
     rml:referenceFormulation rml:HTTPAPI ;
     rml:source inelod:FuenteAPI_68065_det0_tip_det0_tip .
-

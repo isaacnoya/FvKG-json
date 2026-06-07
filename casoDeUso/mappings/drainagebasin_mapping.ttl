@@ -17,19 +17,7 @@ ogc:FuenteAPI_drainagebasin htv:absoluteURI "https://api-features.idee.es/collec
 
 ogc:drainagebasinTriplesMap a rml:TriplesMap ;
     rml:logicalSource ogc:LogicalSource_drainagebasin ;
-    rml:predicateObjectMap [ rml:objectMap [ void:filterx "origend=@{1}" ;
-                    rml:datatype xsd:string ;
-                    rml:reference "properties.origend" ] ;
-            rml:predicate ogc:origend ],
-        [ rml:objectMap [ void:filterx "nil_varios=@{1}" ;
-                    rml:datatype xsd:boolean ;
-                    rml:reference "properties.nil_varios" ] ;
-            rml:predicate ogc:nil_varios ],
-        [ rml:objectMap [ void:filterx "origen=@{1}" ;
-                    rml:datatype xsd:string ;
-                    rml:reference "properties.origen" ] ;
-            rml:predicate ogc:origen ],
-        [ rml:objectMap [ void:filterx "nilreason_nombre=@{1}" ;
+    rml:predicateObjectMap [ rml:objectMap [ void:filterx "nilreason_nombre=@{1}" ;
                     rml:datatype xsd:string ;
                     rml:reference "properties.nilreason_nombre" ] ;
             rml:predicate ogc:nilreason_nombre ],
@@ -89,6 +77,10 @@ ogc:drainagebasinTriplesMap a rml:TriplesMap ;
                     rml:datatype xsd:string ;
                     rml:reference "properties.script" ] ;
             rml:predicate ogc:script ],
+        [ rml:objectMap [ void:filterx "origend=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.origend" ] ;
+            rml:predicate ogc:origend ],
         [ rml:objectMap [ rml:datatype xsd:string ;
                     rml:reference "geometry_name" ] ;
             rml:predicate ogc:geometryName ],
@@ -119,8 +111,16 @@ ogc:drainagebasinTriplesMap a rml:TriplesMap ;
         [ rml:objectMap [ void:filterx "orden_ambd=@{1}" ;
                     rml:datatype xsd:string ;
                     rml:reference "properties.orden_ambd" ] ;
-            rml:predicate ogc:orden_ambd ] ;
-    rml:subjectMap [ rml:class ogc:drainagebasin ;
+            rml:predicate ogc:orden_ambd ],
+        [ rml:objectMap [ void:filterx "nil_varios=@{1}" ;
+                    rml:datatype xsd:boolean ;
+                    rml:reference "properties.nil_varios" ] ;
+            rml:predicate ogc:nil_varios ],
+        [ rml:objectMap [ void:filterx "origen=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.origen" ] ;
+            rml:predicate ogc:origen ] ;
+    rml:subjectMap [ rml:class geolinkeddata:HY-P_Cuenca_de_captación ;
             rml:template "https://api-features.idee.es/collections/drainagebasin/items/{id}" ] .
 
 ogc:LogicalSource_drainagebasin a rml:logicalSource ;

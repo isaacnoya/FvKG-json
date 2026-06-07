@@ -1,11 +1,13 @@
 @prefix geo: <http://www.opengis.net/ont/geosparql#> .
+@prefix geolinkeddata: <http://geo.linkeddata.es/ontology/> .
 @prefix ogc: <http://www.ogc.org/> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema1: <http://schema.org/> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-<http://geo.linkeddata.es/ontology/altitud> a rdf:Property ;
+geolinkeddata:altitud a rdf:Property ;
     rdfs:label "elevacion" ;
     rdfs:domain ogc:standingwater ;
     rdfs:range xsd:float .
@@ -21,12 +23,12 @@
         ogc:wetland ;
     rdfs:range xsd:string .
 
-<http://geo.linkeddata.es/ontology/longitud> a rdf:Property ;
+geolinkeddata:longitud a rdf:Property ;
     rdfs:label "longitud" ;
     rdfs:domain ogc:watercourselinksequence ;
     rdfs:range xsd:float .
 
-<http://geo.linkeddata.es/ontology/nombre> a rdf:Property ;
+geolinkeddata:nombre a rdf:Property ;
     rdfs:label "nil_nombre",
         "nilreason_nombre" ;
     rdfs:domain ogc:damorweir,
@@ -36,7 +38,7 @@
     rdfs:range xsd:boolean,
         xsd:string .
 
-<http://geo.linkeddata.es/ontology/origina> a rdf:Property ;
+geolinkeddata:origina a rdf:Property ;
     rdfs:label "nativeness",
         "origen" ;
     rdfs:domain ogc:damorweir,
@@ -508,21 +510,31 @@ ogc:z_coron a rdf:Property ;
 <http://example.org/ontology/AU_UnidadesAdministrativas> a owl:Class ;
     rdfs:label "AU Unidades administrativas" ;
     rdfs:comment "Unidad de administración sobre la que un Estado miembro tiene y/o ejerce derechos jurisdiccionales para el gobierno local, regional y nacional." ;
-    rdfs:subClassOf <http://schema.org/AdministrativeArea> .
+    rdfs:subClassOf schema1:AdministrativeArea .
 
 <http://example.org/ontology/HY-P_Esclusa> a owl:Class ;
     rdfs:label "HY-P Esclusa" ;
     rdfs:comment "Recinto con un par o una serie de puertas utilizado para hacer subir o bajar a los buques que pasan de un nivel de agua a otro." ;
-    rdfs:subClassOf <http://schema.org/CivicStructure> .
+    rdfs:subClassOf schema1:CivicStructure .
 
 <http://example.org/ontology/NZ_Riesgo_a_la_poblacion_Q500> a owl:Class ;
     rdfs:label "NZ.Riesgo a la población Q500" ;
-    rdfs:subClassOf <http://schema.org/MedicalRiskEstimator> .
+    rdfs:subClassOf schema1:MedicalRiskEstimator .
 
-<http://schema.org/HY-P_Presa_o_represa> a owl:Class ;
+geolinkeddata:HY-P_Cuenca_de_captación a owl:Class ;
+    rdfs:label "HY-P Cuenca de captación" ;
+    rdfs:comment "Zona que tiene un desagüe común para su escorrentía." ;
+    rdfs:subClassOf geolinkeddata:Captación .
+
+geolinkeddata:HY_N_Secuencia_de_enlaces_de_curso_de_agua a owl:Class ;
+    rdfs:label "HY-N Secuencia de enlaces de curso de agua" ;
+    rdfs:comment "Secuencia de enlaces de curso de agua que representa una trayectoria sin ramificación a través de una red hidrográfica." ;
+    rdfs:subClassOf geolinkeddata:Corriente .
+
+schema1:HY-P_Presa_o_represa a owl:Class ;
     rdfs:label "HY-P Presa o represa" ;
     rdfs:comment "Barrera permanente a través de un curso de agua, utilizada para almacenar agua o controlar su flujo." ;
-    rdfs:subClassOf <http://schema.org/CivicStructure> .
+    rdfs:subClassOf schema1:CivicStructure .
 
 ogc:administrativeunit a owl:class ;
     rdfs:label "AU Unidades administrativas" ;
@@ -544,28 +556,30 @@ ogc:lock a owl:class ;
 ogc:watercourselinksequence a owl:class ;
     rdfs:label "HY-N Secuencia de enlaces de curso de agua" ;
     rdfs:comment "Secuencia de enlaces de curso de agua que representa una trayectoria sin ramificación a través de una red hidrográfica." ;
-    rdfs:subClassOf geo:Feature .
+    rdfs:subClassOf geo:Feature ;
+    owl:equivalentClass geolinkeddata:HY_N_Secuencia_de_enlaces_de_curso_de_agua .
 
 ogc:wetland a owl:class ;
     rdfs:label "HY-P Humedal" ;
     rdfs:comment "Zona poco drenada o inundada periódicamente cuyo suelo se encuentra saturado de agua y admite vegetación." ;
     rdfs:subClassOf geo:Feature ;
-    owl:equivalentClass <http://geo.linkeddata.es/ontology/Humedal> .
+    owl:equivalentClass geolinkeddata:Humedal .
 
 ogc:drainagebasin a owl:class ;
     rdfs:label "HY-P Cuenca de captación" ;
     rdfs:comment "Zona que tiene un desagüe común para su escorrentía." ;
-    rdfs:subClassOf geo:Feature .
+    rdfs:subClassOf geo:Feature ;
+    owl:equivalentClass geolinkeddata:HY-P_Cuenca_de_captación .
 
 ogc:damorweir a owl:class ;
     rdfs:label "HY-P Presa o represa" ;
     rdfs:comment "Barrera permanente a través de un curso de agua, utilizada para almacenar agua o controlar su flujo." ;
     rdfs:subClassOf geo:Feature ;
-    owl:equivalentClass <http://schema.org/HY-P_Presa_o_represa> .
+    owl:equivalentClass schema1:HY-P_Presa_o_represa .
 
 ogc:standingwater a owl:class ;
     rdfs:label "HY-P Aguas estancadas" ;
     rdfs:comment "Masa de agua que está rodeada por completo de tierra." ;
     rdfs:subClassOf geo:Feature ;
-    owl:equivalentClass <http://geo.linkeddata.es/ontology/Aguas_Quietas> .
+    owl:equivalentClass geolinkeddata:Aguas_Quietas .
 

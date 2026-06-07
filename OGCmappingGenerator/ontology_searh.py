@@ -6,9 +6,10 @@ from dotenv import load_dotenv
 import requests
 from rdflib import Graph, Namespace, Literal, URIRef
 import rdflib
-from rdflib.namespace import OWL, RDF, RDFS
+from rdflib.namespace import OWL, RDF, RDFS, XSD
 
 DBO = Namespace("http://dbpedia.org/ontology/")
+GEO = Namespace("http://www.opengis.net/ont/geosparql#")
 
 load_dotenv()
 
@@ -113,6 +114,50 @@ def _compact_graph_entities(ontology, max_entities=120):
         })
         if len(compact_entities) >= max_entities:
             break
+    compact_entities.extend([
+        {
+            "iri": str(GEO.Feature),
+            "label": "Feature",
+            "comment": "GeoSPARQL feature class",
+            "types": [str(OWL.Class)]
+        },
+        {
+            "iri": str(GEO.Geometry),
+            "label": "Geometry",
+            "comment": "GeoSPARQL geometry class",
+            "types": [str(OWL.Class)]
+        },
+        {
+            "iri": str(GEO.hasGeometry),
+            "label": "hasGeometry",
+            "comment": "GeoSPARQL property linking a feature to a geometry",
+            "types": [str(RDF.Property)]
+        },
+        {
+            "iri": str(XSD.string),
+            "label": "string",
+            "comment": "XML Schema string datatype",
+            "types": ["datatype"]
+        },
+        {
+            "iri": str(XSD.integer),
+            "label": "integer",
+            "comment": "XML Schema integer datatype",
+            "types": ["datatype"]
+        },
+        {
+            "iri": str(XSD.float),
+            "label": "float",
+            "comment": "XML Schema float datatype",
+            "types": ["datatype"]
+        },
+        {
+            "iri": str(XSD.boolean),
+            "label": "boolean",
+            "comment": "XML Schema boolean datatype",
+            "types": ["datatype"]
+        }
+    ])
     return compact_entities
 
 
@@ -285,36 +330,43 @@ def llm_propose_axiom(ontology, model=None, history=None):
     api_key = os.getenv("GROQ_API_KEY")
     client = Groq(api_key=api_key)
     entities = _compact_graph_entities(ontology)
-    existing_axioms = []
+    existing_axioms_sample = []
     for s, p, o in ontology.triples((None, None, None)):
         if isinstance(s, rdflib.BNode) or isinstance(o, rdflib.BNode):
             continue
-        existing_axioms.append({"subject": str(s), "predicate": str(p), "object": str(o)})
-        if len(existing_axioms) >= 120:
+        existing_axioms_sample.append({"subject": str(s), "predicate": str(p), "object": str(o)})
+        if len(existing_axioms_sample) >= 120:
             break
 
     prompt_sistema = """
     You are an expert in OWL, RDFS, GeoSPARQL, and ontology engineering.
-    Propose exactly one useful ontology axiom that connects existing concepts in the ontology.
-    Prefer conservative axioms such as rdfs:subClassOf, owl:equivalentClass, rdfs:domain, rdfs:range,
-    owl:disjointWith, or a meaningful existing object property.
-    Do not invent new class or property IRIs. Use only IRIs from the provided entity list for subject and object.
+    Propose exactly one useful local OWL class restriction for the ontology.
+    Do NOT propose global rdfs:domain or rdfs:range axioms. They are too rigid because they make
+    any subject/object using a property inherit the global class/range.
+    Model property constraints locally on the class with an anonymous owl:Restriction attached via rdfs:subClassOf.
+    Prefer conservative restrictions:
+    - owl:someValuesFrom for required existence, e.g. a class has at least one value for a property.
+    - owl:allValuesFrom for local value typing, e.g. every value of that property for this class has a datatype/class.
+    - owl:cardinality, owl:minCardinality, or owl:maxCardinality for local cardinality constraints.
+    Use only class, property, datatype, and value IRIs from the provided entity list.
     Respond ONLY with JSON using this structure:
     {
       "rationale": "short explanation",
-      "axioms": [
+      "restrictions": [
         {
-          "subject": "existing subject IRI",
-          "predicate": "predicate IRI",
-          "object": "existing object IRI"
+          "class_iri": "existing class IRI receiving the restriction",
+          "property_iri": "existing property IRI used in owl:onProperty",
+          "quantifier": "someValuesFrom | allValuesFrom | cardinality | minCardinality | maxCardinality",
+          "value_iri": "existing class/datatype IRI for someValuesFrom/allValuesFrom, otherwise empty string",
+          "cardinality": "non-negative integer for cardinality/minCardinality/maxCardinality, otherwise empty string"
         }
       ]
     }
     """
     prompt_usuario = json.dumps({
-        "task": "Propose one ontology axiom that connects existing ontology concepts.",
+        "task": "Propose one local OWL class restriction that improves the ontology without global domain/range axioms.",
         "entities": entities,
-        "existing_axioms_sample": existing_axioms,
+        "existing_axioms_sample": existing_axioms_sample,
         "previous_user_decisions": history or []
     }, ensure_ascii=False)
 
@@ -329,8 +381,8 @@ def llm_propose_axiom(ontology, model=None, history=None):
             response_format={"type": "json_object"}
         )
         proposal = json.loads(chat_completion.choices[0].message.content)
-        axioms = proposal.get("axioms", [])
-        if not axioms:
+        restrictions = proposal.get("restrictions", [])
+        if not restrictions:
             return None
         return proposal
     except Exception as e:

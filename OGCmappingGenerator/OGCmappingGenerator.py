@@ -310,21 +310,123 @@ def get_collections_filtered(urlBase, oe: VectorialOntologyMatcher, collectionsF
     return collections
 
 def _format_axiom_proposal(proposal):
-    print("\nLLM proposed ontology axiom:")
+    print("\nLLM proposed ontology restriction:")
     if proposal.get("rationale"):
         print(f"  Rationale: {proposal['rationale']}")
+    for idx, restriction in enumerate(proposal.get("restrictions", []), start=1):
+        quantifier = restriction.get("quantifier")
+        value = restriction.get("value_iri") or restriction.get("cardinality")
+        print(
+            f"  {idx}. {restriction.get('class_iri')} rdfs:subClassOf "
+            f"[ a owl:Restriction ; owl:onProperty {restriction.get('property_iri')} ; "
+            f"owl:{quantifier} {value} ]"
+        )
     for idx, axiom in enumerate(proposal.get("axioms", []), start=1):
-        print(f"  {idx}. {axiom.get('subject')} {axiom.get('predicate')} {axiom.get('object')}")
+        print(f"  Legacy triple {idx}. {axiom.get('subject')} {axiom.get('predicate')} {axiom.get('object')}")
+
+
+def _known_restriction_resources(ontology):
+    known_resources = {
+        str(GEO.Feature),
+        str(GEO.FeatureCollection),
+        str(GEO.Geometry),
+        str(GEO.hasGeometry),
+        str(GEO.asWKT),
+        str(GEO.wktLiteral),
+        str(GEO.geoJSONLiteral),
+        str(XSD.string),
+        str(XSD.integer),
+        str(XSD.float),
+        str(XSD.boolean),
+        str(XSD.nonNegativeInteger),
+    }
+    for s, p, o in ontology.triples((None, None, None)):
+        for term in (s, p, o):
+            if isinstance(term, URIRef):
+                known_resources.add(str(term))
+    return known_resources
+
+
+def _restriction_predicate(quantifier):
+    normalized = (quantifier or "").strip()
+    if ":" in normalized:
+        normalized = normalized.split(":")[-1]
+    restriction_predicates = {
+        "someValuesFrom": OWL.someValuesFrom,
+        "allValuesFrom": OWL.allValuesFrom,
+        "cardinality": OWL.cardinality,
+        "minCardinality": OWL.minCardinality,
+        "maxCardinality": OWL.maxCardinality,
+    }
+    return restriction_predicates.get(normalized) or {
+        key.lower(): value
+        for key, value in restriction_predicates.items()
+    }.get(normalized.lower())
+
+
+def _is_cardinality_restriction(predicate):
+    return predicate in {OWL.cardinality, OWL.minCardinality, OWL.maxCardinality}
+
+
+def _add_restriction_proposal(ontology, restriction, known_resources, stats=None):
+    class_iri = restriction.get("class_iri")
+    property_iri = restriction.get("property_iri")
+    predicate = _restriction_predicate(restriction.get("quantifier"))
+
+    if not class_iri or not property_iri or not predicate:
+        print("Skipping malformed OWL restriction.")
+        if stats:
+            stats.axiom_skipped_triples += 1
+        return []
+    if class_iri not in known_resources or property_iri not in known_resources:
+        print("Skipping OWL restriction with unknown class or property IRI.")
+        if stats:
+            stats.axiom_skipped_triples += 1
+        return []
+
+    if _is_cardinality_restriction(predicate):
+        try:
+            cardinality = int(restriction.get("cardinality"))
+        except (TypeError, ValueError):
+            print("Skipping OWL restriction with invalid cardinality.")
+            if stats:
+                stats.axiom_skipped_triples += 1
+            return []
+        if cardinality < 0:
+            print("Skipping OWL restriction with negative cardinality.")
+            if stats:
+                stats.axiom_skipped_triples += 1
+            return []
+        value = Literal(cardinality, datatype=XSD.nonNegativeInteger)
+    else:
+        value_iri = restriction.get("value_iri")
+        if not value_iri or value_iri not in known_resources:
+            print("Skipping OWL restriction with unknown value IRI.")
+            if stats:
+                stats.axiom_skipped_triples += 1
+            return []
+        value = URIRef(value_iri)
+
+    restriction_node = BNode()
+    triples = [
+        (URIRef(class_iri), RDFS.subClassOf, restriction_node),
+        (restriction_node, RDF.type, OWL.Restriction),
+        (restriction_node, OWL.onProperty, URIRef(property_iri)),
+        (restriction_node, predicate, value),
+    ]
+    for triple in triples:
+        ontology.add(triple)
+    if stats:
+        stats.axiom_accepted_triples += len(triples)
+    return triples
 
 
 def _add_axiom_proposal(ontology, proposal, stats=None):
     added = []
-    known_resources = set()
-    for s, p, o in ontology.triples((None, None, None)):
-        if isinstance(s, URIRef):
-            known_resources.add(str(s))
-        if isinstance(o, URIRef):
-            known_resources.add(str(o))
+    known_resources = _known_restriction_resources(ontology)
+
+    for restriction in proposal.get("restrictions", []):
+        added.extend(_add_restriction_proposal(ontology, restriction, known_resources, stats=stats))
 
     for axiom in proposal.get("axioms", []):
         subject = axiom.get("subject")
@@ -332,6 +434,11 @@ def _add_axiom_proposal(ontology, proposal, stats=None):
         obj = axiom.get("object")
         if not subject or not predicate or not obj:
             print("Skipping malformed axiom.")
+            if stats:
+                stats.axiom_skipped_triples += 1
+            continue
+        if predicate in {str(RDFS.domain), str(RDFS.range)}:
+            print("Skipping global rdfs:domain/rdfs:range axiom. Use an OWL class restriction instead.")
             if stats:
                 stats.axiom_skipped_triples += 1
             continue

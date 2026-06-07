@@ -17,19 +17,7 @@ ogc:FuenteAPI_watercourselinksequence htv:absoluteURI "https://api-features.idee
 
 ogc:watercourselinksequenceTriplesMap a rml:TriplesMap ;
     rml:logicalSource ogc:LogicalSource_watercourselinksequence ;
-    rml:predicateObjectMap [ rml:objectMap [ void:filterx "nativeness=@{1}" ;
-                    rml:datatype xsd:string ;
-                    rml:reference "properties.nativeness" ] ;
-            rml:predicate geolinkeddata:origina ],
-        [ rml:objectMap [ void:filterx "geometry=@{1}" ;
-                    rml:datatype xsd:string ;
-                    rml:reference "properties.geometry" ] ;
-            rml:predicate <http://geo.linkeddata.es/ontology/hydro-ontology.owl#geometría> ],
-        [ rml:objectMap [ void:filterx "id_red=@{1}" ;
-                    rml:datatype xsd:string ;
-                    rml:reference "properties.id_red" ] ;
-            rml:predicate ogc:id_red ],
-        [ rml:objectMap [ void:filterx "nombre=@{1}" ;
+    rml:predicateObjectMap [ rml:objectMap [ void:filterx "nombre=@{1}" ;
                     rml:datatype xsd:string ;
                     rml:reference "properties.nombre" ] ;
             rml:predicate ogc:nombre ],
@@ -89,6 +77,10 @@ ogc:watercourselinksequenceTriplesMap a rml:TriplesMap ;
                     rml:datatype xsd:string ;
                     rml:reference "properties.id_demarcd" ] ;
             rml:predicate ogc:id_demarcd ],
+        [ rml:objectMap [ void:filterx "nativeness=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.nativeness" ] ;
+            rml:predicate geolinkeddata:origina ],
         [ rml:objectMap [ rml:datatype xsd:string ;
                     rml:reference "geometry_name" ] ;
             rml:predicate ogc:geometryName ],
@@ -99,8 +91,16 @@ ogc:watercourselinksequenceTriplesMap a rml:TriplesMap ;
         [ rml:objectMap [ void:filterx "id_demarc=@{1}" ;
                     rml:datatype xsd:string ;
                     rml:reference "properties.id_demarc" ] ;
-            rml:predicate ogc:id_demarc ] ;
-    rml:subjectMap [ rml:class ogc:watercourselinksequence ;
+            rml:predicate ogc:id_demarc ],
+        [ rml:objectMap [ void:filterx "geometry=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.geometry" ] ;
+            rml:predicate <http://geo.linkeddata.es/ontology/hydro-ontology.owl#geometría> ],
+        [ rml:objectMap [ void:filterx "id_red=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.id_red" ] ;
+            rml:predicate ogc:id_red ] ;
+    rml:subjectMap [ rml:class geolinkeddata:HY_N_Secuencia_de_enlaces_de_curso_de_agua ;
             rml:template "https://api-features.idee.es/collections/watercourselinksequence/items/{id}" ] .
 
 ogc:LogicalSource_watercourselinksequence a rml:logicalSource ;

@@ -4,6 +4,7 @@ from rdflib.plugins.sparql.evaluate import evalPart
 from rdflib.plugins.sparql.operators import register_custom_function
 from rdflib import Variable, Namespace
 from typing import Generator
+from pathlib import Path
 
 from rdflib.plugins.sparql.evalutils import (
     _ebv,
@@ -14,15 +15,21 @@ from rdflib.plugins.sparql.evalutils import (
     _val,
 )
 
-from virtual import getStarShapedSubqueries, candidateMappingSelection, materializeVirtualMappingGroup, getMappingsFromBGP, evalVirtualBGP, getMappingGroups, orderTriplesStatic
-from mappings import getMappingsFromTxT, getMappingsFromFolder, getMappings
-from classes import TriplePattern, MappingContext, geoBindings
-from geoFunctions import GEOF_SFCONTAINS, geof_sfContains, GEOF_DISTANCE, geof_distance, GEOF_WITHIN, geof_within, GEOF_INTESECT, geof_intersects, GEOF_OVERLAPS, geof_overlaps, GEOF_CROSSES, geof_crosses
+try:
+    from .virtual import getStarShapedSubqueries, candidateMappingSelection, materializeVirtualMappingGroup, getMappingsFromBGP, evalVirtualBGP, getMappingGroups, orderTriplesStatic
+    from .mappings import getMappingsFromTxT, getMappingsFromFolder, getMappings
+    from .classes import TriplePattern, MappingContext, geoBindings
+    from .geoFunctions import GEOF_SFCONTAINS, geof_sfContains, GEOF_DISTANCE, geof_distance, GEOF_WITHIN, geof_within, GEOF_INTESECT, geof_intersects, GEOF_OVERLAPS, geof_overlaps, GEOF_CROSSES, geof_crosses
+except ImportError:
+    from virtual import getStarShapedSubqueries, candidateMappingSelection, materializeVirtualMappingGroup, getMappingsFromBGP, evalVirtualBGP, getMappingGroups, orderTriplesStatic
+    from mappings import getMappingsFromTxT, getMappingsFromFolder, getMappings
+    from classes import TriplePattern, MappingContext, geoBindings
+    from geoFunctions import GEOF_SFCONTAINS, geof_sfContains, GEOF_DISTANCE, geof_distance, GEOF_WITHIN, geof_within, GEOF_INTESECT, geof_intersects, GEOF_OVERLAPS, geof_overlaps, GEOF_CROSSES, geof_crosses
 
 EX = Namespace("http://example.com/")
 
-#mappings = getMappingsFromTxT("/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/moprhgeo/mappings.txt")
-mappings = getMappingsFromFolder("/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/casoDeUso/mappings")
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+mappings = getMappingsFromFolder(PROJECT_ROOT / "casoDeUso" / "mappings")
 """
 #TODO:  
     -PRUEBAS:
@@ -255,7 +262,6 @@ register_custom_function(GEOF_OVERLAPS, geof_overlaps)
 register_custom_function(GEOF_CROSSES, geof_crosses)
 
 import rdflib
-from pathlib import Path
 if __name__ == "__main__":
     g = rdflib.Graph()
 
@@ -263,7 +269,7 @@ if __name__ == "__main__":
     query = """
     PREFIX ogc: <http://www.ogc.org/>
     PREFIX geo: <http://www.opengis.net/ont/geosparql#> 
-    PREFIX ine: <https://lod.ine.es/def/vocabulary/>
+    PREFIX ine: <http://lod.ine.es/def/vocabulary/>
     PREFIX sdmx-measure: <http://purl.org/linked-data/sdmx/2009/measure#>
     PREFIX sdmx-dimension: <http://purl.org/linked-data/sdmx/2009/dimension#>
     PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
@@ -273,24 +279,16 @@ if __name__ == "__main__":
     PREFIX dbo: <http://dbpedia.org/ontology/>
     PREFIX geolinkeddata: <http://geo.linkeddata.es/ontology/> 
 
-    SELECT ?ny ?gt WHERE {
-        ?g a <http://example.org/ontology/AU_UnidadesAdministrativas> ;
-            ogc:nameunit "Santiago de Compostela" ;
-            ogc:nationallevelname "Municipio" ;
+    SELECT ?t WHERE {
+        ?y a <http://example.org/ontology/AU_UnidadesAdministrativas> ;
+            ogc:nameunit "Madrid" ;
             ogc:country "ES" ;
-            geo:hasGeometry ?gg .
-
-        ?y a ogc:namedplace ;
-            ogc:etiqueta ?ny ;
-            ogc:tipo "Barrio" ;
             geo:hasGeometry ?gy .
-        FILTER(geof:sfContains(?gg, ?gy))
-
         ?t a ogc:copernicus_wcs ;
             ogc:coverage "NATURAL-COLOR" ;
             geo:hasGeometry ?gt .
-        FILTER(geof:sfIntersects(?gt, ?gy))
-    } 
+        FILTER(geof:sfContains(?gt, ?gy))
+    }
 
     """
 

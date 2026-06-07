@@ -1,6 +1,6 @@
 PREFIX ogc: <http://www.ogc.org/>
 PREFIX geo: <http://www.opengis.net/ont/geosparql#> 
-PREFIX ine: <https://lod.ine.es/def/vocabulary/>
+PREFIX ine: <http://lod.ine.es/def/vocabulary/>
 PREFIX sdmx-measure: <http://purl.org/linked-data/sdmx/2009/measure#>
 PREFIX sdmx-dimension: <http://purl.org/linked-data/sdmx/2009/dimension#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>

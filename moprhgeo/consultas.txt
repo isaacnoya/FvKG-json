@@ -433,6 +433,29 @@ SELECT ?t WHERE {
     FILTER(geof:sfIntersects(?gt, ?gy))
 }
 
+    PREFIX ogc: <http://www.ogc.org/>
+    PREFIX geo: <http://www.opengis.net/ont/geosparql#> 
+    PREFIX ine: <http://lod.ine.es/def/vocabulary/>
+    PREFIX sdmx-measure: <http://purl.org/linked-data/sdmx/2009/measure#>
+    PREFIX sdmx-dimension: <http://purl.org/linked-data/sdmx/2009/dimension#>
+    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+    PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
+    PREFIX ex: <http://example.com/>
+    PREFIX qb: <http://purl.org/linked-data/cube#>
+    PREFIX dbo: <http://dbpedia.org/ontology/>
+    PREFIX geolinkeddata: <http://geo.linkeddata.es/ontology/> 
+
+    SELECT ?t WHERE {
+        ?y a <http://example.org/ontology/AU_UnidadesAdministrativas> ;
+            ogc:nameunit "Santiago de Compostela" ;
+            ogc:country "ES" ;
+            geo:hasGeometry ?gy .
+        ?t a ogc:copernicus_wcs ;
+            ogc:coverage "NATURAL-COLOR" ;
+            geo:hasGeometry ?gt .
+        FILTER(geof:sfContains(?gt, ?gy))
+    }
+
 
 /Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/ineAPI/68065_det0_tip_mappings.rml.ttl
 /Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/mapama-features/mappings/agua:estado_masas_aguasub_mapping.ttl

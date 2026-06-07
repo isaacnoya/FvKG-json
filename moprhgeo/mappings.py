@@ -1,7 +1,12 @@
-from classes import Reference, VirtualMapping
 import rdflib
-from utils import is_compatible, rdf_class_to_pom
 from rdflib.plugins.sparql import prepareQuery
+
+try:
+    from .classes import Reference, VirtualMapping
+    from .utils import is_compatible, rdf_class_to_pom
+except ImportError:
+    from classes import Reference, VirtualMapping
+    from utils import is_compatible, rdf_class_to_pom
 
 
 def get_compatible_mappings(pattern, mappings):

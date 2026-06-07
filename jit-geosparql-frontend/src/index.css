@@ -1,0 +1,116 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+    --background: 216 38% 5%;
+    --foreground: 210 25% 92%;
+    --border: 215 24% 15%;
+    --input: 215 24% 15%;
+    --ring: 187 85% 53%;
+    --primary: 187 85% 53%;
+    --primary-foreground: 205 70% 8%;
+    --secondary: 215 27% 12%;
+    --secondary-foreground: 210 25% 92%;
+    --muted: 215 24% 12%;
+    --muted-foreground: 215 14% 55%;
+    --accent: 187 55% 16%;
+    --accent-foreground: 187 80% 88%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+    margin: 0;
+  }
+
+  body {
+    @apply bg-background font-sans text-foreground antialiased;
+    min-width: 960px;
+  }
+
+  button {
+    font: inherit;
+  }
+
+  ::selection {
+    background: rgba(34, 211, 238, 0.22);
+    color: #ecfeff;
+  }
+
+  ::-webkit-scrollbar {
+    width: 7px;
+    height: 7px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: #263241;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #334155;
+  }
+}
+
+.maplibregl-map {
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
+.maplibregl-ctrl-group {
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  border-radius: 8px !important;
+  background: rgba(9, 15, 23, 0.92) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
+  backdrop-filter: blur(12px);
+}
+
+.maplibregl-ctrl-group button {
+  border-color: rgba(255, 255, 255, 0.07) !important;
+}
+
+.maplibregl-ctrl-group button + button {
+  border-top: 1px solid rgba(255, 255, 255, 0.07) !important;
+}
+
+.maplibregl-ctrl-group button .maplibregl-ctrl-icon {
+  filter: invert(0.75);
+}
+
+.maplibregl-ctrl-bottom-right {
+  bottom: 190px;
+  right: 8px;
+}
+
+.maplibregl-ctrl-bottom-left {
+  bottom: 190px;
+  left: 8px;
+}
+
+.maplibregl-ctrl-scale {
+  border-color: rgba(148, 163, 184, 0.45) !important;
+  background: rgba(9, 15, 23, 0.7) !important;
+  color: #94a3b8 !important;
+  font-size: 9px !important;
+}
+
+.maplibregl-ctrl-attrib {
+  background: rgba(9, 15, 23, 0.75) !important;
+  color: #64748b !important;
+}
+
+.maplibregl-ctrl-attrib a {
+  color: #7890a8 !important;
+}

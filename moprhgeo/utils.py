@@ -1,6 +1,10 @@
 import rdflib
 import re
-from classes import *
+
+try:
+    from .classes import *
+except ImportError:
+    from classes import *
 
 from rdflib.plugins.sparql.sparql import AlreadyBound
   
