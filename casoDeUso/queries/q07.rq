@@ -1,0 +1,43 @@
+PREFIX ogc: <http://www.ogc.org/>
+PREFIX geo: <http://www.opengis.net/ont/geosparql#> 
+PREFIX ine: <http://lod.ine.es/def/vocabulary/>
+PREFIX sdmx-measure: <http://purl.org/linked-data/sdmx/2009/measure#>
+PREFIX schema1: <http://schema.org/> 
+PREFIX sdmx-dimension: <http://purl.org/linked-data/sdmx/2009/dimension#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
+PREFIX ex: <http://example.com/>
+PREFIX qb: <http://purl.org/linked-data/cube#>
+PREFIX dbo: <http://dbpedia.org/ontology/>
+PREFIX geolinkeddata: <http://geo.linkeddata.es/ontology/> 
+
+SELECT ?w ?gw ?s ?gs ?t ?gt ?obsValue WHERE {
+    ?s a <http://example.org/ontology/AU_UnidadesAdministrativas> ;
+        ogc:nameunit "Pontevedra" ;
+        ogc:nationallevelname "Municipio" ;
+        geo:hasGeometry ?gs .
+        
+    ?w a <http://example.org/ontology/NZ_Riesgo_a_la_poblacion_Q500>  ;
+        geo:hasGeometry ?gw .
+    ?t a schema1:HY-P_Presa_o_represa ;
+        geo:hasGeometry ?gt .
+
+    ?o a qb:Observation ;
+        sdmx-measure:obsValue ?obsValue ;
+        qb:slice ?slice ;
+        sdmx-dimension:year ?year .
+    ?slice ine:municipality "Pontevedra" ;
+        sdmx-dimension:sex "Total" .
+    
+    ?i a ogc:copernicus_wcs ;
+            ogc:coverage "NATURAL-COLOR" ;
+            geo:hasGeometry ?gi .
+
+    FILTER (geof:sfContains(?gi, ?gs))
+    FILTER (geof:sfWithin(?gw, ?gs))
+    FILTER (geof:sfWithin(?gt, ?gs))
+    FILTER (geof:sfDistance(?gw, ?gt) < 5000)
+} 
+
+    
+    

@@ -36,7 +36,7 @@ inelod:68065_det0_tip_Observations a rml:TriplesMap ;
                     rml:parentTriplesMap inelod:68065_det0_tip_Series ] ;
             rml:predicate qb:slice ] ;
     rml:subjectMap [ rml:class qb:Observation ;
-            rml:template "http://lod.ine.es/recurso/cubes/68065_det0_tipo{COD}{Data.*.CodigoPeriodo}" ] .
+            rml:template "http://lod.ine.es/recurso/cubes/68065/{Data.*.Valor}_{Data.*.CodigoPeriodo}" ] .
 
 inelod:68065_det0_tip_TriplesMapDSD a rml:TriplesMap ;
     rml:logicalSource inelod:LS_Root ;
