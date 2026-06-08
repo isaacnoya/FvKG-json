@@ -7,12 +7,13 @@ from pathlib import Path
 from threading import Lock
 from typing import Any
 from urllib.parse import parse_qs, urlparse
+from urllib.parse import unquote
 
 import rdflib
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
-from rdflib import BNode, Literal, URIRef
+from rdflib import BNode, Literal, RDF, URIRef
 from shapely.geometry import mapping as geometry_mapping
 
 from . import sparql_virtualizer
@@ -34,9 +35,22 @@ class RasterResult(BaseModel):
     coordinates: list[list[float]]
 
 
+class SparqlBinding(BaseModel):
+    type: str
+    value: Any
+    datatype: str | None = None
+    language: str | None = None
+
+
+class SparqlResults(BaseModel):
+    variables: list[str]
+    rows: list[dict[str, SparqlBinding]]
+
+
 class SpatialData(BaseModel):
     vector: dict[str, Any] | None = None
     raster: RasterResult | None = None
+    results: SparqlResults
 
 
 class ExecuteResponse(BaseModel):
@@ -98,6 +112,41 @@ def _property_name(predicate: rdflib.term.Node) -> str:
     return value.rsplit("#", 1)[-1].rsplit("/", 1)[-1]
 
 
+def _local_name(value: rdflib.term.Node | str) -> str:
+    text = unquote(str(value)).rstrip("/#")
+    return text.rsplit("#", 1)[-1].rsplit("/", 1)[-1] or text
+
+
+def _result_binding(term: rdflib.term.Node) -> SparqlBinding:
+    if isinstance(term, Literal):
+        return SparqlBinding(
+            type="literal",
+            value=_term_value(term),
+            datatype=str(term.datatype) if term.datatype else None,
+            language=term.language,
+        )
+    if isinstance(term, BNode):
+        return SparqlBinding(type="bnode", value=str(term))
+    return SparqlBinding(type="uri", value=str(term))
+
+
+def _sparql_results(
+    variables: list[str],
+    rows: list[dict[str, rdflib.term.Node]],
+) -> SparqlResults:
+    return SparqlResults(
+        variables=variables,
+        rows=[
+            {
+                str(variable): _result_binding(value)
+                for variable, value in row.items()
+                if value is not None
+            }
+            for row in rows
+        ],
+    )
+
+
 def _is_wcs_url(value: str) -> bool:
     parsed = urlparse(value)
     params = {key.lower(): values for key, values in parse_qs(parsed.query).items()}
@@ -152,6 +201,21 @@ def _feature_from_subject(
         else:
             properties[key] = value
 
+    classes = list(graph.objects(subject, RDF.type))
+    if classes:
+        properties["morphgeoClass"] = str(classes[0])
+        properties["morphgeoClassLabel"] = _local_name(classes[0])
+
+    label = next(
+        (
+            properties[key]
+            for key in ("label", "prefLabel", "name", "nameunit", "title")
+            if key in properties and not isinstance(properties[key], list)
+        ),
+        _local_name(subject),
+    )
+    properties["morphgeoLabel"] = str(label)
+
     return {
         "type": "Feature",
         "id": str(subject),
@@ -163,6 +227,7 @@ def _feature_from_subject(
 def _spatial_data(
     graph: rdflib.Graph,
     rows: list[dict[str, rdflib.term.Node]],
+    variables: list[str],
 ) -> SpatialData:
     selected_subjects = {
         value
@@ -196,7 +261,11 @@ def _spatial_data(
         if features
         else None
     )
-    return SpatialData(vector=vector, raster=raster)
+    return SpatialData(
+        vector=vector,
+        raster=raster,
+        results=_sparql_results(variables, rows),
+    )
 
 
 def _execute(request: ExecuteRequest) -> ExecuteResponse:
@@ -215,6 +284,7 @@ def _execute(request: ExecuteRequest) -> ExecuteResponse:
         try:
             with redirect_stdout(output):
                 result = graph.query(request.sparql_query)
+                variables = [str(variable) for variable in result.vars]
                 rows = [dict(row.asdict()) for row in result]
         finally:
             sparql_virtualizer.mappings = previous_mappings
@@ -231,7 +301,7 @@ def _execute(request: ExecuteRequest) -> ExecuteResponse:
     return ExecuteResponse(
         status="success",
         logs=logs,
-        data=_spatial_data(graph, rows),
+        data=_spatial_data(graph, rows, variables),
     )
 
 

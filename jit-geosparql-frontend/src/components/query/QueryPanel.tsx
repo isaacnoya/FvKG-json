@@ -61,7 +61,7 @@ export function QueryPanel({
   };
 
   return (
-    <aside className="relative z-20 flex min-w-0 flex-col border-r border-border bg-[#080c12]">
+    <aside className="relative z-20 flex h-full min-h-0 min-w-0 flex-col border-r border-border bg-[#080c12]">
       <div className="flex h-16 shrink-0 items-center justify-between border-b border-border px-5">
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-cyan-300">
@@ -102,14 +102,16 @@ export function QueryPanel({
           </div>
 
           <TabsContent
-            className="overflow-hidden rounded-lg border border-border bg-[#0a0f16]"
+            className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border bg-[#0a0f16]"
             value="sparql"
           >
-            <CodeEditor
-              language="sparql"
-              onChange={onSparqlChange}
-              value={sparql}
-            />
+            <div className="min-h-0 flex-1">
+              <CodeEditor
+                language="sparql"
+                onChange={onSparqlChange}
+                value={sparql}
+              />
+            </div>
           </TabsContent>
           <TabsContent
             className="flex min-h-0 flex-col overflow-hidden rounded-lg border border-border bg-[#0a0f16]"

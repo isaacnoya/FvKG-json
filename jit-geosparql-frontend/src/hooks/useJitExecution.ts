@@ -31,6 +31,12 @@ function normalizeMapData(data: ApiResponse["data"]): MapData {
           coordinates: normalizeRasterCoordinates(data.raster.coordinates),
         }
       : undefined,
+    results: {
+      variables: Array.isArray(data.results?.variables)
+        ? data.results.variables.map(String)
+        : [],
+      rows: Array.isArray(data.results?.rows) ? data.results.rows : [],
+    },
   };
 }
 

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Box,
   Check,
@@ -10,9 +10,11 @@ import {
 import Map, {
   AttributionControl,
   NavigationControl,
+  Popup,
   ScaleControl,
   type MapRef,
 } from "react-map-gl/maplibre";
+import type { MapLayerMouseEvent } from "maplibre-gl";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -20,9 +22,13 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { getGeoJsonBounds } from "@/lib/geojson";
+import {
+  getGeoJsonBounds,
+  styleFeatureCollection,
+} from "@/lib/geojson";
 import { cn } from "@/lib/utils";
-import type { MapData } from "@/types/api";
+import type { MapData, SparqlBinding } from "@/types/api";
+import { INTERACTIVE_VECTOR_LAYER_IDS } from "@/types/map";
 import { RasterOverlay, VectorLayer } from "./layers";
 
 const MAP_STYLE =
@@ -33,6 +39,38 @@ interface MapCanvasProps {
   isLoading: boolean;
 }
 
+interface SelectedFeature {
+  id: string;
+  longitude: number;
+  latitude: number;
+  properties: Record<string, unknown>;
+}
+
+const INTERNAL_PROPERTIES = new Set([
+  "morphgeoClass",
+  "morphgeoClassLabel",
+  "morphgeoColor",
+  "morphgeoLabel",
+  "type",
+]);
+
+function localName(value: string) {
+  const normalized = value.replace(/[/#]+$/, "");
+  return normalized.split(/[/#]/).pop() || value;
+}
+
+function displayValue(value: unknown) {
+  if (Array.isArray(value)) return value.join(", ");
+  if (value === null || value === undefined) return "";
+  if (typeof value === "object") return JSON.stringify(value);
+  return String(value);
+}
+
+function compactBinding(binding: SparqlBinding) {
+  const value = displayValue(binding.value);
+  return binding.type === "uri" ? localName(value) : value;
+}
+
 export function MapCanvas({
   mapData,
   isLoading,
@@ -41,12 +79,39 @@ export function MapCanvas({
   const [mapLoaded, setMapLoaded] = useState(false);
   const [vectorVisible, setVectorVisible] = useState(true);
   const [rasterVisible, setRasterVisible] = useState(true);
-  const vectorData = mapData?.vector;
+  const [isHoveringFeature, setIsHoveringFeature] = useState(false);
+  const [selectedFeature, setSelectedFeature] =
+    useState<SelectedFeature | null>(null);
+  const styledVector = useMemo(
+    () => (mapData?.vector ? styleFeatureCollection(mapData.vector) : null),
+    [mapData?.vector],
+  );
+  const vectorData = styledVector?.data;
+  const featureClasses = styledVector?.classes ?? [];
   const rasterData = mapData?.raster;
+  const results = mapData?.results;
+
+  const selectedProperties = useMemo(
+    () =>
+      Object.entries(selectedFeature?.properties ?? {}).filter(
+        ([key]) => !INTERNAL_PROPERTIES.has(key),
+      ),
+    [selectedFeature],
+  );
+  const matchingRows = useMemo(() => {
+    if (!selectedFeature || !results) return [];
+
+    return results.rows.filter((row) =>
+      Object.values(row).some(
+        (binding) => String(binding.value) === selectedFeature.id,
+      ),
+    );
+  }, [results, selectedFeature]);
 
   useEffect(() => {
     if (vectorData) setVectorVisible(true);
     if (rasterData) setRasterVisible(true);
+    setSelectedFeature(null);
   }, [rasterData, vectorData]);
 
   useEffect(() => {
@@ -84,10 +149,27 @@ export function MapCanvas({
     });
   };
 
+  const handleFeatureClick = (event: MapLayerMouseEvent) => {
+    const feature = event.features?.[0];
+    if (!feature) {
+      setSelectedFeature(null);
+      return;
+    }
+
+    const properties = feature.properties ?? {};
+    setSelectedFeature({
+      id: String(properties.id ?? feature.id ?? ""),
+      longitude: event.lngLat.lng,
+      latitude: event.lngLat.lat,
+      properties,
+    });
+  };
+
   return (
     <section className="relative min-w-0 overflow-hidden bg-[#071015]">
       <Map
         attributionControl={false}
+        cursor={isHoveringFeature ? "pointer" : "grab"}
         initialViewState={{
           longitude: -3.7038,
           latitude: 40.4168,
@@ -95,7 +177,13 @@ export function MapCanvas({
           pitch: 0,
           bearing: 0,
         }}
+        interactiveLayerIds={
+          vectorVisible && vectorData ? INTERACTIVE_VECTOR_LAYER_IDS : []
+        }
         mapStyle={MAP_STYLE}
+        onClick={handleFeatureClick}
+        onMouseEnter={() => setIsHoveringFeature(true)}
+        onMouseLeave={() => setIsHoveringFeature(false)}
         onLoad={() => setMapLoaded(true)}
         ref={mapRef}
         reuseMaps
@@ -109,6 +197,105 @@ export function MapCanvas({
         <NavigationControl position="bottom-right" showCompass={false} />
         <ScaleControl maxWidth={120} position="bottom-left" />
         <AttributionControl compact position="bottom-right" />
+
+        {selectedFeature && (
+          <Popup
+            anchor="bottom"
+            className="feature-popup"
+            closeOnClick={false}
+            latitude={selectedFeature.latitude}
+            longitude={selectedFeature.longitude}
+            maxWidth="340px"
+            onClose={() => setSelectedFeature(null)}
+            offset={12}
+          >
+            <div className="max-h-80 min-w-64 overflow-y-auto p-3">
+              <div className="flex items-start gap-2.5 border-b border-white/10 pb-2.5">
+                <span
+                  className="mt-1 size-2.5 shrink-0 rounded-full"
+                  style={{
+                    backgroundColor: String(
+                      selectedFeature.properties.morphgeoColor ?? "#22d3ee",
+                    ),
+                  }}
+                />
+                <div className="min-w-0">
+                  <p className="truncate text-xs font-semibold text-slate-100">
+                    {displayValue(
+                      selectedFeature.properties.morphgeoLabel ??
+                        localName(selectedFeature.id),
+                    )}
+                  </p>
+                  <p className="mt-0.5 truncate text-[10px] text-slate-500">
+                    {displayValue(
+                      selectedFeature.properties.morphgeoClassLabel ??
+                        "Unclassified",
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              <dl className="space-y-1.5 py-2.5 text-[10px]">
+                {selectedProperties.map(([key, value]) => (
+                  <div className="grid grid-cols-[90px_1fr] gap-2" key={key}>
+                    <dt className="truncate text-slate-500" title={key}>
+                      {key}
+                    </dt>
+                    <dd
+                      className="break-words text-slate-200"
+                      title={displayValue(value)}
+                    >
+                      {displayValue(value)}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+
+              {matchingRows.length > 0 && (
+                <div className="border-t border-white/10 pt-2.5">
+                  <p className="mb-2 text-[9px] font-semibold uppercase tracking-[0.14em] text-cyan-300">
+                    Matching result rows
+                  </p>
+                  <div className="space-y-2">
+                    {matchingRows.slice(0, 3).map((row, rowIndex) => (
+                      <div
+                        className="rounded border border-white/[0.07] bg-black/20 p-2"
+                        key={rowIndex}
+                      >
+                        {Object.entries(row)
+                          .filter(
+                            ([, binding]) =>
+                              String(binding.value) !== selectedFeature.id,
+                          )
+                          .map(([variable, binding]) => (
+                            <div
+                              className="grid grid-cols-[70px_1fr] gap-2 text-[9px] leading-4"
+                              key={variable}
+                            >
+                              <span className="text-slate-500">
+                                ?{variable}
+                              </span>
+                              <span
+                                className="truncate text-slate-300"
+                                title={displayValue(binding.value)}
+                              >
+                                {compactBinding(binding)}
+                              </span>
+                            </div>
+                          ))}
+                      </div>
+                    ))}
+                  </div>
+                  {matchingRows.length > 3 && (
+                    <p className="mt-2 text-[9px] text-slate-500">
+                      +{matchingRows.length - 3} more rows in Results
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          </Popup>
+        )}
       </Map>
 
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_35%,transparent_0%,rgba(5,10,15,0.08)_55%,rgba(5,10,15,0.28)_100%)]" />
@@ -179,7 +366,7 @@ export function MapCanvas({
         </div>
       </TooltipProvider>
 
-      <div className="absolute right-5 top-20 w-48 rounded-lg border border-white/10 bg-[#090f17]/90 p-3 shadow-panel backdrop-blur-xl">
+      <div className="absolute right-5 top-20 w-56 rounded-lg border border-white/10 bg-[#090f17]/90 p-3 shadow-panel backdrop-blur-xl">
         <div className="mb-3 flex items-center justify-between">
           <span className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.15em] text-slate-400">
             <Layers3 className="size-3.5" />
@@ -204,6 +391,28 @@ export function MapCanvas({
               <Check className="size-3 text-cyan-300" />
             )}
           </button>
+          {vectorData && vectorVisible && featureClasses.length > 0 && (
+            <div className="max-h-28 space-y-1 overflow-y-auto border-l border-white/[0.07] pl-3">
+              {featureClasses.map((featureClass) => (
+                <div
+                  className="flex items-center justify-between gap-2 text-[9px]"
+                  key={featureClass.id}
+                  title={featureClass.id}
+                >
+                  <span className="flex min-w-0 items-center gap-2 text-slate-400">
+                    <span
+                      className="size-2 shrink-0 rounded-full"
+                      style={{ backgroundColor: featureClass.color }}
+                    />
+                    <span className="truncate">{featureClass.label}</span>
+                  </span>
+                  <span className="font-mono text-slate-600">
+                    {featureClass.count}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
           <button
             className="flex w-full items-center justify-between rounded-md px-1 py-1 text-left disabled:cursor-not-allowed disabled:opacity-40"
             disabled={!rasterData}
