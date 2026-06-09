@@ -1,0 +1,139 @@
+@prefix geo: <http://www.opengis.net/ont/geosparql#> .
+@prefix geolinkeddata: <http://geo.linkeddata.es/ontology/> .
+@prefix htv: <http://www.w3.org/2011/http#> .
+@prefix ogc: <http://www.ogc.org/> .
+@prefix rml: <http://w3id.org/rml/> .
+@prefix void: <http://rdfs.org/ns/void#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ogc:damorweirTriplesMap2 a rml:TriplesMap ;
+    rml:logicalSource ogc:LogicalSource_damorweir ;
+    rml:predicateObjectMap [ rml:objectMap [ rml:parentTriplesMap ogc:damorweirTriplesMap ] ;
+            rml:predicate geo:member ] ;
+    rml:subjectMap [ rml:class geo:FeatureCollection ;
+            rml:constant ogc:damorweir_collection ] .
+
+ogc:FuenteAPI_damorweir htv:absoluteURI "https://api-features.idee.es/collections/damorweir/items?f=json&limit=10000" .
+
+ogc:damorweirTriplesMap a rml:TriplesMap ;
+    rml:logicalSource ogc:LogicalSource_damorweir ;
+    rml:predicateObjectMap [ rml:objectMap [ void:filterx "fuente=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.fuente" ] ;
+            rml:predicate ogc:fuente ],
+        [ rml:objectMap [ void:filterx "long_coron=@{1}" ;
+                    rml:datatype xsd:float ;
+                    rml:reference "properties.long_coron" ] ;
+            rml:predicate ogc:long_coron ],
+        [ rml:objectMap [ void:filterx "resolucion=@{1}" ;
+                    rml:datatype xsd:integer ;
+                    rml:reference "properties.resolucion" ] ;
+            rml:predicate ogc:resolucion ],
+        [ rml:objectMap [ void:filterx "bbox=@{1}" ;
+                    rml:datatype geo:geoJSONLiteral ;
+                    rml:reference "geometry" ] ;
+            rml:predicate geo:hasGeometry ],
+        [ rml:objectMap [ void:filterx "condicion=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.condicion" ] ;
+            rml:predicate ogc:condicion ],
+        [ rml:objectMap [ void:filterx "condiciond=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.condiciond" ] ;
+            rml:predicate ogc:condiciond ],
+        [ rml:objectMap [ void:filterx "inspireid_localid=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.inspireid_localid" ] ;
+            rml:predicate ogc:inspireid_localid ],
+        [ rml:objectMap [ void:filterx "nilreason_varios=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.nilreason_varios" ] ;
+            rml:predicate ogc:nilreason_varios ],
+        [ rml:objectMap [ void:filterx "nilreason_nombre=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.nilreason_nombre" ] ;
+            rml:predicate ogc:nilreason_nombre ],
+        [ rml:objectMap [ void:filterx "nativeness=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.nativeness" ] ;
+            rml:predicate geolinkeddata:origina ],
+        [ rml:objectMap [ void:filterx "script=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.script" ] ;
+            rml:predicate ogc:script ],
+        [ rml:objectMap [ void:filterx "materiald=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.materiald" ] ;
+            rml:predicate ogc:materiald ],
+        [ rml:objectMap [ void:filterx "tipo_presad=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.tipo_presad" ] ;
+            rml:predicate ogc:tipo_presad ],
+        [ rml:objectMap [ void:filterx "nombre=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.nombre" ] ;
+            rml:predicate ogc:nombre ],
+        [ rml:objectMap [ void:filterx "hydroid_localid=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.hydroid_localid" ] ;
+            rml:predicate ogc:hydroid_localid ],
+        [ rml:objectMap [ void:filterx "fuented=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.fuented" ] ;
+            rml:predicate ogc:fuented ],
+        [ rml:objectMap [ void:filterx "nil_varios=@{1}" ;
+                    rml:datatype xsd:boolean ;
+                    rml:reference "properties.nil_varios" ] ;
+            rml:predicate ogc:nil_varios ],
+        [ rml:objectMap [ void:filterx "id_nodo=@{1}" ;
+                    rml:datatype xsd:integer ;
+                    rml:reference "properties.id_nodo" ] ;
+            rml:predicate ogc:id_nodo ],
+        [ rml:objectMap [ void:filterx "z_coron=@{1}" ;
+                    rml:datatype xsd:float ;
+                    rml:reference "properties.z_coron" ] ;
+            rml:predicate ogc:z_coron ],
+        [ rml:objectMap [ void:filterx "id_demarc=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.id_demarc" ] ;
+            rml:predicate ogc:id_demarc ],
+        [ rml:objectMap [ void:filterx "nil_nombre=@{1}" ;
+                    rml:datatype xsd:boolean ;
+                    rml:reference "properties.nil_nombre" ] ;
+            rml:predicate geolinkeddata:nombre ],
+        [ rml:objectMap [ void:filterx "tipo_presa=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.tipo_presa" ] ;
+            rml:predicate ogc:tipo_presa ],
+        [ rml:objectMap [ void:filterx "id_demarcd=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.id_demarcd" ] ;
+            rml:predicate ogc:id_demarcd ],
+        [ rml:objectMap [ void:filterx "id_edif=@{1}" ;
+                    rml:datatype xsd:integer ;
+                    rml:reference "properties.id_edif" ] ;
+            rml:predicate ogc:id_edif ],
+        [ rml:objectMap [ void:filterx "material=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.material" ] ;
+            rml:predicate ogc:material ],
+        [ rml:objectMap [ void:filterx "fecha_alta=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.fecha_alta" ] ;
+            rml:predicate ogc:fecha_alta ],
+        [ rml:objectMap [ rml:datatype xsd:string ;
+                    rml:reference "geometry_name" ] ;
+            rml:predicate ogc:geometryName ],
+        [ rml:objectMap [ void:filterx "geometry=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.geometry" ] ;
+            rml:predicate <http://geo.linkeddata.es/ontology/hydro-ontology.owl#geometría> ] ;
+    rml:subjectMap [ rml:class geolinkeddata:Embalse ;
+            rml:template "https://api-features.idee.es/collections/damorweir/items/{id}" ] .
+
+ogc:LogicalSource_damorweir a rml:logicalSource ;
+    void:nextPage "$.links[?(@.rel==\"next\")].href" ;
+    rml:iterator "$.features.*" ;
+    rml:referenceFormulation rml:HTTPAPI ;
+    rml:source ogc:FuenteAPI_damorweir .
+

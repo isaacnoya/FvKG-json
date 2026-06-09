@@ -58,7 +58,7 @@ class GenerationStats:
             total = self.entity_totals[entity_type]
             aligned = self.aligned_total(entity_type)
             print(f"  {entity_type.title()}s: {aligned}/{total} aligned")
-            for source in ("local", "notlocal", "proposal"):
+            for source in ("baseline", "local", "notlocal", "proposal"):
                 print(f"    {source}: {self.alignment_totals[entity_type][source]}")
             print(f"    unaligned: {total - aligned}")
         print("  LLM axiom review:")
@@ -75,6 +75,7 @@ class AlignmentReviewer:
         self.interactive = interactive
         self.local_top_k = local_top_k
         self.stats = stats
+        self.local_reviews = []
 
     def _ask_yes_no(self, prompt, default=False):
         if not self.interactive:
@@ -107,6 +108,27 @@ class AlignmentReviewer:
         elif entity_type == "class":
             matches = [match for match in matches if match["type"] == "Clase"]
         matches = matches[:self.local_top_k]
+
+        review = {
+            "term": term,
+            "description": description or "",
+            "entity_type": entity_type,
+            "query_text": matches[0].get("query_text") if matches else None,
+            "candidates": [
+                {
+                    "rank": idx,
+                    "iri": match["iri"],
+                    "name": match["name"],
+                    "type": match["type"],
+                    "confidence": match["confidence"],
+                }
+                for idx, match in enumerate(matches, start=1)
+            ],
+            "selected_rank": None,
+            "selected_iri": None,
+        }
+        self.local_reviews.append(review)
+
         if not matches:
             return None
         print(f"\nLocal ontology matches for {entity_type} '{term}':")
@@ -127,7 +149,11 @@ class AlignmentReviewer:
             if not answer or answer == "0":
                 return None
             if answer.isdigit() and 1 <= int(answer) <= len(matches):
-                return URIRef(matches[int(answer) - 1]["iri"])
+                selected_rank = int(answer)
+                selected_iri = matches[selected_rank - 1]["iri"]
+                review["selected_rank"] = selected_rank
+                review["selected_iri"] = selected_iri
+                return URIRef(selected_iri)
             print(f"Please enter a number between 1 and {len(matches)}, or 0 to skip.")
 
     def align(self, term, description, entity_type, oe=None, search_not_local=False, model=None):
@@ -542,6 +568,7 @@ def _add_property_alignment(ontology, collection, prop, aligned_uri, stats=None,
     ontology.add((aligned_uri, RDFS.range, _datatype_uri(prop["type"])))
     ontology.add((aligned_uri, RDFS.domain, class_uri))
     prop["equivalentClass"] = aligned_uri
+    prop["annotation_source"] = source
     if stats and source:
         stats.count_alignment("property", source)
 
@@ -562,11 +589,20 @@ def _add_property_extension(ontology, collection, prop, proposal, stats=None):
     local_property_uri = OGC[prop["title"]]
     ontology.add((local_property_uri, OWL.equivalentProperty, proposed_uri))
     prop["equivalentClass"] = proposed_uri
+    prop["annotation_source"] = "proposal"
     if stats:
         stats.count_alignment("property", "proposal")
 
 
-def review_property_alignments(collections, ontology, interactive=True, stats=None):
+def review_property_alignments(
+    collections,
+    ontology,
+    interactive=True,
+    stats=None,
+    use_local=True,
+    use_external=True,
+    use_proposals=True,
+):
     if not interactive:
         return
 
@@ -589,24 +625,37 @@ def review_property_alignments(collections, ontology, interactive=True, stats=No
             print("Skipping review for this property.")
             continue
 
-        external = searchNotLocal(property_title, description, "property", model=representative_collection.model)
-        if external:
-            accepted = representative_collection.reviewer.confirm_external(property_title, "property", external)
-            if accepted:
+        if use_local:
+            local = representative_collection.reviewer.choose_local(property_title, description, "property", representative_collection.oe)
+            if local:
                 for index, (c, prop) in enumerate(occurrences):
                     _add_property_alignment(
                         ontology,
                         c,
                         prop,
-                        accepted,
+                        local,
                         stats=stats if index == 0 else None,
-                        source="notlocal"
+                        source="local",
                     )
-                continue        
-        local = representative_collection.reviewer.choose_local(property_title, description, "property", representative_collection.oe)
-        if local:
-            for c, prop in occurrences:
-                _add_property_alignment(ontology, c, prop, local, stats=stats, source="local")
+                continue
+
+        if use_external:
+            external = searchNotLocal(property_title, description, "property", model=representative_collection.model)
+            if external:
+                accepted = representative_collection.reviewer.confirm_external(property_title, "property", external)
+                if accepted:
+                    for index, (c, prop) in enumerate(occurrences):
+                        _add_property_alignment(
+                            ontology,
+                            c,
+                            prop,
+                            accepted,
+                            stats=stats if index == 0 else None,
+                            source="notlocal",
+                        )
+                    continue
+
+        if not use_proposals:
             continue
         
         proposal = llm_propose_property(

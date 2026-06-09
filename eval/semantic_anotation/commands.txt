@@ -1,0 +1,117 @@
+# Semantic annotation model experiments
+#
+# Run these commands from the project root. Each command starts from the same
+# source ontology and mappings, writes to its own result folder, and records the
+# complete evaluation in results.json.
+#
+# Prerequisites:
+# - GROQ_API_KEY must be available in OGCmappingGenerator/.env or the environment
+#   for stage 2.
+#
+# Evaluation design:
+# - Stage 1: three embedding-only runs. No external search or LLM is called.
+# - Stage 2: three LLM runs. All load exactly the same accepted annotations from
+#   the winning embedding run and only process the remaining concepts.
+# - Strict phase isolation requires six runs: 3 embeddings + 3 LLMs.
+
+# Stage 1: compare embedding models
+
+# 1/6: multilingual MiniLM L12, embeddings only
+/opt/miniconda3/bin/conda run -n oeg python OGCmappingGenerator/semantic_annotation.py \
+  --ontology casoDeUso/ontology.ttl \
+  --mappings_folder casoDeUso/mappings \
+  --output_ontology eval/semantic_anotation/results/multilingual-minilm-l12__embeddings/ontology.ttl \
+  --output_mappings_folder eval/semantic_anotation/results/multilingual-minilm-l12__embeddings/mappings \
+  --rontologias casoDeUso/ontologiasReferencia \
+  --vectorial_model sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2 \
+  --embedding_cache eval/semantic_anotation/cache/multilingual-minilm-l12.pt \
+  --mode embeddings \
+  --run_name multilingual-minilm-l12__embeddings \
+  --results_file eval/semantic_anotation/results/multilingual-minilm-l12__embeddings/results.json \
+  --reset-equivalent-classes \
+  --reset-equivalent-properties
+
+# 2/6: multilingual DistilUSE, embeddings only
+/opt/miniconda3/bin/conda run -n oeg python OGCmappingGenerator/semantic_annotation.py \
+  --ontology casoDeUso/ontology.ttl \
+  --mappings_folder casoDeUso/mappings \
+  --output_ontology eval/semantic_anotation/results/multilingual-distiluse__embeddings/ontology.ttl \
+  --output_mappings_folder eval/semantic_anotation/results/multilingual-distiluse__embeddings/mappings \
+  --rontologias casoDeUso/ontologiasReferencia \
+  --vectorial_model sentence-transformers/distiluse-base-multilingual-cased-v2 \
+  --embedding_cache eval/semantic_anotation/cache/multilingual-distiluse.pt \
+  --mode embeddings \
+  --run_name multilingual-distiluse__embeddings \
+  --results_file eval/semantic_anotation/results/multilingual-distiluse__embeddings/results.json \
+  --reset-equivalent-classes \
+  --reset-equivalent-properties
+
+# 3/6: English MiniLM L6, embeddings only
+/opt/miniconda3/bin/conda run -n oeg python OGCmappingGenerator/semantic_annotation.py \
+  --ontology casoDeUso/ontology.ttl \
+  --mappings_folder casoDeUso/mappings \
+  --output_ontology eval/semantic_anotation/results/english-minilm-l6__embeddings/ontology.ttl \
+  --output_mappings_folder eval/semantic_anotation/results/english-minilm-l6__embeddings/mappings \
+  --rontologias casoDeUso/ontologiasReferencia \
+  --vectorial_model sentence-transformers/all-MiniLM-L6-v2 \
+  --embedding_cache eval/semantic_anotation/cache/english-minilm-l6.pt \
+  --mode embeddings \
+  --run_name english-minilm-l6__embeddings \
+  --results_file eval/semantic_anotation/results/english-minilm-l6__embeddings/results.json \
+  --reset-equivalent-classes \
+  --reset-equivalent-properties
+
+# Stage 2: compare LLM models using frozen annotations
+#
+# After reviewing runs 1-3, point this variable to the results.json produced by
+# the winning embedding. The default below selects multilingual MiniLM L12.
+BEST_EMBEDDING_NAME=multilingual-minilm-l12
+BEST_EMBEDDING_RESULTS=eval/semantic_anotation/results/multilingual-minilm-l12__embeddings/results.json
+
+# 4/6: frozen embedding annotations + GPT-OSS 20B
+/opt/miniconda3/bin/conda run -n oeg python OGCmappingGenerator/semantic_annotation.py \
+  --ontology casoDeUso/ontology.ttl \
+  --mappings_folder casoDeUso/mappings \
+  --output_ontology "eval/semantic_anotation/results/${BEST_EMBEDDING_NAME}__gpt-oss-20b/ontology.ttl" \
+  --output_mappings_folder "eval/semantic_anotation/results/${BEST_EMBEDDING_NAME}__gpt-oss-20b/mappings" \
+  --rontologias casoDeUso/ontologiasReferencia \
+  --annotations_file "$BEST_EMBEDDING_RESULTS" \
+  --llm_model openai/gpt-oss-20b \
+  --mode llm \
+  --run_name "${BEST_EMBEDDING_NAME}__gpt-oss-20b" \
+  --results_file "eval/semantic_anotation/results/${BEST_EMBEDDING_NAME}__gpt-oss-20b/results.json" \
+  --reset-equivalent-classes \
+  --reset-equivalent-properties \
+  -n
+
+# 5/6: frozen embedding annotations + GPT-OSS 120B
+/opt/miniconda3/bin/conda run -n oeg python OGCmappingGenerator/semantic_annotation.py \
+  --ontology casoDeUso/ontology.ttl \
+  --mappings_folder casoDeUso/mappings \
+  --output_ontology "eval/semantic_anotation/results/${BEST_EMBEDDING_NAME}__gpt-oss-120b/ontology.ttl" \
+  --output_mappings_folder "eval/semantic_anotation/results/${BEST_EMBEDDING_NAME}__gpt-oss-120b/mappings" \
+  --rontologias casoDeUso/ontologiasReferencia \
+  --annotations_file "$BEST_EMBEDDING_RESULTS" \
+  --llm_model openai/gpt-oss-120b \
+  --mode llm \
+  --run_name "${BEST_EMBEDDING_NAME}__gpt-oss-120b" \
+  --results_file "eval/semantic_anotation/results/${BEST_EMBEDDING_NAME}__gpt-oss-120b/results.json" \
+  --reset-equivalent-classes \
+  --reset-equivalent-properties \
+  -n
+
+# 6/6: frozen embedding annotations + Llama 3.3 70B
+/opt/miniconda3/bin/conda run -n oeg python OGCmappingGenerator/semantic_annotation.py \
+  --ontology casoDeUso/ontology.ttl \
+  --mappings_folder casoDeUso/mappings \
+  --output_ontology "eval/semantic_anotation/results/${BEST_EMBEDDING_NAME}__llama-3.3-70b/ontology.ttl" \
+  --output_mappings_folder "eval/semantic_anotation/results/${BEST_EMBEDDING_NAME}__llama-3.3-70b/mappings" \
+  --rontologias casoDeUso/ontologiasReferencia \
+  --annotations_file "$BEST_EMBEDDING_RESULTS" \
+  --llm_model llama-3.3-70b-versatile \
+  --mode llm \
+  --run_name "${BEST_EMBEDDING_NAME}__llama-3.3-70b" \
+  --results_file "eval/semantic_anotation/results/${BEST_EMBEDDING_NAME}__llama-3.3-70b/results.json" \
+  --reset-equivalent-classes \
+  --reset-equivalent-properties \
+  -n

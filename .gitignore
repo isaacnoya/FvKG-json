@@ -18,3 +18,4 @@ moprhgeo/output.ttl
 .vscode
 .DS_Store
 onto_index.pt
+OGCmappingGenerator/onto_index.pt
