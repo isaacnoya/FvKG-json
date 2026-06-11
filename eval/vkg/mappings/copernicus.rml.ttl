@@ -1,0 +1,34 @@
+@prefix geo: <http://www.opengis.net/ont/geosparql#> .
+@prefix htv: <http://www.w3.org/2011/http#> .
+@prefix : <http://example.com/> .
+@prefix rml: <http://w3id.org/rml/> .
+@prefix void: <http://rdfs.org/ns/void#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+:copernicusWcsTriplesMap a rml:TriplesMap ;
+    rml:logicalSource :LogicalSourceCopernicusWcs ;
+    rml:predicateObjectMap [ rml:objectMap [ void:filterx "BBOX=@{1}" ;
+                    rml:constant "Cannot be unbounded" ;
+                    rml:datatype geo:geoJSONLiteral ] ;
+            rml:predicate geo:hasBoundingBox ],
+        [ rml:objectMap [ void:filterx "BBOX=@{1}" ;
+                    rml:constant "Cannot be unbounded" ;
+                    rml:datatype geo:geoJSONLiteral ] ;
+            rml:predicate geo:hasGeometry ],
+        [ rml:objectMap [ void:filterx "COVERAGE=@{1}" ;
+                    rml:constant "Cannot be unbounded" ;
+                    rml:datatype xsd:string ] ;
+            rml:predicate :coverage ],
+        [ rml:objectMap [ void:filterx "TIME=@{1}" ;
+                    rml:constant "Cannot be unbounded" ;
+                    rml:datatype xsd:string ] ;
+            rml:predicate :time ] ;
+    rml:subjectMap [ rml:class :copernicus_wcs ;
+            rml:template "https://sh.dataspace.copernicus.eu/ogc/wcs/9629bdae-70c4-4863-af1b-d007dd102174?SERVICE=WCS&REQUEST=GetCoverage&MAXCC=20&WIDTH=2500&HEIGHT=2500&FORMAT=image/jpeg&SHOWLOGO=false" ] .
+
+:FuenteAPI_copernicus_wcs htv:absoluteURI "https://sh.dataspace.copernicus.eu/ogc/wcs/9629bdae-70c4-4863-af1b-d007dd102174?SERVICE=WCS&REQUEST=GetCoverage&MAXCC=20&WIDTH=2500&HEIGHT=2500&FORMAT=image/jpeg&SHOWLOGO=false&CRS=EPSG:4326" .
+
+:LogicalSourceCopernicusWcs a rml:logicalSource ;
+    rml:referenceFormulation rml:CoverageForm ;
+    rml:source :FuenteAPI_copernicus_wcs .
+

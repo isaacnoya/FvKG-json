@@ -1,0 +1,1581 @@
+{
+  "run_name": "multilingual-minilm-l12__gpt-oss-20b",
+  "started_at": "2026-06-10T10:16:38.131981+00:00",
+  "completed_at": "2026-06-10T10:29:39.162444+00:00",
+  "duration_seconds": 781.031,
+  "command": "OGCmappingGenerator/semantic_annotation.py --ontology casoDeUso/ontology.ttl --mappings_folder casoDeUso/mappings --output_ontology eval/semantic_anotation/results/multilingual-minilm-l12__gpt-oss-20b/ontology.ttl --output_mappings_folder eval/semantic_anotation/results/multilingual-minilm-l12__gpt-oss-20b/mappings --rontologias casoDeUso/ontologiasReferencia --annotations_file eval/semantic_anotation/results/multilingual-minilm-l12__embeddings/results.json --llm_model openai/gpt-oss-20b --mode llm --run_name multilingual-minilm-l12__gpt-oss-20b --results_file eval/semantic_anotation/results/multilingual-minilm-l12__gpt-oss-20b/results.json --reset-equivalent-classes --reset-equivalent-properties -n",
+  "models": {
+    "embedding": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+    "llm": "openai/gpt-oss-20b"
+  },
+  "configuration": {
+    "mode": "llm",
+    "interactive": true,
+    "local_top_k": 5,
+    "class_extension_proposals": true,
+    "reset_equivalent_classes": true,
+    "reset_equivalent_properties": true,
+    "embedding_cache": null
+  },
+  "inputs": {
+    "ontology": "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/casoDeUso/ontology.ttl",
+    "mappings_folder": "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/casoDeUso/mappings",
+    "reference_ontologies": [
+      "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/casoDeUso/ontologiasReferencia/hydrOntology_GeoLinkedData.owl",
+      "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/casoDeUso/ontologiasReferencia/schemaorg-all-http.owl"
+    ],
+    "annotations_file": "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/semantic_anotation/results/multilingual-minilm-l12__embeddings/results.json"
+  },
+  "outputs": {
+    "ontology": "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/semantic_anotation/results/multilingual-minilm-l12__gpt-oss-20b/ontology.ttl",
+    "mappings_folder": "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/semantic_anotation/results/multilingual-minilm-l12__gpt-oss-20b/mappings"
+  },
+  "statistics": {
+    "entities": {
+      "class": {
+        "total": 8,
+        "aligned": 5,
+        "unaligned": 3,
+        "by_source": {
+          "baseline": 2,
+          "local": 0,
+          "notlocal": 0,
+          "proposal": 3
+        }
+      },
+      "property": {
+        "total": 71,
+        "aligned": 5,
+        "unaligned": 66,
+        "by_source": {
+          "baseline": 4,
+          "local": 0,
+          "notlocal": 1,
+          "proposal": 0
+        }
+      }
+    },
+    "llm_axiom_review": {
+      "proposals_reviewed": 2,
+      "proposals_accepted": 1,
+      "proposals_denied": 1,
+      "triples_accepted": 0,
+      "triples_skipped": 1
+    }
+  },
+  "mappings": {
+    "processed": 14,
+    "changed": 8
+  },
+  "embedding_reviews": [],
+  "class_annotations": [
+    {
+      "concept_id": "administrativeunit",
+      "concept_uri": "http://www.ogc.org/administrativeunit",
+      "title": "AU Unidades administrativas",
+      "description": "Unidad de administración sobre la que un Estado miembro tiene y/o ejerce derechos jurisdiccionales para el gobierno local, regional y nacional.",
+      "annotated_class_uri": null,
+      "status": "unaligned",
+      "annotation_source": null
+    },
+    {
+      "concept_id": "agua:Zif_riesgo_pob_q500",
+      "concept_uri": "http://www.ogc.org/agua:Zif_riesgo_pob_q500",
+      "title": "NZ.Riesgo a la población Q500",
+      "description": null,
+      "annotated_class_uri": null,
+      "status": "unaligned",
+      "annotation_source": null
+    },
+    {
+      "concept_id": "damorweir",
+      "concept_uri": "http://www.ogc.org/damorweir",
+      "title": "HY-P Presa o represa",
+      "description": "Barrera permanente a través de un curso de agua, utilizada para almacenar agua o controlar su flujo.",
+      "annotated_class_uri": null,
+      "status": "unaligned",
+      "annotation_source": null
+    },
+    {
+      "concept_id": "drainagebasin",
+      "concept_uri": "http://www.ogc.org/drainagebasin",
+      "title": "HY-P Cuenca de captación",
+      "description": "Zona que tiene un desagüe común para su escorrentía.",
+      "annotated_class_uri": "http://geo.linkeddata.es/ontology/Cuenca_de_captación",
+      "status": "annotated",
+      "annotation_source": "proposal"
+    },
+    {
+      "concept_id": "lock",
+      "concept_uri": "http://www.ogc.org/lock",
+      "title": "HY-P Esclusa",
+      "description": "Recinto con un par o una serie de puertas utilizado para hacer subir o bajar a los buques que pasan de un nivel de agua a otro.",
+      "annotated_class_uri": "http://geo.linkeddata.es/ontology/Esclusa",
+      "status": "annotated",
+      "annotation_source": "proposal"
+    },
+    {
+      "concept_id": "standingwater",
+      "concept_uri": "http://www.ogc.org/standingwater",
+      "title": "HY-P Aguas estancadas",
+      "description": "Masa de agua que está rodeada por completo de tierra.",
+      "annotated_class_uri": "http://geo.linkeddata.es/ontology/Aguas_Quietas",
+      "status": "annotated",
+      "annotation_source": "baseline"
+    },
+    {
+      "concept_id": "watercourselinksequence",
+      "concept_uri": "http://www.ogc.org/watercourselinksequence",
+      "title": "HY-N Secuencia de enlaces de curso de agua",
+      "description": "Secuencia de enlaces de curso de agua que representa una trayectoria sin ramificación a través de una red hidrográfica.",
+      "annotated_class_uri": "http://geo.linkeddata.es/ontology/Secuencia_Enlaces_Curso_Agua",
+      "status": "annotated",
+      "annotation_source": "proposal"
+    },
+    {
+      "concept_id": "wetland",
+      "concept_uri": "http://www.ogc.org/wetland",
+      "title": "HY-P Humedal",
+      "description": "Zona poco drenada o inundada periódicamente cuyo suelo se encuentra saturado de agua y admite vegetación.",
+      "annotated_class_uri": "http://geo.linkeddata.es/ontology/Humedal",
+      "status": "annotated",
+      "annotation_source": "baseline"
+    }
+  ],
+  "property_annotations": [
+    {
+      "concept": "area",
+      "concept_uri": "http://www.ogc.org/area",
+      "datatypes": [
+        "number"
+      ],
+      "collections": [
+        {
+          "id": "drainagebasin",
+          "title": "HY-P Cuenca de captación"
+        },
+        {
+          "id": "standingwater",
+          "title": "HY-P Aguas estancadas"
+        },
+        {
+          "id": "wetland",
+          "title": "HY-P Humedal"
+        }
+      ],
+      "annotation_sources": [
+        "notlocal"
+      ],
+      "annotated_property_uri": "http://dbpedia.org/ontology/area",
+      "status": "annotated"
+    },
+    {
+      "concept": "cod_arpsi",
+      "concept_uri": "http://www.ogc.org/cod_arpsi",
+      "datatypes": [
+        "string"
+      ],
+      "collections": [
+        {
+          "id": "agua:Zif_riesgo_pob_q500",
+          "title": "NZ.Riesgo a la población Q500"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "codnut1",
+      "concept_uri": "http://www.ogc.org/codnut1",
+      "datatypes": [
+        "string"
+      ],
+      "collections": [
+        {
+          "id": "administrativeunit",
+          "title": "AU Unidades administrativas"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "codnut2",
+      "concept_uri": "http://www.ogc.org/codnut2",
+      "datatypes": [
+        "string"
+      ],
+      "collections": [
+        {
+          "id": "administrativeunit",
+          "title": "AU Unidades administrativas"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "codnut3",
+      "concept_uri": "http://www.ogc.org/codnut3",
+      "datatypes": [
+        "string"
+      ],
+      "collections": [
+        {
+          "id": "administrativeunit",
+          "title": "AU Unidades administrativas"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "condicion",
+      "concept_uri": "http://www.ogc.org/condicion",
+      "datatypes": [
+        "string"
+      ],
+      "collections": [
+        {
+          "id": "damorweir",
+          "title": "HY-P Presa o represa"
+        },
+        {
+          "id": "lock",
+          "title": "HY-P Esclusa"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "condiciond",
+      "concept_uri": "http://www.ogc.org/condiciond",
+      "datatypes": [
+        "string"
+      ],
+      "collections": [
+        {
+          "id": "damorweir",
+          "title": "HY-P Presa o represa"
+        },
+        {
+          "id": "lock",
+          "title": "HY-P Esclusa"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "country",
+      "concept_uri": "http://www.ogc.org/country",
+      "datatypes": [
+        "string"
+      ],
+      "collections": [
+        {
+          "id": "administrativeunit",
+          "title": "AU Unidades administrativas"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "drainsbasin",
+      "concept_uri": "http://www.ogc.org/drainsbasin",
+      "datatypes": [
+        "string"
+      ],
+      "collections": [
+        {
+          "id": "standingwater",
+          "title": "HY-P Aguas estancadas"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "fecha",
+      "concept_uri": "http://www.ogc.org/fecha",
+      "datatypes": [
+        "integer"
+      ],
+      "collections": [
+        {
+          "id": "agua:Zif_riesgo_pob_q500",
+          "title": "NZ.Riesgo a la población Q500"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "fecha_alta",
+      "concept_uri": "http://www.ogc.org/fecha_alta",
+      "datatypes": [
+        "string"
+      ],
+      "collections": [
+        {
+          "id": "damorweir",
+          "title": "HY-P Presa o represa"
+        },
+        {
+          "id": "drainagebasin",
+          "title": "HY-P Cuenca de captación"
+        },
+        {
+          "id": "lock",
+          "title": "HY-P Esclusa"
+        },
+        {
+          "id": "standingwater",
+          "title": "HY-P Aguas estancadas"
+        },
+        {
+          "id": "watercourselinksequence",
+          "title": "HY-N Secuencia de enlaces de curso de agua"
+        },
+        {
+          "id": "wetland",
+          "title": "HY-P Humedal"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "fuente",
+      "concept_uri": "http://www.ogc.org/fuente",
+      "datatypes": [
+        "string"
+      ],
+      "collections": [
+        {
+          "id": "damorweir",
+          "title": "HY-P Presa o represa"
+        },
+        {
+          "id": "drainagebasin",
+          "title": "HY-P Cuenca de captación"
+        },
+        {
+          "id": "lock",
+          "title": "HY-P Esclusa"
+        },
+        {
+          "id": "standingwater",
+          "title": "HY-P Aguas estancadas"
+        },
+        {
+          "id": "watercourselinksequence",
+          "title": "HY-N Secuencia de enlaces de curso de agua"
+        },
+        {
+          "id": "wetland",
+          "title": "HY-P Humedal"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "fuented",
+      "concept_uri": "http://www.ogc.org/fuented",
+      "datatypes": [
+        "string"
+      ],
+      "collections": [
+        {
+          "id": "damorweir",
+          "title": "HY-P Presa o represa"
+        },
+        {
+          "id": "drainagebasin",
+          "title": "HY-P Cuenca de captación"
+        },
+        {
+          "id": "lock",
+          "title": "HY-P Esclusa"
+        },
+        {
+          "id": "standingwater",
+          "title": "HY-P Aguas estancadas"
+        },
+        {
+          "id": "watercourselinksequence",
+          "title": "HY-N Secuencia de enlaces de curso de agua"
+        },
+        {
+          "id": "wetland",
+          "title": "HY-P Humedal"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "gdb_geomattr_data",
+      "concept_uri": "http://www.ogc.org/gdb_geomattr_data",
+      "datatypes": [
+        "string"
+      ],
+      "collections": [
+        {
+          "id": "agua:Zif_riesgo_pob_q500",
+          "title": "NZ.Riesgo a la población Q500"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "gid",
+      "concept_uri": "http://www.ogc.org/gid",
+      "datatypes": [
+        "integer"
+      ],
+      "collections": [
+        {
+          "id": "administrativeunit",
+          "title": "AU Unidades administrativas"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "hydroid_localid",
+      "concept_uri": "http://www.ogc.org/hydroid_localid",
+      "datatypes": [
+        "string"
+      ],
+      "collections": [
+        {
+          "id": "damorweir",
+          "title": "HY-P Presa o represa"
+        },
+        {
+          "id": "drainagebasin",
+          "title": "HY-P Cuenca de captación"
+        },
+        {
+          "id": "lock",
+          "title": "HY-P Esclusa"
+        },
+        {
+          "id": "standingwater",
+          "title": "HY-P Aguas estancadas"
+        },
+        {
+          "id": "watercourselinksequence",
+          "title": "HY-N Secuencia de enlaces de curso de agua"
+        },
+        {
+          "id": "wetland",
+          "title": "HY-P Humedal"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "id_curso",
+      "concept_uri": "http://www.ogc.org/id_curso",
+      "datatypes": [
+        "string"
+      ],
+      "collections": [
+        {
+          "id": "watercourselinksequence",
+          "title": "HY-N Secuencia de enlaces de curso de agua"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "id_demarc",
+      "concept_uri": "http://www.ogc.org/id_demarc",
+      "datatypes": [
+        "string"
+      ],
+      "collections": [
+        {
+          "id": "damorweir",
+          "title": "HY-P Presa o represa"
+        },
+        {
+          "id": "drainagebasin",
+          "title": "HY-P Cuenca de captación"
+        },
+        {
+          "id": "lock",
+          "title": "HY-P Esclusa"
+        },
+        {
+          "id": "standingwater",
+          "title": "HY-P Aguas estancadas"
+        },
+        {
+          "id": "watercourselinksequence",
+          "title": "HY-N Secuencia de enlaces de curso de agua"
+        },
+        {
+          "id": "wetland",
+          "title": "HY-P Humedal"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "id_demarcd",
+      "concept_uri": "http://www.ogc.org/id_demarcd",
+      "datatypes": [
+        "string"
+      ],
+      "collections": [
+        {
+          "id": "damorweir",
+          "title": "HY-P Presa o represa"
+        },
+        {
+          "id": "drainagebasin",
+          "title": "HY-P Cuenca de captación"
+        },
+        {
+          "id": "lock",
+          "title": "HY-P Esclusa"
+        },
+        {
+          "id": "standingwater",
+          "title": "HY-P Aguas estancadas"
+        },
+        {
+          "id": "watercourselinksequence",
+          "title": "HY-N Secuencia de enlaces de curso de agua"
+        },
+        {
+          "id": "wetland",
+          "title": "HY-P Humedal"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "id_edif",
+      "concept_uri": "http://www.ogc.org/id_edif",
+      "datatypes": [
+        "integer"
+      ],
+      "collections": [
+        {
+          "id": "damorweir",
+          "title": "HY-P Presa o represa"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "id_municip",
+      "concept_uri": "http://www.ogc.org/id_municip",
+      "datatypes": [
+        "string"
+      ],
+      "collections": [
+        {
+          "id": "agua:Zif_riesgo_pob_q500",
+          "title": "NZ.Riesgo a la población Q500"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "id_nodo",
+      "concept_uri": "http://www.ogc.org/id_nodo",
+      "datatypes": [
+        "integer"
+      ],
+      "collections": [
+        {
+          "id": "damorweir",
+          "title": "HY-P Presa o represa"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "id_poblaci",
+      "concept_uri": "http://www.ogc.org/id_poblaci",
+      "datatypes": [
+        "string"
+      ],
+      "collections": [
+        {
+          "id": "agua:Zif_riesgo_pob_q500",
+          "title": "NZ.Riesgo a la población Q500"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "id_red",
+      "concept_uri": "http://www.ogc.org/id_red",
+      "datatypes": [
+        "string"
+      ],
+      "collections": [
+        {
+          "id": "watercourselinksequence",
+          "title": "HY-N Secuencia de enlaces de curso de agua"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "inspireid_localid",
+      "concept_uri": "http://www.ogc.org/inspireid_localid",
+      "datatypes": [
+        "string"
+      ],
+      "collections": [
+        {
+          "id": "damorweir",
+          "title": "HY-P Presa o represa"
+        },
+        {
+          "id": "drainagebasin",
+          "title": "HY-P Cuenca de captación"
+        },
+        {
+          "id": "lock",
+          "title": "HY-P Esclusa"
+        },
+        {
+          "id": "standingwater",
+          "title": "HY-P Aguas estancadas"
+        },
+        {
+          "id": "watercourselinksequence",
+          "title": "HY-N Secuencia de enlaces de curso de agua"
+        },
+        {
+          "id": "wetland",
+          "title": "HY-P Humedal"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "long_coron",
+      "concept_uri": "http://www.ogc.org/long_coron",
+      "datatypes": [
+        "number"
+      ],
+      "collections": [
+        {
+          "id": "damorweir",
+          "title": "HY-P Presa o represa"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "marea",
+      "concept_uri": "http://www.ogc.org/marea",
+      "datatypes": [
+        "boolean"
+      ],
+      "collections": [
+        {
+          "id": "standingwater",
+          "title": "HY-P Aguas estancadas"
+        },
+        {
+          "id": "wetland",
+          "title": "HY-P Humedal"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "material",
+      "concept_uri": "http://www.ogc.org/material",
+      "datatypes": [
+        "string"
+      ],
+      "collections": [
+        {
+          "id": "damorweir",
+          "title": "HY-P Presa o represa"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "materiald",
+      "concept_uri": "http://www.ogc.org/materiald",
+      "datatypes": [
+        "string"
+      ],
+      "collections": [
+        {
+          "id": "damorweir",
+          "title": "HY-P Presa o represa"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "n_hab_muni",
+      "concept_uri": "http://www.ogc.org/n_hab_muni",
+      "datatypes": [
+        "number"
+      ],
+      "collections": [
+        {
+          "id": "agua:Zif_riesgo_pob_q500",
+          "title": "NZ.Riesgo a la población Q500"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "nameunit",
+      "concept_uri": "http://www.ogc.org/nameunit",
+      "datatypes": [
+        "string"
+      ],
+      "collections": [
+        {
+          "id": "administrativeunit",
+          "title": "AU Unidades administrativas"
+        }
+      ],
+      "annotation_sources": [
+        "baseline"
+      ],
+      "annotated_property_uri": "http://geo.linkeddata.es/ontology/nombre",
+      "status": "annotated"
+    },
+    {
+      "concept": "nationalcode",
+      "concept_uri": "http://www.ogc.org/nationalcode",
+      "datatypes": [
+        "string"
+      ],
+      "collections": [
+        {
+          "id": "administrativeunit",
+          "title": "AU Unidades administrativas"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "nationallevel",
+      "concept_uri": "http://www.ogc.org/nationallevel",
+      "datatypes": [
+        "string"
+      ],
+      "collections": [
+        {
+          "id": "administrativeunit",
+          "title": "AU Unidades administrativas"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "nationallevelname",
+      "concept_uri": "http://www.ogc.org/nationallevelname",
+      "datatypes": [
+        "string"
+      ],
+      "collections": [
+        {
+          "id": "administrativeunit",
+          "title": "AU Unidades administrativas"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "nativeness",
+      "concept_uri": "http://www.ogc.org/nativeness",
+      "datatypes": [
+        "string"
+      ],
+      "collections": [
+        {
+          "id": "wetland",
+          "title": "HY-P Humedal"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "nil_elevacion",
+      "concept_uri": "http://www.ogc.org/nil_elevacion",
+      "datatypes": [
+        "string"
+      ],
+      "collections": [
+        {
+          "id": "standingwater",
+          "title": "HY-P Aguas estancadas"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "nil_nombre",
+      "concept_uri": "http://www.ogc.org/nil_nombre",
+      "datatypes": [
+        "boolean"
+      ],
+      "collections": [
+        {
+          "id": "standingwater",
+          "title": "HY-P Aguas estancadas"
+        },
+        {
+          "id": "watercourselinksequence",
+          "title": "HY-N Secuencia de enlaces de curso de agua"
+        },
+        {
+          "id": "wetland",
+          "title": "HY-P Humedal"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "nil_varios",
+      "concept_uri": "http://www.ogc.org/nil_varios",
+      "datatypes": [
+        "boolean"
+      ],
+      "collections": [
+        {
+          "id": "damorweir",
+          "title": "HY-P Presa o represa"
+        },
+        {
+          "id": "drainagebasin",
+          "title": "HY-P Cuenca de captación"
+        },
+        {
+          "id": "lock",
+          "title": "HY-P Esclusa"
+        },
+        {
+          "id": "standingwater",
+          "title": "HY-P Aguas estancadas"
+        },
+        {
+          "id": "watercourselinksequence",
+          "title": "HY-N Secuencia de enlaces de curso de agua"
+        },
+        {
+          "id": "wetland",
+          "title": "HY-P Humedal"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "nilreason_elevacion",
+      "concept_uri": "http://www.ogc.org/nilreason_elevacion",
+      "datatypes": [
+        "string"
+      ],
+      "collections": [
+        {
+          "id": "standingwater",
+          "title": "HY-P Aguas estancadas"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "nilreason_nombre",
+      "concept_uri": "http://www.ogc.org/nilreason_nombre",
+      "datatypes": [
+        "string"
+      ],
+      "collections": [
+        {
+          "id": "damorweir",
+          "title": "HY-P Presa o represa"
+        },
+        {
+          "id": "drainagebasin",
+          "title": "HY-P Cuenca de captación"
+        },
+        {
+          "id": "lock",
+          "title": "HY-P Esclusa"
+        },
+        {
+          "id": "standingwater",
+          "title": "HY-P Aguas estancadas"
+        },
+        {
+          "id": "wetland",
+          "title": "HY-P Humedal"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "nilreason_varios",
+      "concept_uri": "http://www.ogc.org/nilreason_varios",
+      "datatypes": [
+        "string"
+      ],
+      "collections": [
+        {
+          "id": "damorweir",
+          "title": "HY-P Presa o represa"
+        },
+        {
+          "id": "drainagebasin",
+          "title": "HY-P Cuenca de captación"
+        },
+        {
+          "id": "lock",
+          "title": "HY-P Esclusa"
+        },
+        {
+          "id": "standingwater",
+          "title": "HY-P Aguas estancadas"
+        },
+        {
+          "id": "watercourselinksequence",
+          "title": "HY-N Secuencia de enlaces de curso de agua"
+        },
+        {
+          "id": "wetland",
+          "title": "HY-P Humedal"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "nivel_agua",
+      "concept_uri": "http://www.ogc.org/nivel_agua",
+      "datatypes": [
+        "string"
+      ],
+      "collections": [
+        {
+          "id": "standingwater",
+          "title": "HY-P Aguas estancadas"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "nivel_aguad",
+      "concept_uri": "http://www.ogc.org/nivel_aguad",
+      "datatypes": [
+        "string"
+      ],
+      "collections": [
+        {
+          "id": "standingwater",
+          "title": "HY-P Aguas estancadas"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "nom_munici",
+      "concept_uri": "http://www.ogc.org/nom_munici",
+      "datatypes": [
+        "string"
+      ],
+      "collections": [
+        {
+          "id": "agua:Zif_riesgo_pob_q500",
+          "title": "NZ.Riesgo a la población Q500"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "nombre",
+      "concept_uri": "http://www.ogc.org/nombre",
+      "datatypes": [
+        "string"
+      ],
+      "collections": [
+        {
+          "id": "damorweir",
+          "title": "HY-P Presa o represa"
+        },
+        {
+          "id": "drainagebasin",
+          "title": "HY-P Cuenca de captación"
+        },
+        {
+          "id": "lock",
+          "title": "HY-P Esclusa"
+        },
+        {
+          "id": "standingwater",
+          "title": "HY-P Aguas estancadas"
+        },
+        {
+          "id": "watercourselinksequence",
+          "title": "HY-N Secuencia de enlaces de curso de agua"
+        },
+        {
+          "id": "wetland",
+          "title": "HY-P Humedal"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "num_afe_mu",
+      "concept_uri": "http://www.ogc.org/num_afe_mu",
+      "datatypes": [
+        "number"
+      ],
+      "collections": [
+        {
+          "id": "agua:Zif_riesgo_pob_q500",
+          "title": "NZ.Riesgo a la población Q500"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "num_afe_zi",
+      "concept_uri": "http://www.ogc.org/num_afe_zi",
+      "datatypes": [
+        "number"
+      ],
+      "collections": [
+        {
+          "id": "agua:Zif_riesgo_pob_q500",
+          "title": "NZ.Riesgo a la población Q500"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "objectid",
+      "concept_uri": "http://www.ogc.org/objectid",
+      "datatypes": [
+        "integer"
+      ],
+      "collections": [
+        {
+          "id": "agua:Zif_riesgo_pob_q500",
+          "title": "NZ.Riesgo a la población Q500"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "orden",
+      "concept_uri": "http://www.ogc.org/orden",
+      "datatypes": [
+        "string"
+      ],
+      "collections": [
+        {
+          "id": "drainagebasin",
+          "title": "HY-P Cuenca de captación"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "orden_amb",
+      "concept_uri": "http://www.ogc.org/orden_amb",
+      "datatypes": [
+        "string"
+      ],
+      "collections": [
+        {
+          "id": "drainagebasin",
+          "title": "HY-P Cuenca de captación"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "orden_ambd",
+      "concept_uri": "http://www.ogc.org/orden_ambd",
+      "datatypes": [
+        "string"
+      ],
+      "collections": [
+        {
+          "id": "drainagebasin",
+          "title": "HY-P Cuenca de captación"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "orden_esq",
+      "concept_uri": "http://www.ogc.org/orden_esq",
+      "datatypes": [
+        "string"
+      ],
+      "collections": [
+        {
+          "id": "drainagebasin",
+          "title": "HY-P Cuenca de captación"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "orden_esqd",
+      "concept_uri": "http://www.ogc.org/orden_esqd",
+      "datatypes": [
+        "string"
+      ],
+      "collections": [
+        {
+          "id": "drainagebasin",
+          "title": "HY-P Cuenca de captación"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "origen",
+      "concept_uri": "http://www.ogc.org/origen",
+      "datatypes": [
+        "string"
+      ],
+      "collections": [
+        {
+          "id": "drainagebasin",
+          "title": "HY-P Cuenca de captación"
+        }
+      ],
+      "annotation_sources": [
+        "baseline"
+      ],
+      "annotated_property_uri": "http://geo.linkeddata.es/ontology/origen_formación",
+      "status": "annotated"
+    },
+    {
+      "concept": "origen_z",
+      "concept_uri": "http://www.ogc.org/origen_z",
+      "datatypes": [
+        "string"
+      ],
+      "collections": [
+        {
+          "id": "standingwater",
+          "title": "HY-P Aguas estancadas"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "origen_zd",
+      "concept_uri": "http://www.ogc.org/origen_zd",
+      "datatypes": [
+        "string"
+      ],
+      "collections": [
+        {
+          "id": "standingwater",
+          "title": "HY-P Aguas estancadas"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "origend",
+      "concept_uri": "http://www.ogc.org/origend",
+      "datatypes": [
+        "string"
+      ],
+      "collections": [
+        {
+          "id": "drainagebasin",
+          "title": "HY-P Cuenca de captación"
+        },
+        {
+          "id": "standingwater",
+          "title": "HY-P Aguas estancadas"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "otras_cons",
+      "concept_uri": "http://www.ogc.org/otras_cons",
+      "datatypes": [
+        "string"
+      ],
+      "collections": [
+        {
+          "id": "agua:Zif_riesgo_pob_q500",
+          "title": "NZ.Riesgo a la población Q500"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "persist",
+      "concept_uri": "http://www.ogc.org/persist",
+      "datatypes": [
+        "string"
+      ],
+      "collections": [
+        {
+          "id": "standingwater",
+          "title": "HY-P Aguas estancadas"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "persistd",
+      "concept_uri": "http://www.ogc.org/persistd",
+      "datatypes": [
+        "string"
+      ],
+      "collections": [
+        {
+          "id": "standingwater",
+          "title": "HY-P Aguas estancadas"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "resolucion",
+      "concept_uri": "http://www.ogc.org/resolucion",
+      "datatypes": [
+        "integer"
+      ],
+      "collections": [
+        {
+          "id": "damorweir",
+          "title": "HY-P Presa o represa"
+        },
+        {
+          "id": "drainagebasin",
+          "title": "HY-P Cuenca de captación"
+        },
+        {
+          "id": "lock",
+          "title": "HY-P Esclusa"
+        },
+        {
+          "id": "standingwater",
+          "title": "HY-P Aguas estancadas"
+        },
+        {
+          "id": "watercourselinksequence",
+          "title": "HY-N Secuencia de enlaces de curso de agua"
+        },
+        {
+          "id": "wetland",
+          "title": "HY-P Humedal"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "script",
+      "concept_uri": "http://www.ogc.org/script",
+      "datatypes": [
+        "string"
+      ],
+      "collections": [
+        {
+          "id": "damorweir",
+          "title": "HY-P Presa o represa"
+        },
+        {
+          "id": "drainagebasin",
+          "title": "HY-P Cuenca de captación"
+        },
+        {
+          "id": "lock",
+          "title": "HY-P Esclusa"
+        },
+        {
+          "id": "standingwater",
+          "title": "HY-P Aguas estancadas"
+        },
+        {
+          "id": "watercourselinksequence",
+          "title": "HY-N Secuencia de enlaces de curso de agua"
+        },
+        {
+          "id": "wetland",
+          "title": "HY-P Humedal"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "shape",
+      "concept_uri": "http://www.ogc.org/shape",
+      "datatypes": [
+        "string"
+      ],
+      "collections": [
+        {
+          "id": "agua:Zif_riesgo_pob_q500",
+          "title": "NZ.Riesgo a la población Q500"
+        }
+      ],
+      "annotation_sources": [
+        "baseline"
+      ],
+      "annotated_property_uri": "http://geo.linkeddata.es/ontology/hydro-ontology.owl#geometría",
+      "status": "annotated"
+    },
+    {
+      "concept": "superficie",
+      "concept_uri": "http://www.ogc.org/superficie",
+      "datatypes": [
+        "number"
+      ],
+      "collections": [
+        {
+          "id": "agua:Zif_riesgo_pob_q500",
+          "title": "NZ.Riesgo a la población Q500"
+        }
+      ],
+      "annotation_sources": [
+        "baseline"
+      ],
+      "annotated_property_uri": "http://geo.linkeddata.es/ontology/superficie_confinada",
+      "status": "annotated"
+    },
+    {
+      "concept": "tipo",
+      "concept_uri": "http://www.ogc.org/tipo",
+      "datatypes": [
+        "string"
+      ],
+      "collections": [
+        {
+          "id": "wetland",
+          "title": "HY-P Humedal"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "tipo_aest",
+      "concept_uri": "http://www.ogc.org/tipo_aest",
+      "datatypes": [
+        "string"
+      ],
+      "collections": [
+        {
+          "id": "standingwater",
+          "title": "HY-P Aguas estancadas"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "tipo_aestd",
+      "concept_uri": "http://www.ogc.org/tipo_aestd",
+      "datatypes": [
+        "string"
+      ],
+      "collections": [
+        {
+          "id": "standingwater",
+          "title": "HY-P Aguas estancadas"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "tipo_presa",
+      "concept_uri": "http://www.ogc.org/tipo_presa",
+      "datatypes": [
+        "string"
+      ],
+      "collections": [
+        {
+          "id": "damorweir",
+          "title": "HY-P Presa o represa"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "tipo_presad",
+      "concept_uri": "http://www.ogc.org/tipo_presad",
+      "datatypes": [
+        "string"
+      ],
+      "collections": [
+        {
+          "id": "damorweir",
+          "title": "HY-P Presa o represa"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "tipo_zhum",
+      "concept_uri": "http://www.ogc.org/tipo_zhum",
+      "datatypes": [
+        "string"
+      ],
+      "collections": [
+        {
+          "id": "wetland",
+          "title": "HY-P Humedal"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    },
+    {
+      "concept": "z_coron",
+      "concept_uri": "http://www.ogc.org/z_coron",
+      "datatypes": [
+        "number"
+      ],
+      "collections": [
+        {
+          "id": "damorweir",
+          "title": "HY-P Presa o represa"
+        }
+      ],
+      "annotation_sources": [],
+      "annotated_property_uri": null,
+      "status": "unaligned"
+    }
+  ]
+}

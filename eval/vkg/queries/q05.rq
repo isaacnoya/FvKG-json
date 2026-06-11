@@ -1,0 +1,19 @@
+PREFIX : <http://example.com/>
+PREFIX geo: <http://www.opengis.net/ont/geosparql#> 
+PREFIX ine: <http://lod.ine.es/def/vocabulary/>
+PREFIX sdmx-measure: <http://purl.org/linked-data/sdmx/2009/measure#>
+PREFIX sdmx-dimension: <http://purl.org/linked-data/sdmx/2009/dimension#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
+PREFIX qb: <http://purl.org/linked-data/cube#>
+PREFIX dbo: <http://dbpedia.org/ontology/>
+PREFIX geolinkeddata: <http://geo.linkeddata.es/ontology/> 
+
+SELECT ?obsValue ?y  WHERE {
+    ?o a qb:Observation ;
+        sdmx-measure:obsValue ?obsValue ;
+        sdmx-dimension:year "2025"^^xsd:gYear ;
+        qb:slice ?slice .
+    ?slice ine:municipality "Madrid" ;
+        sdmx-dimension:sex "Total" .
+    }

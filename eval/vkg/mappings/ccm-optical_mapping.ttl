@@ -1,0 +1,46 @@
+@prefix geo: <http://www.opengis.net/ont/geosparql#> .
+@prefix htv: <http://www.w3.org/2011/http#> .
+@prefix : <http://example.com/> .
+@prefix rml: <http://w3id.org/rml/> .
+@prefix void: <http://rdfs.org/ns/void#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+:ccm-opticalTriplesMap2 a rml:TriplesMap ;
+    rml:logicalSource :LogicalSource_ccm-optical ;
+    rml:predicateObjectMap [ rml:objectMap [ rml:parentTriplesMap :ccm-opticalTriplesMap ] ;
+            rml:predicate geo:member ] ;
+    rml:subjectMap [ rml:class geo:FeatureCollection ;
+            rml:constant :ccm-optical_collection ] .
+
+:FuenteAPI_ccm-optical htv:absoluteURI "https://stac.dataspace.copernicus.eu/v1/collections/ccm-optical/items?f=json&limit=10000" .
+
+:ccm-opticalTriplesMap a rml:TriplesMap ;
+    rml:logicalSource :LogicalSource_ccm-optical ;
+    rml:predicateObjectMap [ rml:objectMap [ void:filterx "id=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.id" ] ;
+            rml:predicate :id ],
+        [ rml:objectMap [ void:filterx "datetime=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.datetime" ] ;
+            rml:predicate :datetime ],
+        [ rml:objectMap [ void:filterx "geometry=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.geometry" ] ;
+            rml:predicate :geometry ],
+        [ rml:objectMap [ rml:datatype xsd:string ;
+                    rml:reference "geometry_name" ] ;
+            rml:predicate :geometryName ],
+        [ rml:objectMap [ void:filterx "bbox=@{1}" ;
+                    rml:datatype geo:geoJSONLiteral ;
+                    rml:reference "geometry" ] ;
+            rml:predicate geo:hasGeometry ] ;
+    rml:subjectMap [ rml:class :ccm-optical ;
+            rml:template "https://stac.dataspace.copernicus.eu/v1/collections/ccm-optical/items/{id}" ] .
+
+:LogicalSource_ccm-optical a rml:logicalSource ;
+    void:nextPage "$.links[?(@.rel==\"next\")].href" ;
+    rml:iterator "$.features.*" ;
+    rml:referenceFormulation rml:HTTPAPI ;
+    rml:source :FuenteAPI_ccm-optical .
+

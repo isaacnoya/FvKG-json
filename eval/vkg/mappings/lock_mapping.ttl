@@ -1,0 +1,107 @@
+@prefix geo: <http://www.opengis.net/ont/geosparql#> .
+@prefix geolinkeddata: <http://geo.linkeddata.es/ontology/> .
+@prefix htv: <http://www.w3.org/2011/http#> .
+@prefix : <http://example.com/> .
+@prefix rml: <http://w3id.org/rml/> .
+@prefix void: <http://rdfs.org/ns/void#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+:lockTriplesMap2 a rml:TriplesMap ;
+    rml:logicalSource :LogicalSource_lock ;
+    rml:predicateObjectMap [ rml:objectMap [ rml:parentTriplesMap :lockTriplesMap ] ;
+            rml:predicate geo:member ] ;
+    rml:subjectMap [ rml:class geo:FeatureCollection ;
+            rml:constant :lock_collection ] .
+
+:FuenteAPI_lock htv:absoluteURI "https://api-features.idee.es/collections/lock/items?f=json&limit=10000" .
+
+:lockTriplesMap a rml:TriplesMap ;
+    rml:logicalSource :LogicalSource_lock ;
+    rml:predicateObjectMap [ rml:objectMap [ void:filterx "fuented=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.fuented" ] ;
+            rml:predicate :fuented ],
+        [ rml:objectMap [ void:filterx "nil_nombre=@{1}" ;
+                    rml:datatype xsd:boolean ;
+                    rml:reference "properties.nil_nombre" ] ;
+            rml:predicate geolinkeddata:nombre ],
+        [ rml:objectMap [ void:filterx "hydroid_localid=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.hydroid_localid" ] ;
+            rml:predicate :hydroid_localid ],
+        [ rml:objectMap [ void:filterx "nilreason_nombre=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.nilreason_nombre" ] ;
+            rml:predicate :nilreason_nombre ],
+        [ rml:objectMap [ void:filterx "nil_varios=@{1}" ;
+                    rml:datatype xsd:boolean ;
+                    rml:reference "properties.nil_varios" ] ;
+            rml:predicate :nil_varios ],
+        [ rml:objectMap [ void:filterx "script=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.script" ] ;
+            rml:predicate :script ],
+        [ rml:objectMap [ void:filterx "id_demarcd=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.id_demarcd" ] ;
+            rml:predicate :id_demarcd ],
+        [ rml:objectMap [ void:filterx "resolucion=@{1}" ;
+                    rml:datatype xsd:integer ;
+                    rml:reference "properties.resolucion" ] ;
+            rml:predicate :resolucion ],
+        [ rml:objectMap [ rml:datatype xsd:string ;
+                    rml:reference "geometry_name" ] ;
+            rml:predicate :geometryName ],
+        [ rml:objectMap [ void:filterx "nombre=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.nombre" ] ;
+            rml:predicate :nombre ],
+        [ rml:objectMap [ void:filterx "fecha_alta=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.fecha_alta" ] ;
+            rml:predicate :fecha_alta ],
+        [ rml:objectMap [ void:filterx "nilreason_varios=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.nilreason_varios" ] ;
+            rml:predicate :nilreason_varios ],
+        [ rml:objectMap [ void:filterx "bbox=@{1}" ;
+                    rml:datatype geo:geoJSONLiteral ;
+                    rml:reference "geometry" ] ;
+            rml:predicate geo:hasGeometry ],
+        [ rml:objectMap [ void:filterx "geometry=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.geometry" ] ;
+            rml:predicate <http://geo.linkeddata.es/ontology/hydro-ontology.owl#geometría> ],
+        [ rml:objectMap [ void:filterx "id_demarc=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.id_demarc" ] ;
+            rml:predicate :id_demarc ],
+        [ rml:objectMap [ void:filterx "nativeness=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.nativeness" ] ;
+            rml:predicate geolinkeddata:origina ],
+        [ rml:objectMap [ void:filterx "inspireid_localid=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.inspireid_localid" ] ;
+            rml:predicate :inspireid_localid ],
+        [ rml:objectMap [ void:filterx "condiciond=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.condiciond" ] ;
+            rml:predicate :condiciond ],
+        [ rml:objectMap [ void:filterx "condicion=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.condicion" ] ;
+            rml:predicate :condicion ],
+        [ rml:objectMap [ void:filterx "fuente=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.fuente" ] ;
+            rml:predicate :fuente ] ;
+    rml:subjectMap [ rml:class geolinkeddata:HY-P_Esclusa ;
+            rml:template "https://api-features.idee.es/collections/lock/items/{id}" ] .
+
+:LogicalSource_lock a rml:logicalSource ;
+    void:nextPage "$.links[?(@.rel==\"next\")].href" ;
+    rml:iterator "$.features.*" ;
+    rml:referenceFormulation rml:HTTPAPI ;
+    rml:source :FuenteAPI_lock .
+

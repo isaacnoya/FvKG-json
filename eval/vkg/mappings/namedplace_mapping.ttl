@@ -1,0 +1,68 @@
+@prefix geo: <http://www.opengis.net/ont/geosparql#> .
+@prefix htv: <http://www.w3.org/2011/http#> .
+@prefix : <http://example.com/> .
+@prefix rml: <http://w3id.org/rml/> .
+@prefix void: <http://rdfs.org/ns/void#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+:namedplaceTriplesMap2 a rml:TriplesMap ;
+    rml:logicalSource :LogicalSource_namedplace ;
+    rml:predicateObjectMap [ rml:objectMap [ rml:parentTriplesMap :namedplaceTriplesMap ] ;
+            rml:predicate geo:member ] ;
+    rml:subjectMap [ rml:class geo:FeatureCollection ;
+            rml:constant :namedplace_collection ] .
+
+:FuenteAPI_namedplace htv:absoluteURI "https://api-features.ign.es//collections/namedplace/items?f=json&limit=10000" .
+
+:namedplaceTriplesMap a rml:TriplesMap ;
+    rml:logicalSource :LogicalSource_namedplace ;
+    rml:predicateObjectMap [ rml:objectMap [ void:filterx "tiponombre=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.tiponombre" ] ;
+            rml:predicate :tiponombre ],
+        [ rml:objectMap [ void:filterx "etiqueta=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.etiqueta" ] ;
+            rml:predicate :etiqueta ],
+        [ rml:objectMap [ rml:datatype xsd:string ;
+                    rml:reference "geometry_name" ] ;
+            rml:predicate :geometryName ],
+        [ rml:objectMap [ void:filterx "fuente=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.fuente" ] ;
+            rml:predicate :fuente ],
+        [ rml:objectMap [ void:filterx "fecha=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.fecha" ] ;
+            rml:predicate :fecha ],
+        [ rml:objectMap [ void:filterx "tipo=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.tipo" ] ;
+            rml:predicate :tipo ],
+        [ rml:objectMap [ void:filterx "bbox=@{1}" ;
+                    rml:datatype geo:geoJSONLiteral ;
+                    rml:reference "geometry" ] ;
+            rml:predicate geo:hasGeometry ],
+        [ rml:objectMap [ void:filterx "identidad=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.identidad" ] ;
+            rml:predicate :identidad ],
+        [ rml:objectMap [ void:filterx "codigo_ngbe=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.codigo_ngbe" ] ;
+            rml:predicate :codigo_ngbe ],
+        [ rml:objectMap [ void:filterx "geometry=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.geometry" ] ;
+            rml:predicate :geometry ] ;
+    rml:subjectMap [ rml:class :namedplace ;
+            rml:template "https://api-features.ign.es//namedplace/items/{id}" ] .
+
+:LogicalSource_namedplace a rml:logicalSource ;
+    void:limit "limit=@{1}" ;
+    void:nElements ".numberMatched" ;
+    void:nextPage "$.links[?(@.rel==\"next\")].href" ;
+    rml:iterator "$.features.*" ;
+    rml:referenceFormulation rml:HTTPAPI ;
+    rml:source :FuenteAPI_namedplace .
+

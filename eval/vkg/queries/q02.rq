@@ -1,0 +1,25 @@
+PREFIX : <http://example.com/>
+PREFIX geo: <http://www.opengis.net/ont/geosparql#> 
+PREFIX ine: <http://lod.ine.es/def/vocabulary/>
+PREFIX sdmx-measure: <http://purl.org/linked-data/sdmx/2009/measure#>
+PREFIX sdmx-dimension: <http://purl.org/linked-data/sdmx/2009/dimension#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
+PREFIX qb: <http://purl.org/linked-data/cube#>
+PREFIX dbo: <http://dbpedia.org/ontology/>
+PREFIX geolinkeddata: <http://geo.linkeddata.es/ontology/> 
+
+SELECT ?w ?t WHERE {
+    ?s a :administrativeunit ;
+        geolinkeddata:nombre "Pontevedra" ;
+        :nationallevelname "Municipio" ;
+        geo:hasGeometry ?gs .
+    ?w a :agua:Zif_riesgo_pob_q500 ;
+        geo:hasGeometry ?gw .
+    ?t a geolinkeddata:Presa_o_represa ;
+        geo:hasGeometry ?gt .
+    
+    FILTER (geof:sfWithin(?gw, ?gs))
+    FILTER (geof:sfWithin(?gt, ?gs))
+    FILTER (geof:sfDistance(?gw, ?gt) < 5000)
+} 

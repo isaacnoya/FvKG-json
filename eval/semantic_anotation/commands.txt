@@ -10,19 +10,19 @@
 #
 # Evaluation design:
 # - Stage 1: three embedding-only runs. No external search or LLM is called.
-# - Stage 2: three LLM runs. All load exactly the same accepted annotations from
+# - Stage 2: four LLM runs. All load exactly the same accepted annotations from
 #   the winning embedding run and only process the remaining concepts.
-# - Strict phase isolation requires six runs: 3 embeddings + 3 LLMs.
+# - Strict phase isolation requires seven runs: 3 embeddings + 4 LLMs.
 
 # Stage 1: compare embedding models
 
 # 1/6: multilingual MiniLM L12, embeddings only
 /opt/miniconda3/bin/conda run -n oeg python OGCmappingGenerator/semantic_annotation.py \
-  --ontology casoDeUso/ontology.ttl \
-  --mappings_folder casoDeUso/mappings \
+  --ontology eval/initialMappingTemplates/ontology.ttl \
+  --mappings_folder eval/initialMappingTemplates/mappings \
   --output_ontology eval/semantic_anotation/results/multilingual-minilm-l12__embeddings/ontology.ttl \
   --output_mappings_folder eval/semantic_anotation/results/multilingual-minilm-l12__embeddings/mappings \
-  --rontologias casoDeUso/ontologiasReferencia \
+  --rontologias eval/initialMappingTemplates/ontologiasReferencia \
   --vectorial_model sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2 \
   --embedding_cache eval/semantic_anotation/cache/multilingual-minilm-l12.pt \
   --mode embeddings \
@@ -33,11 +33,11 @@
 
 # 2/6: multilingual DistilUSE, embeddings only
 /opt/miniconda3/bin/conda run -n oeg python OGCmappingGenerator/semantic_annotation.py \
-  --ontology casoDeUso/ontology.ttl \
-  --mappings_folder casoDeUso/mappings \
+  --ontology eval/initialMappingTemplates/ontology.ttl \
+  --mappings_folder eval/initialMappingTemplates/mappings \
   --output_ontology eval/semantic_anotation/results/multilingual-distiluse__embeddings/ontology.ttl \
   --output_mappings_folder eval/semantic_anotation/results/multilingual-distiluse__embeddings/mappings \
-  --rontologias casoDeUso/ontologiasReferencia \
+  --rontologias eval/initialMappingTemplates/ontologiasReferencia \
   --vectorial_model sentence-transformers/distiluse-base-multilingual-cased-v2 \
   --embedding_cache eval/semantic_anotation/cache/multilingual-distiluse.pt \
   --mode embeddings \
@@ -48,11 +48,11 @@
 
 # 3/6: English MiniLM L6, embeddings only
 /opt/miniconda3/bin/conda run -n oeg python OGCmappingGenerator/semantic_annotation.py \
-  --ontology casoDeUso/ontology.ttl \
-  --mappings_folder casoDeUso/mappings \
+  --ontology eval/initialMappingTemplates/ontology.ttl \
+  --mappings_folder eval/initialMappingTemplates/mappings \
   --output_ontology eval/semantic_anotation/results/english-minilm-l6__embeddings/ontology.ttl \
   --output_mappings_folder eval/semantic_anotation/results/english-minilm-l6__embeddings/mappings \
-  --rontologias casoDeUso/ontologiasReferencia \
+  --rontologias eval/initialMappingTemplates/ontologiasReferencia \
   --vectorial_model sentence-transformers/all-MiniLM-L6-v2 \
   --embedding_cache eval/semantic_anotation/cache/english-minilm-l6.pt \
   --mode embeddings \
@@ -70,11 +70,11 @@ BEST_EMBEDDING_RESULTS=eval/semantic_anotation/results/multilingual-minilm-l12__
 
 # 4/6: frozen embedding annotations + GPT-OSS 20B
 /opt/miniconda3/bin/conda run -n oeg python OGCmappingGenerator/semantic_annotation.py \
-  --ontology casoDeUso/ontology.ttl \
-  --mappings_folder casoDeUso/mappings \
+  --ontology eval/initialMappingTemplates/ontology.ttl \
+  --mappings_folder eval/initialMappingTemplates/mappings \
   --output_ontology "eval/semantic_anotation/results/${BEST_EMBEDDING_NAME}__gpt-oss-20b/ontology.ttl" \
   --output_mappings_folder "eval/semantic_anotation/results/${BEST_EMBEDDING_NAME}__gpt-oss-20b/mappings" \
-  --rontologias casoDeUso/ontologiasReferencia \
+  --rontologias eval/initialMappingTemplates/ontologiasReferencia \
   --annotations_file "$BEST_EMBEDDING_RESULTS" \
   --llm_model openai/gpt-oss-20b \
   --mode llm \
@@ -86,11 +86,11 @@ BEST_EMBEDDING_RESULTS=eval/semantic_anotation/results/multilingual-minilm-l12__
 
 # 5/6: frozen embedding annotations + GPT-OSS 120B
 /opt/miniconda3/bin/conda run -n oeg python OGCmappingGenerator/semantic_annotation.py \
-  --ontology casoDeUso/ontology.ttl \
-  --mappings_folder casoDeUso/mappings \
+  --ontology eval/initialMappingTemplates/ontology.ttl \
+  --mappings_folder eval/initialMappingTemplates/mappings \
   --output_ontology "eval/semantic_anotation/results/${BEST_EMBEDDING_NAME}__gpt-oss-120b/ontology.ttl" \
   --output_mappings_folder "eval/semantic_anotation/results/${BEST_EMBEDDING_NAME}__gpt-oss-120b/mappings" \
-  --rontologias casoDeUso/ontologiasReferencia \
+  --rontologias eval/initialMappingTemplates/ontologiasReferencia \
   --annotations_file "$BEST_EMBEDDING_RESULTS" \
   --llm_model openai/gpt-oss-120b \
   --mode llm \
@@ -102,11 +102,11 @@ BEST_EMBEDDING_RESULTS=eval/semantic_anotation/results/multilingual-minilm-l12__
 
 # 6/6: frozen embedding annotations + Llama 3.3 70B
 /opt/miniconda3/bin/conda run -n oeg python OGCmappingGenerator/semantic_annotation.py \
-  --ontology casoDeUso/ontology.ttl \
-  --mappings_folder casoDeUso/mappings \
+  --ontology eval/initialMappingTemplates/ontology.ttl \
+  --mappings_folder eval/initialMappingTemplates/mappings \
   --output_ontology "eval/semantic_anotation/results/${BEST_EMBEDDING_NAME}__llama-3.3-70b/ontology.ttl" \
   --output_mappings_folder "eval/semantic_anotation/results/${BEST_EMBEDDING_NAME}__llama-3.3-70b/mappings" \
-  --rontologias casoDeUso/ontologiasReferencia \
+  --rontologias eval/initialMappingTemplates/ontologiasReferencia \
   --annotations_file "$BEST_EMBEDDING_RESULTS" \
   --llm_model llama-3.3-70b-versatile \
   --mode llm \

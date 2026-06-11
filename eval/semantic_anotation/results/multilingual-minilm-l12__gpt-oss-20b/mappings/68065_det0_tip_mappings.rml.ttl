@@ -1,0 +1,177 @@
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix htv: <http://www.w3.org/2011/http#> .
+@prefix ine: <http://lod.ine.es/def/vocabulary/> .
+@prefix inelod: <http://lod.ine.es/recurso/cubes/> .
+@prefix qb: <http://purl.org/linked-data/cube#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix rml: <http://w3id.org/rml/> .
+@prefix sdmx-attribute: <http://purl.org/linked-data/sdmx/2009/attribute#> .
+@prefix sdmx-dimension: <http://purl.org/linked-data/sdmx/2009/dimension#> .
+@prefix sdmx-measure: <http://purl.org/linked-data/sdmx/2009/measure#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+inelod:68065_det0_tip_Observations a rml:TriplesMap ;
+    rml:logicalSource inelod:LS_Data ;
+    rml:predicateObjectMap [ rml:objectMap [ rml:datatype xsd:float ;
+                    rml:reference "Data.*.Valor" ] ;
+            rml:predicate sdmx-measure:obsValue ],
+        [ rml:objectMap [ rml:template "http://purl.org/linked-data/sdmx/2009/code#confStatus-{Data.*.Secreto}" ;
+                    rml:termType rml:IRI ] ;
+            rml:predicate sdmx-attribute:confStatus ],
+        [ rml:objectMap [ rml:datatype xsd:long ;
+                    rml:reference "Data.*.Fecha" ] ;
+            rml:predicate sdmx-dimension:date ],
+        [ rml:objectMap [ rml:joinCondition [ rml:child "COD" ;
+                            rml:parent "COD" ] ;
+                    rml:parentTriplesMap inelod:68065_det0_tip_Series ] ;
+            rml:predicate qb:slice ],
+        [ rml:objectMap [ rml:reference "Data.*.TipoDato.Nombre" ] ;
+            rml:predicate sdmx-attribute:obsStatus ],
+        [ rml:objectMap [ rml:datatype xsd:gYear ;
+                    rml:reference "Data.*.Anyo" ] ;
+            rml:predicate sdmx-dimension:year ],
+        [ rml:object inelod:68065_det0_tip ;
+            rml:predicate qb:dataSet ],
+        [ rml:objectMap [ rml:reference "Data.*.CodigoPeriodo" ] ;
+            rml:predicate sdmx-dimension:refPeriod ] ;
+    rml:subjectMap [ rml:class qb:Observation ;
+            rml:template "http://lod.ine.es/recurso/cubes/68065/{Data.*.Valor}_{Data.*.CodigoPeriodo}" ] .
+
+inelod:68065_det0_tip_TriplesMapDSD a rml:TriplesMap ;
+    rml:logicalSource inelod:LS_Root ;
+    rml:predicateObjectMap [ rml:objectMap [ rml:parentTriplesMap inelod:68065_det0_tip_TriplesMapDSD_bndim1 ] ;
+            rml:predicate qb:component ],
+        [ rml:objectMap [ rml:parentTriplesMap inelod:68065_det0_tip_TriplesMapDSD_bndim4 ] ;
+            rml:predicate qb:component ],
+        [ rml:objectMap [ rml:parentTriplesMap inelod:68065_det0_tip_TriplesMapDSD_bndim2 ] ;
+            rml:predicate qb:component ],
+        [ rml:objectMap [ rml:parentTriplesMap inelod:68065_det0_tip_TriplesMapDSD_bndim3 ] ;
+            rml:predicate qb:component ] ;
+    rml:subjectMap [ rml:class qb:DataStructureDefinition ;
+            rml:constant inelod:68065_det0_tip_dsd ] .
+
+inelod:DataSet_Static a rml:TriplesMap ;
+    rml:logicalSource inelod:LS_Root ;
+    rml:predicateObjectMap [ rml:object "urn:ine:es:TABLA:68065_det0_tip" ;
+            rml:predicate dct:identifier ],
+        [ rml:object <http://publications.europa.eu/resource/authority/language/SPA> ;
+            rml:predicate dct:language ],
+        [ rml:object <https://servicios.ine.es/wstempus/jsCache/ES/DATOS_TABLA/68065?det=2&tip=M> ;
+            rml:predicate dct:source ],
+        [ rml:object "68065_det0_tip"@es ;
+            rml:predicate dct:title ],
+        [ rml:object ine:INE ;
+            rml:predicate dct:publisher ],
+        [ rml:object inelod:68065_det0_tip_dsd ;
+            rml:predicate qb:structure ],
+        [ rml:object <https://creativecommons.org/licenses/by/4.0/> ;
+            rml:predicate dct:license ] ;
+    rml:subjectMap [ rml:class qb:DataSet ;
+            rml:constant inelod:68065_det0_tip ] .
+
+inelod:LS_Notas a rml:logicalSource ;
+    rml:iterator "$..Notas[*]" ;
+    rml:referenceFormulation rml:HTTPAPI ;
+    rml:source inelod:FuenteAPI_68065_det0_tip_det0_tip .
+
+inelod:SliceKey_DSD_TriplesMap a rml:TriplesMap ;
+    rml:logicalSource inelod:LS_Unidad ;
+    rml:predicateObjectMap [ rml:objectMap [ rml:joinCondition [ rml:child "Id" ;
+                            rml:parent "Id" ] ;
+                    rml:parentTriplesMap inelod:SliceKey_TriplesMap ] ;
+            rml:predicate qb:sliceKey ] ;
+    rml:subjectMap [ rml:class qb:DataStructureDefinition ;
+            rml:template "http://lod.ine.es/recurso/cubes/slice_dsd/{Id}" ] .
+
+inelod:68065_det0_tip_Series a rml:TriplesMap ;
+    rml:logicalSource inelod:LS_Root ;
+    rml:predicateObjectMap [ rml:objectMap [ rml:reference "COD" ] ;
+            rml:predicate dct:identifier ],
+        [ rml:objectMap [ rml:joinCondition [ rml:child "Unidad.Id" ;
+                            rml:parent "Id" ] ;
+                    rml:parentTriplesMap inelod:SliceKey_TriplesMap ] ;
+            rml:predicate qb:sliceStructure ],
+        [ rml:objectMap [ rml:reference "Nombre" ] ;
+            rml:predicate skos:prefLabel ],
+        [ rml:objectMap [ rml:reference "MetaData[?(@.Variable.Id==349)].Nombre" ] ;
+            rml:predicate ine:territorialTotals ],
+        [ rml:objectMap [ rml:reference "Unidad.Nombre" ] ;
+            rml:predicate qb:measure ],
+        [ rml:objectMap [ rml:reference "Escala.Factor" ] ;
+            rml:predicate sdmx-attribute:decimals ],
+        [ rml:objectMap [ rml:reference "MetaData[?(@.Variable.Id==18)].Nombre" ] ;
+            rml:predicate sdmx-dimension:sex ],
+        [ rml:objectMap [ rml:reference "MetaData[?(@.Variable.Id==19)].Nombre" ] ;
+            rml:predicate ine:municipality ] ;
+    rml:subjectMap [ rml:class qb:slice ;
+            rml:template "http://lod.ine.es/recurso/cubes/series/{COD}" ] .
+
+inelod:68065_det0_tip_TriplesMapDSD_bndim1 a rml:TriplesMap ;
+    rml:logicalSource inelod:LS_Root ;
+    rml:predicateObjectMap [ rml:object ine:territorialTotals ;
+            rml:predicate qb:dimension ],
+        [ rml:object 1 ;
+            rml:predicate qb:order ] ;
+    rml:subjectMap [ rml:constant [ ] ;
+            rml:termType rml:BlankNode ] .
+
+inelod:68065_det0_tip_TriplesMapDSD_bndim2 a rml:TriplesMap ;
+    rml:logicalSource inelod:LS_Root ;
+    rml:predicateObjectMap [ rml:object sdmx-dimension:sex ;
+            rml:predicate qb:dimension ],
+        [ rml:object 2 ;
+            rml:predicate qb:order ] ;
+    rml:subjectMap [ rml:constant [ ] ;
+            rml:termType rml:BlankNode ] .
+
+inelod:68065_det0_tip_TriplesMapDSD_bndim3 a rml:TriplesMap ;
+    rml:logicalSource inelod:LS_Root ;
+    rml:predicateObjectMap [ rml:object ine:municipality ;
+            rml:predicate qb:dimension ],
+        [ rml:object 3 ;
+            rml:predicate qb:order ] ;
+    rml:subjectMap [ rml:constant [ ] ;
+            rml:termType rml:BlankNode ] .
+
+inelod:68065_det0_tip_TriplesMapDSD_bndim4 a rml:TriplesMap ;
+    rml:logicalSource inelod:LS_Root ;
+    rml:predicateObjectMap [ rml:object sdmx-dimension:refPeriod ;
+            rml:predicate qb:dimension ],
+        [ rml:object 4 ;
+            rml:predicate qb:order ] ;
+    rml:subjectMap [ rml:constant [ ] ;
+            rml:termType rml:BlankNode ] .
+
+inelod:LS_Data a rml:logicalSource ;
+    rml:iterator "$.*" ;
+    rml:referenceFormulation rml:HTTPAPI ;
+    rml:source inelod:FuenteAPI_68065_det0_tip_det0_tip .
+
+inelod:LS_Unidad a rml:logicalSource ;
+    rml:iterator "$.*.Unidad" ;
+    rml:referenceFormulation rml:HTTPAPI ;
+    rml:source inelod:FuenteAPI_68065_det0_tip_det0_tip .
+
+inelod:SliceKey_TriplesMap a rml:TriplesMap ;
+    rml:logicalSource inelod:LS_Unidad ;
+    rml:predicateObjectMap [ rml:object "Slice by fixing every dimension except period" ;
+            rml:predicate rdfs:comment ],
+        [ rml:object "Slice by Series" ;
+            rml:predicate rdfs:label ],
+        [ rml:object sdmx-dimension:sex ;
+            rml:predicate qb:componentProperty ],
+        [ rml:object ine:territorialTotals ;
+            rml:predicate qb:componentProperty ],
+        [ rml:object ine:municipality ;
+            rml:predicate qb:componentProperty ] ;
+    rml:subjectMap [ rml:class qb:SliceKey ;
+            rml:template "http://lod.ine.es/recurso/cubes/slice_key/{Id}" ] .
+
+inelod:FuenteAPI_68065_det0_tip_det0_tip htv:absoluteURI "https://servicios.ine.es/wstempus/jsCache/ES/DATOS_TABLA/68065?det=2&tip=M" .
+
+inelod:LS_Root a rml:logicalSource ;
+    rml:iterator "$.*" ;
+    rml:referenceFormulation rml:HTTPAPI ;
+    rml:source inelod:FuenteAPI_68065_det0_tip_det0_tip .
+

@@ -13,6 +13,124 @@ GEO = Namespace("http://www.opengis.net/ont/geosparql#")
 
 load_dotenv()
 
+GPT_OSS_MODELS = {
+    "openai/gpt-oss-20b",
+    "openai/gpt-oss-120b",
+}
+
+
+def _json_response_format(model, schema_name, schema):
+    if model in GPT_OSS_MODELS:
+        return {
+            "type": "json_schema",
+            "json_schema": {
+                "name": schema_name,
+                "strict": True,
+                "schema": schema,
+            },
+        }
+    return {"type": "json_object"}
+
+
+def _validate_json_value(value, schema, path="$"):
+    schema_type = schema.get("type")
+    expected_types = {
+        "object": dict,
+        "array": list,
+        "string": str,
+    }
+    expected_type = expected_types.get(schema_type)
+    if expected_type and not isinstance(value, expected_type):
+        raise ValueError(f"{path} must be a JSON {schema_type}.")
+
+    if schema_type == "object":
+        missing = [
+            key
+            for key in schema.get("required", [])
+            if key not in value
+        ]
+        if missing:
+            raise ValueError(
+                f"{path} is missing required field(s): {', '.join(missing)}."
+            )
+        if schema.get("additionalProperties") is False:
+            unexpected = set(value) - set(schema.get("properties", {}))
+            if unexpected:
+                raise ValueError(
+                    f"{path} has unexpected field(s): "
+                    f"{', '.join(sorted(unexpected))}."
+                )
+        for key, property_schema in schema.get("properties", {}).items():
+            if key in value:
+                _validate_json_value(
+                    value[key],
+                    property_schema,
+                    f"{path}.{key}",
+                )
+
+    if schema_type == "array":
+        item_schema = schema.get("items", {})
+        for index, item in enumerate(value):
+            _validate_json_value(item, item_schema, f"{path}[{index}]")
+
+    if "enum" in schema and value not in schema["enum"]:
+        raise ValueError(
+            f"{path} must be one of: {', '.join(schema['enum'])}."
+        )
+
+
+def _create_json_completion(
+    client,
+    messages,
+    model,
+    schema_name,
+    schema,
+    temperature,
+    max_completion_tokens=1800,
+):
+    response_format = _json_response_format(model, schema_name, schema)
+    request_messages = [dict(message) for message in messages]
+    if response_format["type"] == "json_object":
+        request_messages[0]["content"] += (
+            "\nThe response must satisfy this exact JSON Schema:\n"
+            + json.dumps(schema, ensure_ascii=False)
+        )
+
+    max_attempts = 1 if response_format["type"] == "json_schema" else 2
+    last_error = None
+    for attempt in range(max_attempts):
+        chat_completion = client.chat.completions.create(
+            messages=request_messages,
+            model=model,
+            temperature=temperature,
+            max_completion_tokens=max_completion_tokens,
+            response_format=response_format,
+        )
+        content = chat_completion.choices[0].message.content
+        try:
+            if not content:
+                raise ValueError("Groq returned an empty structured response.")
+            result = json.loads(content)
+            _validate_json_value(result, schema)
+            return result
+        except (json.JSONDecodeError, ValueError) as error:
+            last_error = error
+            if attempt + 1 >= max_attempts:
+                break
+            request_messages.extend([
+                {"role": "assistant", "content": content or ""},
+                {
+                    "role": "user",
+                    "content": (
+                        f"The previous response was invalid: {error} "
+                        "Return only a corrected JSON object that satisfies "
+                        "the schema exactly."
+                    ),
+                },
+            ])
+
+    raise ValueError(f"Groq returned invalid structured output: {last_error}")
+
 
 def preprocess_local_search_text(text):
     """Normalize API-style identifiers only for local embedding search."""
@@ -28,36 +146,40 @@ def preprocess_local_search_text(text):
 def searchLLM(term, type="class", description="", model="llama-3.3-70b-versatile"):  
     api_key = os.getenv("GROQ_API_KEY")
     client = Groq(api_key=api_key)
-    
-    # Usamos f-string con doble llave para el esquema JSON
-    prompt_sistema = f"""You are an expert in Semantic Web. 
-    Return a JSON object mapping the {type} to Wikidata and DBpedia.
-    JSON structure:
-    {{
-    "{type}": "{term}",
-    "wikidata_qid": "QID here",
-    "dbpedia_uri": "URI here"
-    }}
-    Respond ONLY with JSON."""
-    
-    prompt_usuario = f"Mapping for {type}: '{term}'"
-    if description:
-        prompt_usuario += f" Description: {description}"
+
+    prompt_sistema = f"""You are an expert in Semantic Web.
+    Map the requested {type} to Wikidata and DBpedia.
+    Use an empty string when no reliable identifier or URI exists.
+    Respond only with the requested JSON object."""
+
+    prompt_usuario = json.dumps({
+        "entity_type": type,
+        "term": term,
+        "description": description,
+    }, ensure_ascii=False)
+    schema = {
+        "type": "object",
+        "properties": {
+            "term": {"type": "string"},
+            "wikidata_qid": {"type": "string"},
+            "dbpedia_uri": {"type": "string"},
+        },
+        "required": ["term", "wikidata_qid", "dbpedia_uri"],
+        "additionalProperties": False,
+    }
 
     try:
-        chat_completion = client.chat.completions.create(
-            messages=[
+        return _create_json_completion(
+            client,
+            [
                 {"role": "system", "content": prompt_sistema},
                 {"role": "user", "content": prompt_usuario}
             ],
-            model=model,
+            model,
+            "external_semantic_mapping",
+            schema,
             temperature=0.1,
-            response_format={"type": "json_object"} 
         )
-
-        content = chat_completion.choices[0].message.content
-        return json.loads(content)
-
     except Exception as e:
         print(f"Error con Groq: {e}")
         return None
@@ -200,13 +322,7 @@ def llm_propose(ontology, term, type="class", description="", model=None, prefix
     You are an expert in Semantic Web and Linked Data.
     Your task is to identify the equivalent class in the ontology or, in case there isn't, propose an extension of the ontology to include the following {type}: '{term}' with the following description: '{description}'.
     Choose the most specific parent class from the ontology classes provided by the user and use a generic label and comment for the new class based on the term and description.
-    Respond ONLY in JSON format with the following structure:
-    {{
-        "iri": "proposed IRI",
-        "parent_iri": "existing ontology class IRI",
-        "label": "{term}",
-        "comment": "{description}"
-    }}
+    Respond only with the requested JSON object.
     The parent_iri value MUST be one of the existing ontology class IRIs provided by the user.
     """
     prompt_usuario = json.dumps({
@@ -215,18 +331,29 @@ def llm_propose(ontology, term, type="class", description="", model=None, prefix
         "description": description,
         "existing_classes": existing_classes
     }, ensure_ascii=False)
+    schema = {
+        "type": "object",
+        "properties": {
+            "iri": {"type": "string"},
+            "parent_iri": {"type": "string"},
+            "label": {"type": "string"},
+            "comment": {"type": "string"},
+        },
+        "required": ["iri", "parent_iri", "label", "comment"],
+        "additionalProperties": False,
+    }
     try:
-        chat_completion = client.chat.completions.create(
-            messages=[
+        respuesta_json = _create_json_completion(
+            client,
+            [
                 {"role": "system", "content": prompt_sistema},
                 {"role": "user", "content": prompt_usuario}
             ],
-            model=model, # Usamos el modelo grande para mejor precisión
-            temperature=0.1, # Temperatura baja para que sea determinista
-            response_format={"type": "json_object"} # Forzamos salida JSON
+            model,
+            "ontology_class_extension",
+            schema,
+            temperature=0.1,
         )
-
-        respuesta_json = json.loads(chat_completion.choices[0].message.content)
         respuesta_json.setdefault("iri", default_iri)
         respuesta_json.setdefault("label", term)
         respuesta_json.setdefault("comment", description)
@@ -268,13 +395,7 @@ def llm_propose_property(ontology, term, description="", datatype="", domain_iri
     The user has a first draft ontology and needs to represent a data property from an OGC API collection.
     If there is no suitable existing property, propose a conservative ontology extension for this property.
     Prefer attaching the new property with rdfs:subPropertyOf to the most specific compatible property from the provided list.
-    Respond ONLY in JSON format with this structure:
-    {{
-        "iri": "proposed property IRI",
-        "parent_iri": "existing property IRI or empty string",
-        "label": "{term}",
-        "comment": "{description}"
-    }}
+    Respond only with the requested JSON object.
     The parent_iri value, when present, MUST be one of the existing property IRIs provided by the user.
     """
     prompt_usuario = json.dumps({
@@ -285,18 +406,29 @@ def llm_propose_property(ontology, term, description="", datatype="", domain_iri
         "domain_iri": domain_iri,
         "existing_properties": existing_properties
     }, ensure_ascii=False)
+    schema = {
+        "type": "object",
+        "properties": {
+            "iri": {"type": "string"},
+            "parent_iri": {"type": "string"},
+            "label": {"type": "string"},
+            "comment": {"type": "string"},
+        },
+        "required": ["iri", "parent_iri", "label", "comment"],
+        "additionalProperties": False,
+    }
     try:
-        chat_completion = client.chat.completions.create(
-            messages=[
+        respuesta_json = _create_json_completion(
+            client,
+            [
                 {"role": "system", "content": prompt_sistema},
                 {"role": "user", "content": prompt_usuario}
             ],
-            model=model,
+            model,
+            "ontology_property_extension",
+            schema,
             temperature=0.1,
-            response_format={"type": "json_object"}
         )
-
-        respuesta_json = json.loads(chat_completion.choices[0].message.content)
         respuesta_json.setdefault("iri", default_iri)
         respuesta_json.setdefault("label", term)
         respuesta_json.setdefault("comment", description)
@@ -329,13 +461,13 @@ def llm_propose_property(ontology, term, description="", datatype="", domain_iri
 def llm_propose_axiom(ontology, model=None, history=None):
     api_key = os.getenv("GROQ_API_KEY")
     client = Groq(api_key=api_key)
-    entities = _compact_graph_entities(ontology)
+    entities = _compact_graph_entities(ontology, max_entities=60)
     existing_axioms_sample = []
     for s, p, o in ontology.triples((None, None, None)):
         if isinstance(s, rdflib.BNode) or isinstance(o, rdflib.BNode):
             continue
         existing_axioms_sample.append({"subject": str(s), "predicate": str(p), "object": str(o)})
-        if len(existing_axioms_sample) >= 120:
+        if len(existing_axioms_sample) >= 30:
             break
 
     prompt_sistema = """
@@ -367,20 +499,59 @@ def llm_propose_axiom(ontology, model=None, history=None):
         "task": "Propose one local OWL class restriction that improves the ontology without global domain/range axioms.",
         "entities": entities,
         "existing_axioms_sample": existing_axioms_sample,
-        "previous_user_decisions": history or []
+        "previous_user_decisions": (history or [])[-5:]
     }, ensure_ascii=False)
+    schema = {
+        "type": "object",
+        "properties": {
+            "rationale": {"type": "string"},
+            "restrictions": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "class_iri": {"type": "string"},
+                        "property_iri": {"type": "string"},
+                        "quantifier": {
+                            "type": "string",
+                            "enum": [
+                                "someValuesFrom",
+                                "allValuesFrom",
+                                "cardinality",
+                                "minCardinality",
+                                "maxCardinality",
+                            ],
+                        },
+                        "value_iri": {"type": "string"},
+                        "cardinality": {"type": "string"},
+                    },
+                    "required": [
+                        "class_iri",
+                        "property_iri",
+                        "quantifier",
+                        "value_iri",
+                        "cardinality",
+                    ],
+                    "additionalProperties": False,
+                },
+            },
+        },
+        "required": ["rationale", "restrictions"],
+        "additionalProperties": False,
+    }
 
     try:
-        chat_completion = client.chat.completions.create(
-            messages=[
+        proposal = _create_json_completion(
+            client,
+            [
                 {"role": "system", "content": prompt_sistema},
                 {"role": "user", "content": prompt_usuario}
             ],
-            model=model,
+            model,
+            "ontology_axiom_proposal",
+            schema,
             temperature=0.2,
-            response_format={"type": "json_object"}
         )
-        proposal = json.loads(chat_completion.choices[0].message.content)
         restrictions = proposal.get("restrictions", [])
         if not restrictions:
             return None
@@ -452,9 +623,13 @@ def searchNotLocal(term, description="", type="class", model="llama-3.3-70b-vers
         result = searchLLM(term, type=type, description=description, model=model)
         if not result:
             return None
-    
-        dbpedia_resource = result['dbpedia_uri'].split('/')[-1] if result['dbpedia_uri'] else None
-        if existe_en_dbpedia(dbpedia_resource) and existe_en_wikidata(result['wikidata_qid']):
+
+        dbpedia_uri = result.get("dbpedia_uri")
+        wikidata_qid = result.get("wikidata_qid")
+        if not dbpedia_uri or not wikidata_qid:
+            return None
+        dbpedia_resource = dbpedia_uri.rstrip("/").split("/")[-1]
+        if existe_en_dbpedia(dbpedia_resource) and existe_en_wikidata(wikidata_qid):
             return DBO[dbpedia_resource]
         else:
             return None

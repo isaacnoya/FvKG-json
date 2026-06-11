@@ -12,10 +12,12 @@ output_prueba.ttl
 pruebas.ipynb
 tfm.txt
 OGCmappingGenerator/.env
-moprhgeo/mappings.txt
-moprhgeo/output.ttl
+morphgeo/mappings.txt
+morphgeo/output.ttl
 .vscode/*
 .vscode
 .DS_Store
 onto_index.pt
 OGCmappingGenerator/onto_index.pt
+morphgeo/consultas.txt
+morphgeo/pruebasMappingSelection.py

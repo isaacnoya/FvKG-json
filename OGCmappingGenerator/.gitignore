@@ -1,2 +1,4 @@
 .env
 onto_index.pt
+__pycache__
+__pycache__/*

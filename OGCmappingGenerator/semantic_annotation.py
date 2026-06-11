@@ -5,32 +5,191 @@ import os
 import shlex
 import sys
 import time
+from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 
 import rdflib
-from rdflib import Literal, URIRef
+from rdflib import BNode, Literal, Namespace, URIRef
 
 from OGCmappingGenerator import (
-    AlignmentReviewer,
     GEO,
-    GenerationStats,
     OGC,
     OWL,
     RDF,
     RDFS,
     RML,
     XSD,
+    namespaces,
+)
+from ontology_searh import (
     VectorialOntologyMatcher,
     llm_propose,
-    namespaces,
-    review_llm_axioms,
-    review_property_alignments,
+    llm_propose_axiom,
+    llm_propose_property,
     searchNotLocal,
 )
 
 
 OWL_CLASS_LOWER = OWL["class"]
+namespaces = {
+    **namespaces,
+    "schema": Namespace("http://schema.org/"),
+    "rr": Namespace("http://www.w3.org/ns/r2rml#"),
+    "wgs84_pos": Namespace("http://www.w3.org/2003/01/geo/wgs84_pos#"),
+    "skos": Namespace("http://www.w3.org/2004/02/skos/core#"),
+    "foaf": Namespace("http://xmlns.com/foaf/0.1/"),
+    "org": Namespace("http://www.w3.org/ns/org#"),
+    "geolinkeddata": Namespace("http://geo.linkeddata.es/ontology/"),
+    "dbo": Namespace("http://dbpedia.org/ontology/"),
+}
+
+
+class GenerationStats:
+    def __init__(self):
+        self.entity_totals = defaultdict(int)
+        self.alignment_totals = defaultdict(lambda: defaultdict(int))
+        self.axiom_proposals = 0
+        self.axiom_accepted_proposals = 0
+        self.axiom_denied_proposals = 0
+        self.axiom_accepted_triples = 0
+        self.axiom_skipped_triples = 0
+
+    def count_entity(self, entity_type):
+        self.entity_totals[entity_type] += 1
+
+    def count_alignment(self, entity_type, source):
+        self.alignment_totals[entity_type][source] += 1
+
+    def aligned_total(self, entity_type):
+        return sum(self.alignment_totals[entity_type].values())
+
+    def print_summary(self):
+        print("\nAnnotation statistics")
+        labels = {
+            "class": "Classes",
+            "property": "Properties",
+        }
+        for entity_type in ("class", "property"):
+            total = self.entity_totals[entity_type]
+            aligned = self.aligned_total(entity_type)
+            print(f"  {labels[entity_type]}: {aligned}/{total} aligned")
+            for source in ("baseline", "local", "notlocal", "proposal"):
+                count = self.alignment_totals[entity_type][source]
+                print(f"    {source}: {count}")
+            print(f"    unaligned: {total - aligned}")
+        print("  LLM axiom review:")
+        print(f"    proposals reviewed: {self.axiom_proposals}")
+        print(f"    proposals accepted: {self.axiom_accepted_proposals}")
+        print(f"    proposals denied: {self.axiom_denied_proposals}")
+        print(f"    triples accepted: {self.axiom_accepted_triples}")
+        print(f"    triples skipped: {self.axiom_skipped_triples}")
+
+
+class AlignmentReviewer:
+    def __init__(self, interactive=True, local_top_k=5, stats=None):
+        self.interactive = interactive
+        self.local_top_k = local_top_k
+        self.stats = stats
+        self.local_reviews = []
+
+    def _ask_yes_no(self, prompt, default=False):
+        if not self.interactive:
+            return default
+        suffix = " [Y/n]: " if default else " [y/N]: "
+        while True:
+            try:
+                answer = input(prompt + suffix).strip().lower()
+            except EOFError:
+                return default
+            if not answer:
+                return default
+            if answer in {"y", "yes", "s", "si", "sí"}:
+                return True
+            if answer in {"n", "no"}:
+                return False
+            print("Please answer yes or no.")
+
+    def confirm_external(self, term, entity_type, iri):
+        print(f"\nExternal match found for {entity_type} '{term}':")
+        print(f"  {iri}")
+        if self._ask_yes_no("Accept this external alignment?"):
+            return URIRef(iri)
+        return None
+
+    def choose_local(self, term, description, entity_type, oe):
+        if not oe:
+            return None
+        matches = oe.search_top(
+            term,
+            description or "",
+            top_k=self.local_top_k * 3,
+            threshold=None,
+        )
+        if entity_type == "property":
+            matches = [
+                match for match in matches
+                if "Propiedad" in match["type"]
+            ]
+        elif entity_type == "class":
+            matches = [
+                match for match in matches
+                if match["type"] == "Clase"
+            ]
+        matches = matches[:self.local_top_k]
+
+        review = {
+            "term": term,
+            "description": description or "",
+            "entity_type": entity_type,
+            "query_text": matches[0].get("query_text") if matches else None,
+            "candidates": [
+                {
+                    "rank": index,
+                    "iri": match["iri"],
+                    "name": match["name"],
+                    "type": match["type"],
+                    "confidence": match["confidence"],
+                }
+                for index, match in enumerate(matches, start=1)
+            ],
+            "selected_rank": None,
+            "selected_iri": None,
+        }
+        self.local_reviews.append(review)
+
+        if not matches:
+            return None
+        print(f"\nLocal ontology matches for {entity_type} '{term}':")
+        if matches[0].get("query_text"):
+            print(f"  Search text: {matches[0]['query_text']}")
+        for index, match in enumerate(matches, start=1):
+            print(
+                f"  {index}. {match['name']} ({match['type']}) "
+                f"confidence={match['confidence']} iri={match['iri']}"
+            )
+        if not self.interactive:
+            return None
+        while True:
+            try:
+                answer = input(
+                    "Choose a match number to accept, "
+                    "or press Enter/0 to skip: "
+                ).strip()
+            except EOFError:
+                return None
+            if not answer or answer == "0":
+                return None
+            if answer.isdigit() and 1 <= int(answer) <= len(matches):
+                selected_rank = int(answer)
+                selected_iri = matches[selected_rank - 1]["iri"]
+                review["selected_rank"] = selected_rank
+                review["selected_iri"] = selected_iri
+                return URIRef(selected_iri)
+            print(
+                f"Please enter a number between 1 and {len(matches)}, "
+                "or 0 to skip."
+            )
 
 
 @dataclass
@@ -269,6 +428,478 @@ def propose_class_extensions(collections, ontology, reference_ontology, model, i
         collection.annotation_source = "proposal"
         if stats:
             stats.count_alignment("class", "proposal")
+
+
+def _format_axiom_proposal(proposal):
+    print("\nLLM proposed ontology restriction:")
+    if proposal.get("rationale"):
+        print(f"  Rationale: {proposal['rationale']}")
+    for index, restriction in enumerate(
+        proposal.get("restrictions", []),
+        start=1,
+    ):
+        quantifier = restriction.get("quantifier")
+        value = (
+            restriction.get("value_iri")
+            or restriction.get("cardinality")
+        )
+        print(
+            f"  {index}. {restriction.get('class_iri')} "
+            "rdfs:subClassOf "
+            "[ a owl:Restriction ; "
+            f"owl:onProperty {restriction.get('property_iri')} ; "
+            f"owl:{quantifier} {value} ]"
+        )
+    for index, axiom in enumerate(proposal.get("axioms", []), start=1):
+        print(
+            f"  Legacy triple {index}. {axiom.get('subject')} "
+            f"{axiom.get('predicate')} {axiom.get('object')}"
+        )
+
+
+def _known_restriction_resources(ontology):
+    known_resources = {
+        str(GEO.Feature),
+        str(GEO.FeatureCollection),
+        str(GEO.Geometry),
+        str(GEO.hasGeometry),
+        str(GEO.asWKT),
+        str(GEO.wktLiteral),
+        str(GEO.geoJSONLiteral),
+        str(XSD.string),
+        str(XSD.integer),
+        str(XSD.float),
+        str(XSD.boolean),
+        str(XSD.nonNegativeInteger),
+    }
+    for subject, predicate, obj in ontology:
+        for term in (subject, predicate, obj):
+            if isinstance(term, URIRef):
+                known_resources.add(str(term))
+    return known_resources
+
+
+def _restriction_predicate(quantifier):
+    normalized = (quantifier or "").strip().split(":")[-1]
+    predicates = {
+        "someValuesFrom": OWL.someValuesFrom,
+        "allValuesFrom": OWL.allValuesFrom,
+        "cardinality": OWL.cardinality,
+        "minCardinality": OWL.minCardinality,
+        "maxCardinality": OWL.maxCardinality,
+    }
+    return predicates.get(normalized) or {
+        key.lower(): value
+        for key, value in predicates.items()
+    }.get(normalized.lower())
+
+
+def _is_cardinality_restriction(predicate):
+    return predicate in {
+        OWL.cardinality,
+        OWL.minCardinality,
+        OWL.maxCardinality,
+    }
+
+
+def _add_restriction_proposal(
+    ontology,
+    restriction,
+    known_resources,
+    stats=None,
+):
+    class_iri = restriction.get("class_iri")
+    property_iri = restriction.get("property_iri")
+    predicate = _restriction_predicate(restriction.get("quantifier"))
+
+    if not class_iri or not property_iri or not predicate:
+        print("Skipping malformed OWL restriction.")
+        if stats:
+            stats.axiom_skipped_triples += 1
+        return []
+    if class_iri not in known_resources or property_iri not in known_resources:
+        print(
+            "Skipping OWL restriction with unknown class "
+            "or property IRI."
+        )
+        if stats:
+            stats.axiom_skipped_triples += 1
+        return []
+
+    if _is_cardinality_restriction(predicate):
+        try:
+            cardinality = int(restriction.get("cardinality"))
+        except (TypeError, ValueError):
+            print("Skipping OWL restriction with invalid cardinality.")
+            if stats:
+                stats.axiom_skipped_triples += 1
+            return []
+        if cardinality < 0:
+            print("Skipping OWL restriction with negative cardinality.")
+            if stats:
+                stats.axiom_skipped_triples += 1
+            return []
+        value = Literal(cardinality, datatype=XSD.nonNegativeInteger)
+    else:
+        value_iri = restriction.get("value_iri")
+        if not value_iri or value_iri not in known_resources:
+            print("Skipping OWL restriction with unknown value IRI.")
+            if stats:
+                stats.axiom_skipped_triples += 1
+            return []
+        value = URIRef(value_iri)
+
+    restriction_node = BNode()
+    triples = [
+        (URIRef(class_iri), RDFS.subClassOf, restriction_node),
+        (restriction_node, RDF.type, OWL.Restriction),
+        (restriction_node, OWL.onProperty, URIRef(property_iri)),
+        (restriction_node, predicate, value),
+    ]
+    for triple in triples:
+        ontology.add(triple)
+    if stats:
+        stats.axiom_accepted_triples += len(triples)
+    return triples
+
+
+def _add_axiom_proposal(ontology, proposal, stats=None):
+    added = []
+    known_resources = _known_restriction_resources(ontology)
+
+    for restriction in proposal.get("restrictions", []):
+        added.extend(
+            _add_restriction_proposal(
+                ontology,
+                restriction,
+                known_resources,
+                stats=stats,
+            )
+        )
+
+    for axiom in proposal.get("axioms", []):
+        subject = axiom.get("subject")
+        predicate = axiom.get("predicate")
+        obj = axiom.get("object")
+        if not subject or not predicate or not obj:
+            print("Skipping malformed axiom.")
+            if stats:
+                stats.axiom_skipped_triples += 1
+            continue
+        if predicate in {str(RDFS.domain), str(RDFS.range)}:
+            print(
+                "Skipping global rdfs:domain/rdfs:range axiom. "
+                "Use an OWL class restriction instead."
+            )
+            if stats:
+                stats.axiom_skipped_triples += 1
+            continue
+        if subject not in known_resources or obj not in known_resources:
+            print("Skipping axiom with unknown subject or object IRI.")
+            if stats:
+                stats.axiom_skipped_triples += 1
+            continue
+        triple = (URIRef(subject), URIRef(predicate), URIRef(obj))
+        ontology.add(triple)
+        added.append(triple)
+        if stats:
+            stats.axiom_accepted_triples += 1
+    return added
+
+
+def review_llm_axioms(ontology, model=None, interactive=True, stats=None):
+    if not interactive:
+        return
+
+    history = []
+    print("\nStarting LLM ontology axiom review loop.")
+    print("For each proposal choose: accept, deny, or finish.")
+
+    while True:
+        proposal = llm_propose_axiom(
+            ontology,
+            model=model,
+            history=history,
+        )
+        if not proposal:
+            print("No axiom proposal was produced.")
+            reviewer = AlignmentReviewer(interactive=True)
+            if not reviewer._ask_yes_no("Try again?"):
+                break
+            continue
+
+        if stats:
+            stats.axiom_proposals += 1
+        _format_axiom_proposal(proposal)
+        while True:
+            try:
+                answer = input(
+                    "Accept, deny, or finish? [a/d/f]: "
+                ).strip().lower()
+            except EOFError:
+                return
+            if answer in {"a", "accept", "yes", "y", "s", "si", "sí"}:
+                added = _add_axiom_proposal(
+                    ontology,
+                    proposal,
+                    stats=stats,
+                )
+                history.append({
+                    "decision": "accepted",
+                    "proposal": proposal,
+                })
+                if stats:
+                    stats.axiom_accepted_proposals += 1
+                print(f"Accepted {len(added)} axiom triple(s).")
+                break
+            if answer in {"d", "deny", "no", "n"}:
+                history.append({
+                    "decision": "denied",
+                    "proposal": proposal,
+                })
+                if stats:
+                    stats.axiom_denied_proposals += 1
+                print("Denied. Asking the LLM for another proposal.")
+                break
+            if answer in {"f", "finish", "q", "quit", "stop"}:
+                print("Finished ontology axiom review.")
+                return
+            print("Please answer accept, deny, or finish.")
+
+
+def _property_description(occurrences):
+    first_collection, first_property = occurrences[0]
+    collection_titles = ", ".join(
+        collection.title
+        for collection, _ in occurrences[:5]
+    )
+    parts = [
+        f"Property used by collection(s): {collection_titles}."
+    ]
+    if len(occurrences) > 5:
+        parts.append(f"And {len(occurrences) - 5} more collection(s).")
+    if first_collection.description:
+        parts.append(first_collection.description)
+    parts.append(f"Datatype: {first_property['type']}.")
+    return " ".join(parts)
+
+
+def _property_title_from_ontology(ontology, property_uri):
+    label = ontology.value(property_uri, RDFS.label)
+    if label:
+        return str(label)
+    return str(property_uri).rstrip("/#").split("/")[-1].split("#")[-1]
+
+
+def _collection_properties_by_ontology_uri(collections):
+    properties_by_uri = defaultdict(list)
+    for collection in collections:
+        for prop in collection.properties:
+            property_uri = URIRef(OGC[prop["title"]])
+            properties_by_uri[property_uri].append((collection, prop))
+    return properties_by_uri
+
+
+def _datatype_uri(property_type):
+    if property_type == "number":
+        return XSD.float
+    return XSD[property_type]
+
+
+def _add_property_alignment(
+    ontology,
+    collection,
+    prop,
+    aligned_uri,
+    stats=None,
+    source=None,
+):
+    local_property_uri = OGC[prop["title"]]
+    aligned_uri = URIRef(aligned_uri)
+    class_uri = OGC[collection.id]
+
+    ontology.add((
+        local_property_uri,
+        OWL.equivalentProperty,
+        aligned_uri,
+    ))
+    ontology.add((aligned_uri, RDF.type, RDF.Property))
+    ontology.add((aligned_uri, RDFS.label, Literal(prop["title"])))
+    ontology.add((
+        aligned_uri,
+        RDFS.range,
+        _datatype_uri(prop["type"]),
+    ))
+    ontology.add((aligned_uri, RDFS.domain, class_uri))
+    prop["equivalentClass"] = aligned_uri
+    prop["annotation_source"] = source
+    if stats and source:
+        stats.count_alignment("property", source)
+
+
+def _add_property_extension(
+    ontology,
+    collection,
+    prop,
+    proposal,
+    stats=None,
+):
+    proposed_uri = URIRef(proposal["iri"])
+    class_uri = OGC[collection.id]
+
+    ontology.add((proposed_uri, RDF.type, RDF.Property))
+    ontology.add((
+        proposed_uri,
+        RDFS.label,
+        Literal(proposal.get("label", prop["title"])),
+    ))
+    ontology.add((
+        proposed_uri,
+        RDFS.range,
+        _datatype_uri(prop["type"]),
+    ))
+    ontology.add((proposed_uri, RDFS.domain, class_uri))
+    if proposal.get("comment"):
+        ontology.add((
+            proposed_uri,
+            RDFS.comment,
+            Literal(proposal["comment"]),
+        ))
+    if proposal.get("parent_iri"):
+        ontology.add((
+            proposed_uri,
+            RDFS.subPropertyOf,
+            URIRef(proposal["parent_iri"]),
+        ))
+
+    local_property_uri = OGC[prop["title"]]
+    ontology.add((
+        local_property_uri,
+        OWL.equivalentProperty,
+        proposed_uri,
+    ))
+    prop["equivalentClass"] = proposed_uri
+    prop["annotation_source"] = "proposal"
+    if stats:
+        stats.count_alignment("property", "proposal")
+
+
+def review_property_alignments(
+    collections,
+    ontology,
+    interactive=True,
+    stats=None,
+    use_local=True,
+    use_external=True,
+    use_proposals=True,
+):
+    if not interactive:
+        return
+
+    print("\nStarting property alignment review after first ontology draft.")
+    collection_properties = _collection_properties_by_ontology_uri(
+        collections
+    )
+    ontology_properties = sorted(
+        set(ontology.subjects(RDF.type, RDF.Property)),
+        key=str,
+    )
+
+    for property_uri in ontology_properties:
+        occurrences = collection_properties.get(property_uri)
+        if not occurrences or all(
+            prop["equivalentClass"]
+            for _, prop in occurrences
+        ):
+            continue
+
+        representative_collection, representative_prop = occurrences[0]
+        property_title = _property_title_from_ontology(
+            ontology,
+            property_uri,
+        )
+        description = _property_description(occurrences)
+        print(
+            f"\nReviewing property '{property_title}' "
+            f"used in {len(occurrences)} collection(s)"
+        )
+
+        review_flag = input(
+            "Do you want to review this property for possible "
+            "alignment or extension? [Y/n]: "
+        ).strip().lower()
+        if review_flag in {"n", "no"}:
+            print("Skipping review for this property.")
+            continue
+
+        if use_local:
+            local = representative_collection.reviewer.choose_local(
+                property_title,
+                description,
+                "property",
+                representative_collection.oe,
+            )
+            if local:
+                for index, (collection, prop) in enumerate(occurrences):
+                    _add_property_alignment(
+                        ontology,
+                        collection,
+                        prop,
+                        local,
+                        stats=stats if index == 0 else None,
+                        source="local",
+                    )
+                continue
+
+        if use_external:
+            external = searchNotLocal(
+                property_title,
+                description,
+                "property",
+                model=representative_collection.model,
+            )
+            if external:
+                accepted = (
+                    representative_collection.reviewer.confirm_external(
+                        property_title,
+                        "property",
+                        external,
+                    )
+                )
+                if accepted:
+                    for index, (collection, prop) in enumerate(occurrences):
+                        _add_property_alignment(
+                            ontology,
+                            collection,
+                            prop,
+                            accepted,
+                            stats=stats if index == 0 else None,
+                            source="notlocal",
+                        )
+                    continue
+
+        if not use_proposals:
+            continue
+
+        proposal = llm_propose_property(
+            ontology,
+            property_title,
+            description=description,
+            datatype=representative_prop["type"],
+            domain_iri=str(OGC[representative_collection.id]),
+            model=representative_collection.model,
+            prefix=f"{str(OGC)}extension/",
+            interactive=interactive,
+        )
+        if proposal:
+            for index, (collection, prop) in enumerate(occurrences):
+                _add_property_extension(
+                    ontology,
+                    collection,
+                    prop,
+                    proposal,
+                    stats=stats if index == 0 else None,
+                )
 
 
 def class_equivalences(ontology):
@@ -606,7 +1237,11 @@ def parse_args():
     parser.add_argument("-r", "--rontologias", default=None, help="Reference ontology file or folder for local vector search and class extension proposals")
     parser.add_argument("-l", "--llm_model", default="openai/gpt-oss-120b", help="LLM model to use for ontology search")
     parser.add_argument("-v", "--vectorial_model", default="paraphrase-multilingual-MiniLM-L12-v2", help="Sentence Transformer model for local ontology alignment")
-    parser.add_argument("-n", action="store_true", help="Enable the same class-extension proposal step used by OGCmappingGenerator.py")
+    parser.add_argument(
+        "-n",
+        action="store_true",
+        help="Enable LLM class-extension proposals.",
+    )
     parser.add_argument(
         "--mode",
         choices=("full", "embeddings", "llm"),

@@ -1,0 +1,106 @@
+@prefix geo: <http://www.opengis.net/ont/geosparql#> .
+@prefix htv: <http://www.w3.org/2011/http#> .
+@prefix ogc: <http://www.ogc.org/> .
+@prefix rml: <http://w3id.org/rml/> .
+@prefix void: <http://rdfs.org/ns/void#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://www.ogc.org/WMS_INE_SECCIONES_G01:SU.VectorStatisticalUnitTriplesMap2> a rml:TriplesMap ;
+    rml:logicalSource <http://www.ogc.org/LogicalSource_WMS_INE_SECCIONES_G01:SU.VectorStatisticalUnit> ;
+    rml:predicateObjectMap [ rml:objectMap [ rml:parentTriplesMap <http://www.ogc.org/WMS_INE_SECCIONES_G01:SU.VectorStatisticalUnitTriplesMap> ] ;
+            rml:predicate geo:member ] ;
+    rml:subjectMap [ rml:class geo:FeatureCollection ;
+            rml:constant <http://www.ogc.org/WMS_INE_SECCIONES_G01:SU.VectorStatisticalUnit_collection> ] .
+
+<http://www.ogc.org/FuenteAPI_WMS_INE_SECCIONES_G01:SU.VectorStatisticalUnit> htv:absoluteURI "https://www.ine.es/geoserver/ogc/features/v1//collections/WMS_INE_SECCIONES_G01:SU.VectorStatisticalUnit/items?f=json&limit=10000" .
+
+<http://www.ogc.org/WMS_INE_SECCIONES_G01:SU.VectorStatisticalUnitTriplesMap> a rml:TriplesMap ;
+    rml:logicalSource <http://www.ogc.org/LogicalSource_WMS_INE_SECCIONES_G01:SU.VectorStatisticalUnit> ;
+    rml:predicateObjectMap [ rml:objectMap [ void:filterx "the_geom=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.the_geom" ] ;
+            rml:predicate ogc:the_geom ],
+        [ rml:objectMap [ void:filterx "CNUT3=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.CNUT3" ] ;
+            rml:predicate ogc:CNUT3 ],
+        [ rml:objectMap [ void:filterx "CPRO=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.CPRO" ] ;
+            rml:predicate ogc:CPRO ],
+        [ rml:objectMap [ void:filterx "CUMUN=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.CUMUN" ] ;
+            rml:predicate ogc:CUMUN ],
+        [ rml:objectMap [ void:filterx "CNUT0=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.CNUT0" ] ;
+            rml:predicate ogc:CNUT0 ],
+        [ rml:objectMap [ void:filterx "CNUT2=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.CNUT2" ] ;
+            rml:predicate ogc:CNUT2 ],
+        [ rml:objectMap [ void:filterx "CMUN=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.CMUN" ] ;
+            rml:predicate ogc:CMUN ],
+        [ rml:objectMap [ rml:datatype xsd:string ;
+                    rml:reference "geometry_name" ] ;
+            rml:predicate ogc:geometryName ],
+        [ rml:objectMap [ void:filterx "NPRO=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.NPRO" ] ;
+            rml:predicate ogc:NPRO ],
+        [ rml:objectMap [ void:filterx "bbox=@{1}" ;
+                    rml:datatype geo:geoJSONLiteral ;
+                    rml:reference "geometry" ] ;
+            rml:predicate geo:hasGeometry ],
+        [ rml:objectMap [ void:filterx "CSEC=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.CSEC" ] ;
+            rml:predicate ogc:CSEC ],
+        [ rml:objectMap [ void:filterx "NMUN=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.NMUN" ] ;
+            rml:predicate ogc:NMUN ],
+        [ rml:objectMap [ void:filterx "NCA=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.NCA" ] ;
+            rml:predicate ogc:NCA ],
+        [ rml:objectMap [ void:filterx "CLAU2=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.CLAU2" ] ;
+            rml:predicate ogc:CLAU2 ],
+        [ rml:objectMap [ void:filterx "CCA=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.CCA" ] ;
+            rml:predicate ogc:CCA ],
+        [ rml:objectMap [ void:filterx "TIPO=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.TIPO" ] ;
+            rml:predicate ogc:TIPO ],
+        [ rml:objectMap [ void:filterx "CNUT1=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.CNUT1" ] ;
+            rml:predicate ogc:CNUT1 ],
+        [ rml:objectMap [ void:filterx "CUDIS=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.CUDIS" ] ;
+            rml:predicate ogc:CUDIS ],
+        [ rml:objectMap [ void:filterx "CUSEC=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.CUSEC" ] ;
+            rml:predicate ogc:CUSEC ],
+        [ rml:objectMap [ void:filterx "CDIS=@{1}" ;
+                    rml:datatype xsd:string ;
+                    rml:reference "properties.CDIS" ] ;
+            rml:predicate ogc:CDIS ] ;
+    rml:subjectMap [ rml:class <http://www.ogc.org/WMS_INE_SECCIONES_G01:SU.VectorStatisticalUnit> ;
+            rml:template "https://www.ine.es/geoserver/ogc/features/v1//collections/WMS_INE_SECCIONES_G01:SU.VectorStatisticalUnit/items/{id}" ] .
+
+<http://www.ogc.org/LogicalSource_WMS_INE_SECCIONES_G01:SU.VectorStatisticalUnit> a rml:logicalSource ;
+    void:nextPage "$.links[?(@.rel==\"next\")].href" ;
+    rml:iterator "$.features.*" ;
+    rml:referenceFormulation rml:HTTPAPI ;
+    rml:source <http://www.ogc.org/FuenteAPI_WMS_INE_SECCIONES_G01:SU.VectorStatisticalUnit> .
+

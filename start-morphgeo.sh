@@ -3,7 +3,7 @@
 set -u
 
 ROOT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
-FRONTEND_DIR="$ROOT_DIR/jit-geosparql-frontend"
+FRONTEND_DIR="$ROOT_DIR/geosparql-frontend"
 CONDA_ENV=${CONDA_ENV:-oeg}
 BACKEND_HOST=${BACKEND_HOST:-127.0.0.1}
 BACKEND_PORT=${BACKEND_PORT:-8000}
@@ -115,7 +115,7 @@ fi
 log "Starting backend at http://$BACKEND_HOST:$BACKEND_PORT"
 (
   cd "$ROOT_DIR" &&
-    exec "$UVICORN_BIN" moprhgeo.api:app \
+    exec "$UVICORN_BIN" morphgeo.api:app \
       --reload \
       --host "$BACKEND_HOST" \
       --port "$BACKEND_PORT"
