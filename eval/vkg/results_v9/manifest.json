@@ -1,0 +1,71 @@
+{
+  "schema_version": 9,
+  "benchmark_id": "20260615T104532.511748Z",
+  "created_at_utc": "2026-06-15T10:45:32.511742+00:00",
+  "updated_at_utc": "2026-06-15T10:45:32.512977+00:00",
+  "resume_count": 0,
+  "project_root": "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm",
+  "queries_dir": "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/vkg/queries",
+  "query_files": [
+    "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/vkg/queries/q01.rq",
+    "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/vkg/queries/q02.rq",
+    "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/vkg/queries/q03.rq",
+    "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/vkg/queries/q04.rq",
+    "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/vkg/queries/q05.rq",
+    "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/vkg/queries/q06.rq",
+    "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/vkg/queries/q07.rq"
+  ],
+  "mappings_dir": "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/vkg/mappings",
+  "mapping_files": [
+    "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/vkg/mappings/68065_det0_tip_mappings.rml.ttl",
+    "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/vkg/mappings/WMS_INE_SECCIONES_G01:SU.VectorStatisticalUnit_mapping.ttl",
+    "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/vkg/mappings/administrativeunit_mapping.ttl",
+    "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/vkg/mappings/agua:Zif_riesgo_pob_q500_mapping.ttl",
+    "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/vkg/mappings/ccm-optical_mapping.ttl",
+    "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/vkg/mappings/copernicus.rml.ttl",
+    "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/vkg/mappings/damorweir_mapping.ttl",
+    "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/vkg/mappings/drainagebasin_mapping.ttl",
+    "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/vkg/mappings/falls_mapping.ttl",
+    "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/vkg/mappings/lock_mapping.ttl",
+    "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/vkg/mappings/namedplace_mapping.ttl",
+    "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/vkg/mappings/standingwater_mapping.ttl",
+    "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/vkg/mappings/watercourselinksequence_mapping.ttl",
+    "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/vkg/mappings/wetland_mapping.ttl"
+  ],
+  "mapping_rule_count": 307,
+  "mapping_load_seconds": 6.5766125,
+  "output_dir": "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/vkg/results_v9",
+  "repetitions": 3,
+  "skip_baseline_after_first_timeout": true,
+  "query_timeout_seconds": 600.0,
+  "random_seed_base": 42,
+  "variants": [
+    "baseline",
+    "binding_injection_random",
+    "final"
+  ],
+  "variant_definitions": {
+    "baseline": {
+      "virtual_bgp_function": "virtual_bgp_evalBaseline",
+      "virtual_geo_filter_enabled": true,
+      "url_binding_injection_enabled": false,
+      "triple_order_mode": "static"
+    },
+    "binding_injection_random": {
+      "virtual_bgp_function": "virtual_bgp_evalBindingInjectionRandom",
+      "virtual_geo_filter_enabled": true,
+      "url_binding_injection_enabled": true,
+      "triple_order_mode": "random"
+    },
+    "final": {
+      "virtual_bgp_function": "virtual_bgp_evalFinal",
+      "virtual_geo_filter_enabled": true,
+      "url_binding_injection_enabled": true,
+      "triple_order_mode": "static"
+    }
+  },
+  "python_version": "3.13.7 | packaged by Anaconda, Inc. | (main, Sep  9 2025, 19:54:17) [Clang 17.0.6 ]",
+  "platform": "macOS-26.0.1-arm64-arm-64bit-Mach-O",
+  "rdflib_version": "7.2.1",
+  "requests_version": "2.32.5"
+}

@@ -21,3 +21,8 @@ onto_index.pt
 OGCmappingGenerator/onto_index.pt
 morphgeo/consultas.txt
 morphgeo/pruebasMappingSelection.py
+*.tex
+tests
+eval/vkg/queries/q07.rq
+eval/vkg/results/
+eval/vkg/results_v7/

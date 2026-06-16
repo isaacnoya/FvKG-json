@@ -1,0 +1,3 @@
+https://api-features.ign.es/collections/administrativeunit/items?f=json&limit=10000&nameunit=Lugo&nationallevelname=Provincia
+https://api-features.idee.es/collections/wetland/items?f=json&limit=10000&bbox=-7.999732198%2C42.325700246000004%2C-6.814053008%2C43.761644173
+https://wmts.mapama.gob.es/sig-api/ogc/features/v1/collections/agua:Zif_riesgo_pob_q500/items?f=json&limit=10000&bbox=-7.999732198%2C42.325700246000004%2C-6.814053008%2C43.761644173

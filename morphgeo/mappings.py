@@ -32,7 +32,7 @@ def getMappings(mapping_file):
     PREFIX htv: <http://www.w3.org/2011/http#>
     PREFIX void: <http://rdfs.org/ns/void#> 
 
-    SELECT ?subject ?predicate ?object ?reference ?url ?iterator ?nextPage ?filterx ?projectx ?limit ?nElements WHERE {
+    SELECT ?subject ?predicate ?object ?reference ?url ?iterator ?nextPage ?filterx ?projectx ?limit ?nElements ?datatype ?language ?termType WHERE {
         ?tm a rml:TriplesMap ;
             rml:predicateObjectMap ?pom .
         ?tm rml:logicalSource ?ls .
@@ -82,6 +82,16 @@ def getMappings(mapping_file):
                 ?pom rml:objectMap ?om .                    
                 ?om rml:reference ?reference .
         } .
+        OPTIONAL {
+            ?pom rml:objectMap ?omMetadata .
+            OPTIONAL { ?omMetadata rml:datatype ?datatype . }
+            OPTIONAL { ?omMetadata rml:language ?rmlLanguage . }
+            OPTIONAL {
+                ?omMetadata <http://www.w3.org/ns/r2rml#language> ?rrLanguage .
+            }
+            OPTIONAL { ?omMetadata rml:termType ?termType . }
+        } .
+        BIND(COALESCE(?rmlLanguage, ?rrLanguage) AS ?language)
     }
     """)
     mrules = []

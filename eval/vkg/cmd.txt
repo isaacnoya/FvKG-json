@@ -1,0 +1,6 @@
+python eval/vkg/evaluate_vkg.py \
+  --queries-dir eval/vkg/queries \
+  --mappings-dir eval/vkg/mappings \
+  --output-dir eval/vkg/results \
+  --repetitions 3 \
+  --timeout-seconds 600

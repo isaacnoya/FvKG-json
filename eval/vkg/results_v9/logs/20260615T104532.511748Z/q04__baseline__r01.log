@@ -1,0 +1,57 @@
+https://api-features.idee.es/collections/standingwater/items?f=json&limit=10000
+https://api-features.idee.es/collections/standingwater/items?offset=10000&limit=10000
+https://api-features.idee.es/collections/standingwater/items?offset=20000&limit=10000
+https://api-features.idee.es/collections/standingwater/items?offset=30000&limit=10000
+https://api-features.idee.es/collections/standingwater/items?offset=40000&limit=10000
+https://api-features.idee.es/collections/standingwater/items?offset=50000&limit=10000
+https://api-features.idee.es/collections/standingwater/items?offset=60000&limit=10000
+https://api-features.idee.es/collections/standingwater/items?offset=70000&limit=10000
+https://api-features.idee.es/collections/standingwater/items?offset=80000&limit=10000
+https://api-features.idee.es/collections/standingwater/items?offset=90000&limit=10000
+https://api-features.idee.es/collections/standingwater/items?offset=100000&limit=10000
+https://api-features.idee.es/collections/standingwater/items?offset=110000&limit=10000
+https://api-features.idee.es/collections/standingwater/items?offset=120000&limit=10000
+https://api-features.idee.es/collections/standingwater/items?offset=130000&limit=10000
+https://api-features.ign.es/collections/administrativeunit/items?f=json&limit=10000
+https://servicios.ine.es/wstempus/jsCache/ES/DATOS_TABLA/68065?det=2&tip=M
+https://servicios.ine.es/wstempus/jsCache/ES/DATOS_TABLA/68065?det=2&tip=M
+
+Traceback (most recent call last):
+  File "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/vkg/evaluate_vkg.py", line 468, in execute_run
+    result_data = result_digest(graph.query(query_text))
+  File "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/vkg/evaluate_vkg.py", line 323, in result_digest
+    for row in result:
+               ^^^^^^
+  File "/opt/miniconda3/envs/oeg/lib/python3.13/site-packages/rdflib/query.py", line 372, in __iter__
+    for b in self._genbindings:
+             ^^^^^^^^^^^^^^^^^
+  File "/opt/miniconda3/envs/oeg/lib/python3.13/site-packages/rdflib/plugins/sparql/evaluate.py", line 574, in <genexpr>
+    return (row.project(project.PV) for row in res)
+                                               ^^^
+  File "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/morphgeo/sparql_virtualizer.py", line 296, in _auxGen
+    for c in evalPart(ctx, part.p):
+             ~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/morphgeo/virtual.py", line 245, in evalVirtualBGPWithoutBindings
+    yield from evalVirtualBGPWithoutBindings(
+    ...<5 lines>...
+    )
+  File "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/morphgeo/virtual.py", line 245, in evalVirtualBGPWithoutBindings
+    yield from evalVirtualBGPWithoutBindings(
+    ...<5 lines>...
+    )
+  File "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/morphgeo/virtual.py", line 245, in evalVirtualBGPWithoutBindings
+    yield from evalVirtualBGPWithoutBindings(
+    ...<5 lines>...
+    )
+  [Previous line repeated 4 more times]
+  File "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/morphgeo/virtual.py", line 241, in evalVirtualBGPWithoutBindings
+    child_ctx[o] = so
+    ~~~~~~~~~^^^
+  File "/opt/miniconda3/envs/oeg/lib/python3.13/site-packages/rdflib/plugins/sparql/sparql.py", line 411, in __setitem__
+    def __setitem__(self, key: str, value: str) -> None:
+    
+  File "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/vkg/evaluate_vkg.py", line 182, in handle_timeout
+    raise QueryTimeoutError(
+        f"Query exceeded the {timeout_seconds:g}-second timeout."
+    )
+QueryTimeoutError: Query exceeded the 600-second timeout.

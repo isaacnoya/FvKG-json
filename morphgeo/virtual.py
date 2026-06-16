@@ -7,7 +7,8 @@ import pandas as pd
 import rdflib
 import requests
 from jsonpath import JSONPath
-from rdflib import Literal, URIRef, Variable
+from rdflib import BNode, Literal, URIRef, Variable
+from rdflib.namespace import XSD
 from rdflib.plugins.sparql.sparql import (
     AlreadyBound,
     QueryContext,
@@ -299,6 +300,24 @@ def injectBindings(ctx, url):
 def has_filter(ref: str) -> bool:
         return '[?(' in ref
 
+def materialize_object_term(mapping, value):
+    term_type = str(mapping.term_type) if mapping.term_type is not None else None
+
+    if term_type == RML_IRI:
+        return URIRef(str(value))
+    if term_type == RML_BLANK_NODE:
+        return BNode(str(value))
+
+    datatype = (
+        URIRef(str(mapping.datatype))
+        if mapping.datatype is not None
+        else None
+    )
+    language = str(mapping.language) if mapping.language is not None else None
+    if language is not None or datatype == XSD.string:
+        datatype = None
+    return Literal(value, datatype=datatype, lang=language)
+
 def _split_bbox_url(url):
     url_parts = list(urlparse(url))
     query_params = parse_qsl(url_parts[4], keep_blank_values=True)
@@ -376,7 +395,7 @@ def materializeGroup(ctx, mappings, suj, queriesMade):
         try:
             print(url_next)
             r = requests.get(url_next).json()
-        except:
+        except Exception:
             r = {} 
         #Podemos usar mappings[0] porque todos los mappings comparten sujeto?
         next = JSONPath(mappings[0].nextPage).parse(r) if mappings[0].nextPage != None else []
@@ -402,7 +421,11 @@ def materializeGroup(ctx, mappings, suj, queriesMade):
                 r_obj = JSONPath(m.iterator + "." + m.o).parse(r) 
                 r_subj = [mappings[0].s for _ in r_obj] if isinstance(mappings[0].s, URIRef) else r_subj # In case subject is a constant, r_subj and r_obj must be same size in order to zip correctly
                 for sujeto, objeto in zip(r_subj, r_obj):
-                    ctx.graph.add((URIRef(sujeto), URIRef(m.p), Literal(objeto)))
+                    ctx.graph.add((
+                        URIRef(sujeto),
+                        URIRef(m.p),
+                        materialize_object_term(m, objeto),
+                    ))
             elif isinstance(m.o, Reference) and has_filter(m.o) and not getattr(m, "parentIterator", None):    
                 join_key = refs[0]
                 entries = JSONPath(m.iterator).parse(r)
@@ -412,7 +435,11 @@ def materializeGroup(ctx, mappings, suj, queriesMade):
                     match = lookup_data.get(key_value)
                     if match:
                         res = JSONPath(f"$.{m.o}").parse(match)
-                        ctx.graph.add((URIRef(template.replace(f"{{{refs[0]}}}", str(key_value))), URIRef(m.p), Literal(res[0]))) if res else None
+                        ctx.graph.add((
+                            URIRef(template.replace(f"{{{refs[0]}}}", str(key_value))),
+                            URIRef(m.p),
+                            materialize_object_term(m, res[0]),
+                        )) if res else None
                     else:
                         column_value.append(None)
             elif isinstance(m.o, Reference) and getattr(m, "parentIterator", None): #parentTripleMaps logic adhoc to use case
@@ -504,7 +531,7 @@ def materializeGroupWithoutBindings(ctx, mappings, suj, queriesMade):
                     ctx.graph.add((
                         URIRef(subject),
                         URIRef(mapping.p),
-                        Literal(obj),
+                        materialize_object_term(mapping, obj),
                     ))
             elif (
                 isinstance(mapping.o, Reference)
@@ -532,7 +559,7 @@ def materializeGroupWithoutBindings(ctx, mappings, suj, queriesMade):
                                 )
                             ),
                             URIRef(mapping.p),
-                            Literal(result[0]),
+                            materialize_object_term(mapping, result[0]),
                         ))
             elif (
                 isinstance(mapping.o, Reference)

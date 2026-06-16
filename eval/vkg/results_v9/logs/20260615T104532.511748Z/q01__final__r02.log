@@ -1,0 +1,2 @@
+https://api-features.ign.es/collections/administrativeunit/items?f=json&limit=10000&nameunit=Galicia
+https://wmts.mapama.gob.es/sig-api/ogc/features/v1/collections/agua:Zif_riesgo_pob_q500/items?f=json&limit=10000&bbox=-9.301515672%2C41.807233058%2C-6.733953272000001%2C43.792379568

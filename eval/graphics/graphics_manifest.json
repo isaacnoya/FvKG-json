@@ -1,0 +1,29 @@
+{
+  "semantic_results_dir": "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/semantic_anotation/results",
+  "vkg_results_dir": "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/vkg/results_v9",
+  "output_dir": "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/graphics",
+  "formats": [
+    "png",
+    "pdf"
+  ],
+  "dpi": 220,
+  "sources": {
+    "vkg": [
+      "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/vkg/results_v9/runs.csv"
+    ]
+  },
+  "generated_files": [
+    "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/graphics/vkg/vkg_runtime_by_query.png",
+    "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/graphics/vkg/vkg_runtime_by_query.pdf",
+    "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/graphics/vkg/vkg_success_rate.png",
+    "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/graphics/vkg/vkg_success_rate.pdf",
+    "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/graphics/vkg/vkg_result_cardinality.png",
+    "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/graphics/vkg/vkg_result_cardinality.pdf",
+    "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/graphics/vkg/vkg_api_calls.png",
+    "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/graphics/vkg/vkg_api_calls.pdf",
+    "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/graphics/vkg/vkg_intermediate_triples.png",
+    "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/graphics/vkg/vkg_intermediate_triples.pdf",
+    "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/graphics/vkg/vkg_final_time_breakdown.png",
+    "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/graphics/vkg/vkg_final_time_breakdown.pdf"
+  ]
+}

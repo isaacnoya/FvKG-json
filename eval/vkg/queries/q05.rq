@@ -9,7 +9,7 @@ PREFIX qb: <http://purl.org/linked-data/cube#>
 PREFIX dbo: <http://dbpedia.org/ontology/>
 PREFIX geolinkeddata: <http://geo.linkeddata.es/ontology/> 
 
-SELECT ?obsValue ?y  WHERE {
+SELECT ?obsValue  WHERE {
     ?o a qb:Observation ;
         sdmx-measure:obsValue ?obsValue ;
         sdmx-dimension:year "2025"^^xsd:gYear ;

@@ -1,0 +1,58 @@
+https://api-features.ign.es/collections/administrativeunit/items?f=json&limit=10000&nationallevelname=Municipio&nameunit=Pontevedra
+https://servicios.ine.es/wstempus/jsCache/ES/DATOS_TABLA/68065?det=2&tip=M
+https://wmts.mapama.gob.es/sig-api/ogc/features/v1/collections/agua:Zif_riesgo_pob_q500/items?f=json&limit=10000
+https://wmts.mapama.gob.es/sig-api/ogc/features/v1/collections/agua%3AZif_riesgo_pob_q500/items?f=json&limit=10000&startIndex=10000
+https://api-features.idee.es/collections/damorweir/items?f=json&limit=10000
+https://api-features.idee.es/collections/damorweir/items?offset=10000&limit=10000
+https://api-features.idee.es/collections/damorweir/items?offset=20000&limit=10000
+https://servicios.ine.es/wstempus/jsCache/ES/DATOS_TABLA/68065?det=2&tip=M
+
+Traceback (most recent call last):
+  File "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/vkg/evaluate_vkg.py", line 468, in execute_run
+    result_data = result_digest(graph.query(query_text))
+  File "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/vkg/evaluate_vkg.py", line 323, in result_digest
+    for row in result:
+               ^^^^^^
+  File "/opt/miniconda3/envs/oeg/lib/python3.13/site-packages/rdflib/query.py", line 372, in __iter__
+    for b in self._genbindings:
+             ^^^^^^^^^^^^^^^^^
+  File "/opt/miniconda3/envs/oeg/lib/python3.13/site-packages/rdflib/plugins/sparql/evaluate.py", line 574, in <genexpr>
+    return (row.project(project.PV) for row in res)
+                                               ^^^
+  File "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/morphgeo/sparql_virtualizer.py", line 296, in _auxGen
+    for c in evalPart(ctx, part.p):
+             ~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/morphgeo/virtual.py", line 196, in evalVirtualBGP
+    for x in evalVirtualBGP(c, bgp[1:], mappingGroups, triggers, queriesMade):
+             ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/morphgeo/virtual.py", line 196, in evalVirtualBGP
+    for x in evalVirtualBGP(c, bgp[1:], mappingGroups, triggers, queriesMade):
+             ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/morphgeo/virtual.py", line 196, in evalVirtualBGP
+    for x in evalVirtualBGP(c, bgp[1:], mappingGroups, triggers, queriesMade):
+             ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  [Previous line repeated 4 more times]
+  File "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/morphgeo/virtual.py", line 174, in evalVirtualBGP
+    c = ctx.push()
+  File "/opt/miniconda3/envs/oeg/lib/python3.13/site-packages/rdflib/plugins/sparql/sparql.py", line 423, in push
+    r = self.clone(Bindings(self.bindings))
+  File "/opt/miniconda3/envs/oeg/lib/python3.13/site-packages/rdflib/plugins/sparql/sparql.py", line 309, in clone
+    r = QueryContext(
+        self._dataset if self._dataset is not None else self.graph,
+        bindings or self.bindings,
+        initBindings=self.initBindings,
+    )
+  File "/opt/miniconda3/envs/oeg/lib/python3.13/site-packages/rdflib/plugins/sparql/sparql.py", line 259, in __init__
+    self.bindings = Bindings(d=bindings or [])
+                    ~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/opt/miniconda3/envs/oeg/lib/python3.13/site-packages/rdflib/plugins/sparql/sparql.py", line 68, in __init__
+    self._d: Dict[str, str] = dict(d)
+                              ~~~~^^^
+  File "/opt/miniconda3/envs/oeg/lib/python3.13/site-packages/rdflib/plugins/sparql/sparql.py", line 71, in __getitem__
+    def __getitem__(self, key: str) -> str:
+    
+  File "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/vkg/evaluate_vkg.py", line 182, in handle_timeout
+    raise QueryTimeoutError(
+        f"Query exceeded the {timeout_seconds:g}-second timeout."
+    )
+QueryTimeoutError: Query exceeded the 600-second timeout.

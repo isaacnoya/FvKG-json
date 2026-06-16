@@ -1,5 +1,6 @@
 import rdflib
 import re
+from rdflib.plugins.sparql.sparql import QueryContext
 
 RML_NAMESPACE = 'http://w3id.org/rml/'
 RML_SUBJECT_MAP = f'{RML_NAMESPACE}subjectMap'
@@ -12,6 +13,9 @@ RML_PREDICATE_OBJECT_MAP = f'{RML_NAMESPACE}predicateObjectMap'
 RML_CLASS = f'{RML_NAMESPACE}class'
 RML_PARENT_TRIPLES_MAP = f'{RML_NAMESPACE}parentTriplesMap'
 RML_TERM_TYPE = f'{RML_NAMESPACE}termType'
+RML_IRI = f'{RML_NAMESPACE}IRI'
+RML_LITERAL = f'{RML_NAMESPACE}Literal'
+RML_BLANK_NODE = f'{RML_NAMESPACE}BlankNode'
 
 from collections import defaultdict
 geoBindings = defaultdict(list)
@@ -28,7 +32,24 @@ class Template(rdflib.term.Literal):
 
 from urllib.parse import urlparse
 class VirtualMapping:
-    def __init__(self, subject=None, predicate=None, objec=None, reference=None, source=None, iterator=None, nextPage=None, filterx=None, projectx=None, limit=None, nElements=None, coverage=False):
+    def __init__(
+        self,
+        subject=None,
+        predicate=None,
+        objec=None,
+        reference=None,
+        source=None,
+        iterator=None,
+        nextPage=None,
+        filterx=None,
+        projectx=None,
+        limit=None,
+        nElements=None,
+        datatype=None,
+        language=None,
+        term_type=None,
+        coverage=False,
+    ):
         if subject != None:
             self.s = Reference(subject) if isinstance(subject, rdflib.term.Literal) else subject
         if predicate != None:
@@ -49,6 +70,9 @@ class VirtualMapping:
         self.projectx = projectx
         self.limit = limit
         self.nElements = nElements
+        self.datatype = datatype or getattr(objec, "datatype", None)
+        self.language = language or getattr(objec, "language", None)
+        self.term_type = term_type
 
 
     def setParentTriplesMapInfo(self, childJoinCond=None, parentJoinCond=None, parentURL=None, parentIterator=None):
@@ -99,7 +123,10 @@ class VirtualMapping:
             self.s,
             self.p,
             self.o,
-            getattr(self, "source", None)
+            getattr(self, "source", None),
+            getattr(self, "datatype", None),
+            getattr(self, "language", None),
+            getattr(self, "term_type", None),
             ))
     def __eq__(self, other):
         if not isinstance(other, VirtualMapping):
@@ -108,7 +135,10 @@ class VirtualMapping:
             getattr(self, "s", None) == getattr(other, "s", None) and
             getattr(self, "p", None) == getattr(other, "p", None) and
             getattr(self, "o", None) == getattr(other, "o", None) and
-            getattr(self, "source", None) == getattr(other, "source", None) 
+            getattr(self, "source", None) == getattr(other, "source", None) and
+            getattr(self, "datatype", None) == getattr(other, "datatype", None) and
+            getattr(self, "language", None) == getattr(other, "language", None) and
+            getattr(self, "term_type", None) == getattr(other, "term_type", None)
             #and getattr(self, "bindingVariables", None) == getattr(other, "bindingVariables", None)
         )
         
@@ -119,7 +149,7 @@ class TriplePattern:
         self.o=o
 
 
-class MappingContext(rdflib.plugins.sparql.sparql.QueryContext):
+class MappingContext(QueryContext):
     def __init__(self, *args, mappings=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.mappings = mappings or []
@@ -138,4 +168,3 @@ class MappingContext(rdflib.plugins.sparql.sparql.QueryContext):
 
 
     
-

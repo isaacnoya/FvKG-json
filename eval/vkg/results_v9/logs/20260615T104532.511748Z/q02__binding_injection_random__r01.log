@@ -1,0 +1,79 @@
+https://wmts.mapama.gob.es/sig-api/ogc/features/v1/collections/agua:Zif_riesgo_pob_q500/items?f=json&limit=10000
+https://wmts.mapama.gob.es/sig-api/ogc/features/v1/collections/agua%3AZif_riesgo_pob_q500/items?f=json&limit=10000&startIndex=10000
+https://api-features.idee.es/collections/damorweir/items?f=json&limit=10000
+https://api-features.idee.es/collections/damorweir/items?offset=10000&limit=10000
+https://api-features.idee.es/collections/damorweir/items?offset=20000&limit=10000
+https://api-features.ign.es/collections/administrativeunit/items?f=json&limit=10000&nationallevelname=Municipio&nameunit=Pontevedra&bbox=-1.53147792%2C43.13646113%2C-1.50628541%2C43.14870715
+https://api-features.ign.es/collections/administrativeunit/items?f=json&limit=10000&nationallevelname=Municipio&nameunit=Pontevedra&bbox=-1.56074317%2C43.13579003%2C-1.50636064%2C43.15131276
+https://api-features.ign.es/collections/administrativeunit/items?f=json&limit=10000&nationallevelname=Municipio&nameunit=Pontevedra&bbox=-1.56992924%2C43.1361822%2C-1.53439848%2C43.14414767
+https://api-features.ign.es/collections/administrativeunit/items?f=json&limit=10000&nationallevelname=Municipio&nameunit=Pontevedra&bbox=-1.61203435%2C43.13142788%2C-1.60642171%2C43.13994958
+https://api-features.ign.es/collections/administrativeunit/items?f=json&limit=10000&nationallevelname=Municipio&nameunit=Pontevedra&bbox=-1.66193418%2C43.12854993%2C-1.64928064%2C43.13240747
+https://api-features.ign.es/collections/administrativeunit/items?f=json&limit=10000&nationallevelname=Municipio&nameunit=Pontevedra&bbox=-1.71646141%2C43.24598531%2C-1.68866086%2C43.25267427
+https://api-features.ign.es/collections/administrativeunit/items?f=json&limit=10000&nationallevelname=Municipio&nameunit=Pontevedra&bbox=-1.71313889%2C43.2467852%2C-1.68870748%2C43.25304193
+https://api-features.ign.es/collections/administrativeunit/items?f=json&limit=10000&nationallevelname=Municipio&nameunit=Pontevedra&bbox=-1.71314008%2C43.26958935%2C-1.6868308%2C43.28168003
+https://api-features.ign.es/collections/administrativeunit/items?f=json&limit=10000&nationallevelname=Municipio&nameunit=Pontevedra&bbox=-1.69094837%2C43.27178632%2C-1.68063036%2C43.28218657
+https://api-features.ign.es/collections/administrativeunit/items?f=json&limit=10000&nationallevelname=Municipio&nameunit=Pontevedra&bbox=-1.68248541%2C43.28059208%2C-1.67414101%2C43.28300145
+https://api-features.ign.es/collections/administrativeunit/items?f=json&limit=10000&nationallevelname=Municipio&nameunit=Pontevedra&bbox=-1.71267166%2C43.27008934%2C-1.67379466%2C43.28327203
+https://api-features.ign.es/collections/administrativeunit/items?f=json&limit=10000&nationallevelname=Municipio&nameunit=Pontevedra&bbox=-1.67150626%2C43.15597704%2C-1.66976599%2C43.15978395
+https://api-features.ign.es/collections/administrativeunit/items?f=json&limit=10000&nationallevelname=Municipio&nameunit=Pontevedra&bbox=-1.6753739%2C43.15587263%2C-1.66776286%2C43.16835901
+https://api-features.ign.es/collections/administrativeunit/items?f=json&limit=10000&nationallevelname=Municipio&nameunit=Pontevedra&bbox=-1.64302946%2C43.23239033%2C-1.62720447%2C43.23643989
+https://api-features.ign.es/collections/administrativeunit/items?f=json&limit=10000&nationallevelname=Municipio&nameunit=Pontevedra&bbox=-1.7111955%2C43.1279753%2C-1.70356112%2C43.13119886
+https://api-features.ign.es/collections/administrativeunit/items?f=json&limit=10000&nationallevelname=Municipio&nameunit=Pontevedra&bbox=-1.55884325%2C43.12491087%2C-1.54673894%2C43.1399026
+
+Traceback (most recent call last):
+  File "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/vkg/evaluate_vkg.py", line 468, in execute_run
+    result_data = result_digest(graph.query(query_text))
+  File "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/vkg/evaluate_vkg.py", line 323, in result_digest
+    for row in result:
+               ^^^^^^
+  File "/opt/miniconda3/envs/oeg/lib/python3.13/site-packages/rdflib/query.py", line 372, in __iter__
+    for b in self._genbindings:
+             ^^^^^^^^^^^^^^^^^
+  File "/opt/miniconda3/envs/oeg/lib/python3.13/site-packages/rdflib/plugins/sparql/evaluate.py", line 574, in <genexpr>
+    return (row.project(project.PV) for row in res)
+                                               ^^^
+  File "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/morphgeo/sparql_virtualizer.py", line 296, in _auxGen
+    for c in evalPart(ctx, part.p):
+             ~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/morphgeo/virtual.py", line 196, in evalVirtualBGP
+    for x in evalVirtualBGP(c, bgp[1:], mappingGroups, triggers, queriesMade):
+             ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/morphgeo/virtual.py", line 196, in evalVirtualBGP
+    for x in evalVirtualBGP(c, bgp[1:], mappingGroups, triggers, queriesMade):
+             ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/morphgeo/virtual.py", line 196, in evalVirtualBGP
+    for x in evalVirtualBGP(c, bgp[1:], mappingGroups, triggers, queriesMade):
+             ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/morphgeo/virtual.py", line 171, in evalVirtualBGP
+    materializeCompatibleMappingGroup(ctx, tp, mappingGroups, triggers, queriesMade)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/morphgeo/virtual.py", line 637, in materializeCompatibleMappingGroup
+    ctx = materializeGroup(ctx, mappings, key[1], queriesMade)
+  File "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/morphgeo/virtual.py", line 386, in materializeGroup
+    url_next = injectBindings(ctx, url_next)
+  File "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/morphgeo/virtual.py", line 289, in injectBindings
+    newbbox = getBbox(geoBindings_value)
+  File "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/morphgeo/geoFunctions.py", line 45, in getBbox
+    minx, miny, maxx, maxy = get_offset_bounds(fgeom)
+                             ~~~~~~~~~~~~~~~~~^^^^^^^
+  File "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/morphgeo/geoFunctions.py", line 174, in get_offset_bounds
+    geom, crs = parse_geom_and_crs(geom_raw)
+                ~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/morphgeo/geoFunctions.py", line 71, in parse_geom_and_crs
+    return shape(g), crs
+           ~~~~~^^^
+  File "/opt/miniconda3/envs/oeg/lib/python3.13/site-packages/shapely/geometry/geo.py", line 107, in shape
+    return Polygon(ob["coordinates"][0], ob["coordinates"][1:])
+  File "/opt/miniconda3/envs/oeg/lib/python3.13/site-packages/shapely/geometry/polygon.py", line 237, in __new__
+    shell = LinearRing(shell)
+  File "/opt/miniconda3/envs/oeg/lib/python3.13/site-packages/shapely/geometry/polygon.py", line 93, in __new__
+    coordinates = np.array([_coords(o) for o in coordinates])
+                            ~~~~~~~^^^
+  File "/opt/miniconda3/envs/oeg/lib/python3.13/site-packages/shapely/geometry/polygon.py", line 91, in _coords
+    return [float(c) for c in o]
+            ~~~~~^^^
+  File "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/vkg/evaluate_vkg.py", line 182, in handle_timeout
+    raise QueryTimeoutError(
+        f"Query exceeded the {timeout_seconds:g}-second timeout."
+    )
+QueryTimeoutError: Query exceeded the 600-second timeout.

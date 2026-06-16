@@ -1,0 +1,79 @@
+https://api-features.ign.es/collections/administrativeunit/items?f=json&limit=10000&nameunit=Lugo&nationallevelname=Provincia
+https://api-features.idee.es/collections/wetland/items?f=json&limit=10000
+https://wmts.mapama.gob.es/sig-api/ogc/features/v1/collections/agua:Zif_riesgo_pob_q500/items?f=json&limit=10000
+https://wmts.mapama.gob.es/sig-api/ogc/features/v1/collections/agua%3AZif_riesgo_pob_q500/items?f=json&limit=10000&startIndex=10000
+
+Traceback (most recent call last):
+  File "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/vkg/evaluate_vkg.py", line 468, in execute_run
+    result_data = result_digest(graph.query(query_text))
+  File "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/vkg/evaluate_vkg.py", line 323, in result_digest
+    for row in result:
+               ^^^^^^
+  File "/opt/miniconda3/envs/oeg/lib/python3.13/site-packages/rdflib/query.py", line 372, in __iter__
+    for b in self._genbindings:
+             ^^^^^^^^^^^^^^^^^
+  File "/opt/miniconda3/envs/oeg/lib/python3.13/site-packages/rdflib/plugins/sparql/evaluate.py", line 574, in <genexpr>
+    return (row.project(project.PV) for row in res)
+                                               ^^^
+  File "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/morphgeo/sparql_virtualizer.py", line 297, in _auxGen
+    if _ebv(
+       ~~~~^
+        part.expr,
+        ^^^^^^^^^^
+        c.forget(ctx, _except=part._vars) if not part.no_isolated_scope else c,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ):
+    ^
+  File "/opt/miniconda3/envs/oeg/lib/python3.13/site-packages/rdflib/plugins/sparql/evalutils.py", line 88, in _ebv
+    return EBV(expr.eval(ctx))
+               ~~~~~~~~~^^^^^
+  File "/opt/miniconda3/envs/oeg/lib/python3.13/site-packages/rdflib/plugins/sparql/parserutils.py", line 226, in eval
+    return self._evalfn(ctx)  # type: ignore[misc]
+           ~~~~~~~~~~~~^^^^^
+  File "/opt/miniconda3/envs/oeg/lib/python3.13/site-packages/rdflib/plugins/sparql/operators.py", line 934, in ConditionalAndExpression
+    other = e.other
+            ^^^^^^^
+  File "/opt/miniconda3/envs/oeg/lib/python3.13/site-packages/rdflib/plugins/sparql/parserutils.py", line 195, in __getattr__
+    return self[a]
+           ~~~~^^^
+  File "/opt/miniconda3/envs/oeg/lib/python3.13/site-packages/rdflib/plugins/sparql/parserutils.py", line 183, in __getitem__
+    return self._value(OrderedDict.__getitem__(self, a))
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/miniconda3/envs/oeg/lib/python3.13/site-packages/rdflib/plugins/sparql/parserutils.py", line 178, in _value
+    return value(self.ctx, val, variables)
+  File "/opt/miniconda3/envs/oeg/lib/python3.13/site-packages/rdflib/plugins/sparql/parserutils.py", line 81, in value
+    return [value(ctx, x, variables, errors) for x in val]
+            ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/miniconda3/envs/oeg/lib/python3.13/site-packages/rdflib/plugins/sparql/parserutils.py", line 76, in value
+    return val.eval(ctx)  # recurse?
+           ~~~~~~~~^^^^^
+  File "/opt/miniconda3/envs/oeg/lib/python3.13/site-packages/rdflib/plugins/sparql/parserutils.py", line 226, in eval
+    return self._evalfn(ctx)  # type: ignore[misc]
+           ~~~~~~~~~~~~^^^^^
+  File "/opt/miniconda3/envs/oeg/lib/python3.13/site-packages/rdflib/plugins/sparql/operators.py", line 658, in Function
+    return func(*e.expr)
+  File "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/morphgeo/geoFunctions.py", line 123, in geof_within
+    g2 = parse_geom(geom2)
+  File "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/morphgeo/geoFunctions.py", line 61, in parse_geom
+    geom, _ = parse_geom_and_crs(g)
+              ~~~~~~~~~~~~~~~~~~^^^
+  File "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/morphgeo/geoFunctions.py", line 71, in parse_geom_and_crs
+    return shape(g), crs
+           ~~~~~^^^
+  File "/opt/miniconda3/envs/oeg/lib/python3.13/site-packages/shapely/geometry/geo.py", line 113, in shape
+    return MultiPolygon([[c[0], c[1:]] for c in ob["coordinates"]])
+  File "/opt/miniconda3/envs/oeg/lib/python3.13/site-packages/shapely/geometry/multipolygon.py", line 81, in __new__
+    p = polygon.Polygon(shell, holes)
+  File "/opt/miniconda3/envs/oeg/lib/python3.13/site-packages/shapely/geometry/polygon.py", line 237, in __new__
+    shell = LinearRing(shell)
+  File "/opt/miniconda3/envs/oeg/lib/python3.13/site-packages/shapely/geometry/polygon.py", line 93, in __new__
+    coordinates = np.array([_coords(o) for o in coordinates])
+                            ~~~~~~~^^^
+  File "/opt/miniconda3/envs/oeg/lib/python3.13/site-packages/shapely/geometry/polygon.py", line 91, in _coords
+    return [float(c) for c in o]
+            ~~~~~^^^
+  File "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/vkg/evaluate_vkg.py", line 182, in handle_timeout
+    raise QueryTimeoutError(
+        f"Query exceeded the {timeout_seconds:g}-second timeout."
+    )
+QueryTimeoutError: Query exceeded the 600-second timeout.

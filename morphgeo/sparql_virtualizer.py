@@ -103,18 +103,33 @@ def _record_random_triple_order(triples):
     ])
 
 
+def get_static_triple_patterns(ctx, triples):
+    ordered_triples, _ = orderTriplesStatic(ctx, triples)
+    return [
+        TriplePattern(s, p, o)
+        for s, p, o in ordered_triples
+    ]
+
+
+def get_random_triple_patterns(triples):
+    ordered_triples = list(triples)
+    _random_triple_rng.shuffle(ordered_triples)
+    _record_random_triple_order(ordered_triples)
+    return [
+        TriplePattern(s, p, o)
+        for s, p, o in ordered_triples
+    ]
+
+
 def virtual_bgp_evalBaseline(
     ctx: QueryContext,
     part,
 ) -> Generator[FrozenBindings, None, None]:
-    """Evaluate in query order without literal or geospatial URL bindings."""
+    """Evaluate in static order without injecting bindings into source URLs."""
     if part.name != "BGP":
         raise NotImplementedError()
 
-    triple_patterns = [
-        TriplePattern(s, p, o)
-        for s, p, o in part.triples
-    ]
+    triple_patterns = get_static_triple_patterns(ctx, part.triples)
     selected_mappings = set()
     mapping_ctx = MappingContext()
     for mapping in getMappingsFromBGPWithoutBindings(
@@ -144,13 +159,7 @@ def virtual_bgp_evalBindingInjectionRandom(
     if part.name != "BGP":
         raise NotImplementedError()
 
-    triples = list(part.triples)
-    _random_triple_rng.shuffle(triples)
-    _record_random_triple_order(triples)
-    triple_patterns = [
-        TriplePattern(s, p, o)
-        for s, p, o in triples
-    ]
+    triple_patterns = get_random_triple_patterns(part.triples)
 
     selected_mappings = set()
     mapping_ctx = MappingContext()
@@ -176,13 +185,8 @@ def virtual_bgp_evalBindingInjectionRandom(
 def virtual_bgp_evalFinal(ctx: QueryContext, part) -> Generator[FrozenBindings, None, None]:
     if part.name != "BGP":
         raise NotImplementedError()
-    
-    tps = []
-    triples, _ = orderTriplesStatic(ctx, part.triples)
-    
-    for s, p, o in triples:
-        tp = TriplePattern(s, p, o)
-        tps.append(tp)
+
+    tps = get_static_triple_patterns(ctx, part.triples)
 
     mappingsBGP = set()
     ctxMapping = MappingContext()
