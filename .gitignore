@@ -26,3 +26,5 @@ tests
 eval/vkg/queries/q07.rq
 eval/vkg/results/
 eval/vkg/results_v7/
+eval/vkg/__pycache__
+eval/semantic_annotation/__pycache__
