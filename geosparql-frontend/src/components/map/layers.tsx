@@ -24,6 +24,11 @@ const vectorLineLayer: LayerProps = {
 const vectorCircleLayer: LayerProps = {
   id: "vector-circle",
   type: "circle",
+  filter: [
+    "any",
+    ["==", ["geometry-type"], "Point"],
+    ["==", ["geometry-type"], "MultiPoint"],
+  ],
   paint: {
     "circle-color": ["get", "fvkgJsonColor"],
     "circle-radius": 6,
