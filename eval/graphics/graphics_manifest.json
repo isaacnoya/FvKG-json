@@ -8,22 +8,25 @@
   ],
   "dpi": 220,
   "sources": {
-    "vkg": [
-      "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/vkg/results_v9/runs.csv"
+    "semantic_annotation": [
+      "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/semantic_anotation/results/english-minilm-l6__embeddings/results.json",
+      "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/semantic_anotation/results/multilingual-distiluse__embeddings/results.json",
+      "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/semantic_anotation/results/multilingual-minilm-l12__embeddings/results.json",
+      "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/semantic_anotation/results/multilingual-minilm-l12__gpt-oss-20b/results.json",
+      "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/semantic_anotation/results/multilingual-minilm-l12__gpt-oss-120b/results.json",
+      "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/semantic_anotation/results/multilingual-minilm-l12__llama-3.3-70b/results.json"
     ]
   },
   "generated_files": [
-    "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/graphics/vkg/vkg_runtime_by_query.png",
-    "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/graphics/vkg/vkg_runtime_by_query.pdf",
-    "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/graphics/vkg/vkg_success_rate.png",
-    "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/graphics/vkg/vkg_success_rate.pdf",
-    "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/graphics/vkg/vkg_result_cardinality.png",
-    "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/graphics/vkg/vkg_result_cardinality.pdf",
-    "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/graphics/vkg/vkg_api_calls.png",
-    "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/graphics/vkg/vkg_api_calls.pdf",
-    "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/graphics/vkg/vkg_intermediate_triples.png",
-    "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/graphics/vkg/vkg_intermediate_triples.pdf",
-    "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/graphics/vkg/vkg_final_time_breakdown.png",
-    "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/graphics/vkg/vkg_final_time_breakdown.pdf"
+    "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/graphics/semantic_annotation/semantic_alignment_coverage.png",
+    "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/graphics/semantic_annotation/semantic_alignment_coverage.pdf",
+    "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/graphics/semantic_annotation/semantic_alignment_sources.png",
+    "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/graphics/semantic_annotation/semantic_alignment_sources.pdf",
+    "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/graphics/semantic_annotation/semantic_runtime.png",
+    "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/graphics/semantic_annotation/semantic_runtime.pdf",
+    "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/graphics/semantic_annotation/semantic_embedding_reviews.png",
+    "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/graphics/semantic_annotation/semantic_embedding_reviews.pdf",
+    "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/graphics/semantic_annotation/semantic_llm_review.png",
+    "/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/graphics/semantic_annotation/semantic_llm_review.pdf"
   ]
 }

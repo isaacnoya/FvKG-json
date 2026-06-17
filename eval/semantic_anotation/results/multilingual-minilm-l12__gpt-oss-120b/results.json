@@ -56,9 +56,9 @@
       }
     },
     "llm_axiom_review": {
-      "proposals_reviewed": 1,
+      "proposals_reviewed": 2,
       "proposals_accepted": 1,
-      "proposals_denied": 0,
+      "proposals_denied": 1,
       "triples_accepted": 4,
       "triples_skipped": 0
     }
