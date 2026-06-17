@@ -1,4 +1,4 @@
-# MorphGEO Frontend
+# FvKG-json Frontend
 
 Dark WebGIS dashboard for authoring SPARQL queries and RML mappings, executing
 a just-in-time virtualization pipeline, and visualizing vector and raster
@@ -11,7 +11,7 @@ Developed by Isaac Noya Vázquez.
 Start the backend and frontend together from the repository root:
 
 ```bash
-./start-morphgeo.sh
+./start-fvkg-json.sh
 ```
 
 Press `Ctrl+C` to stop both services.
@@ -23,7 +23,7 @@ From the repository root, start the FastAPI backend:
 ```bash
 source /opt/miniconda3/etc/profile.d/conda.sh
 conda activate oeg
-uvicorn morphgeo.api:app --reload --port 8000
+uvicorn fvkg_json.api:app --reload --port 8000
 ```
 
 In a second terminal, start the frontend:
@@ -42,7 +42,7 @@ npm run build
 
 ## Backend integration
 
-`Execute MorphGEO Query` posts the current editor contents to:
+`Execute FvKG-json Query` posts the current editor contents to:
 
 ```text
 http://localhost:8000/api/execute

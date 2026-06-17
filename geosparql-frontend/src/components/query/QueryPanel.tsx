@@ -162,7 +162,7 @@ export function QueryPanel({
                 Target endpoint
               </span>
               <span className="mt-0.5 block text-xs text-slate-300">
-                Local MorphGEO endpoint
+                Local FvKG-json endpoint
               </span>
             </span>
           </span>
@@ -182,7 +182,7 @@ export function QueryPanel({
           ) : (
             <>
               <Play className="size-4 fill-current" />
-              Execute MorphGEO Query
+              Execute FvKG-json Query
               <kbd className="ml-auto rounded border border-cyan-900/40 bg-cyan-950/30 px-1.5 py-0.5 font-mono text-[9px] font-normal text-cyan-100/70">
                 Cmd Enter
               </kbd>

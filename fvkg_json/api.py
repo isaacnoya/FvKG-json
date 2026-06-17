@@ -60,7 +60,7 @@ class ExecuteResponse(BaseModel):
 
 
 app = FastAPI(
-    title="MorphGEO",
+    title="FvKG-json",
     description="GeoSPARQL virtualization endpoint by Isaac Noya Vázquez.",
     version="0.1.0",
 )
@@ -203,8 +203,8 @@ def _feature_from_subject(
 
     classes = list(graph.objects(subject, RDF.type))
     if classes:
-        properties["morphgeoClass"] = str(classes[0])
-        properties["morphgeoClassLabel"] = _local_name(classes[0])
+        properties["fvkgJsonClass"] = str(classes[0])
+        properties["fvkgJsonClassLabel"] = _local_name(classes[0])
 
     label = next(
         (
@@ -214,7 +214,7 @@ def _feature_from_subject(
         ),
         _local_name(subject),
     )
-    properties["morphgeoLabel"] = str(label)
+    properties["fvkgJsonLabel"] = str(label)
 
     return {
         "type": "Feature",

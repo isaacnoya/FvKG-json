@@ -17,11 +17,11 @@ from typing import Any, Iterable
 
 os.environ.setdefault(
     "MPLCONFIGDIR",
-    str(Path(tempfile.gettempdir()) / "morphgeo-matplotlib"),
+    str(Path(tempfile.gettempdir()) / "fvkg-json-matplotlib"),
 )
 os.environ.setdefault(
     "XDG_CACHE_HOME",
-    str(Path(tempfile.gettempdir()) / "morphgeo-cache"),
+    str(Path(tempfile.gettempdir()) / "fvkg-json-cache"),
 )
 
 try:
@@ -206,7 +206,9 @@ def load_semantic_results(results_dir: Path) -> list[dict[str, Any]]:
     return sorted(results, key=sort_key)
 
 
-def semantic_label(result: dict[str, Any]) -> str:
+def semantic_label(
+    result: dict[str, Any], *, include_llm_embedding_context: bool = False
+) -> str:
     run_name = str(result.get("run_name", "unknown"))
     aliases = {
         "english-minilm-l6__embeddings": "English\nMiniLM L6",
@@ -216,6 +218,11 @@ def semantic_label(result: dict[str, Any]) -> str:
         "multilingual-minilm-l12__gpt-oss-120b": "GPT-OSS\n120B",
         "multilingual-minilm-l12__llama-3.3-70b": "Llama 3.3\n70B",
     }
+    if include_llm_embedding_context and result.get("configuration", {}).get(
+        "mode"
+    ) == "llm":
+        llm_label = aliases.get(run_name, run_name.split("__")[-1])
+        return f"{llm_label} +\nMultilingual\nMiniLM L12"
     return aliases.get(run_name, run_name.replace("__", "\n"))
 
 
@@ -228,7 +235,10 @@ def semantic_entity_stats(
 def plot_semantic_alignment_coverage(
     results: list[dict[str, Any]],
 ) -> tuple[Any, str]:
-    labels = [semantic_label(result) for result in results]
+    labels = [
+        semantic_label(result, include_llm_embedding_context=True)
+        for result in results
+    ]
     x = np.arange(len(results))
     width = 0.36
     class_rates = []
@@ -491,6 +501,25 @@ def load_vkg_runs(results_dir: Path) -> list[dict[str, Any]]:
         runs.append(run)
     if not runs:
         raise ValueError(f"No VKG runs found in {results_dir / 'runs.csv'}.")
+
+    expected_hashes: dict[str, str] = {}
+    for query in {str(run["query_id"]) for run in runs}:
+        hashes = [
+            str(run["result_hash"])
+            for run in runs
+            if run["query_id"] == query
+            and run["status"] == "success"
+            and run.get("result_hash")
+        ]
+        if hashes:
+            expected_hashes[query] = max(set(hashes), key=hashes.count)
+    for run in runs:
+        expected_hash = expected_hashes.get(str(run["query_id"]))
+        run["valid_result"] = (
+            run["status"] == "success"
+            and bool(expected_hash)
+            and run.get("result_hash") == expected_hash
+        )
     return runs
 
 
@@ -513,7 +542,7 @@ def grouped_values(
 ) -> dict[tuple[str, str], list[float]]:
     grouped: dict[tuple[str, str], list[float]] = defaultdict(list)
     for run in runs:
-        if successful_only and run["status"] != "success":
+        if successful_only and not run.get("valid_result"):
             continue
         value = run.get(metric)
         if value is not None:
@@ -525,16 +554,18 @@ def plot_vkg_runtime(runs: list[dict[str, Any]]) -> tuple[Any, str]:
     queries = ordered_queries(runs)
     variants = present_variants(runs)
     grouped = grouped_values(
-        runs, metric="total_time_seconds", successful_only=False
+        runs, metric="total_time_seconds", successful_only=True
     )
     x = np.arange(len(queries))
     width = 0.8 / len(variants)
 
     fig, ax = plt.subplots(figsize=(12, 6.1))
+    timeout_label_added = False
     for index, variant in enumerate(variants):
         means = []
         deviations = []
         annotations = []
+        timeout_means = []
         for query in queries:
             values = grouped.get((query, variant), [])
             means.append(statistics.fmean(values) if values else 0)
@@ -546,10 +577,36 @@ def plot_vkg_runtime(runs: list[dict[str, Any]]) -> tuple[Any, str]:
                 for run in runs
                 if run["query_id"] == query and run["variant"] == variant
             ]
-            succeeded = sum(run["status"] == "success" for run in executed)
-            annotations.append(f"{succeeded}/{len(executed)}")
+            valid = sum(bool(run.get("valid_result")) for run in executed)
+            annotations.append(f"{valid}/{len(executed)}")
+            timeout_values = [
+                float(run["total_time_seconds"])
+                for run in executed
+                if run["status"] == "timeout"
+                and run.get("total_time_seconds") is not None
+            ]
+            timeout_means.append(
+                statistics.fmean(timeout_values) if timeout_values else 0
+            )
 
         positions = x + (index - (len(variants) - 1) / 2) * width
+        if any(timeout_means):
+            ax.bar(
+                positions,
+                timeout_means,
+                width,
+                facecolor="none",
+                edgecolor="#B91C1C",
+                linewidth=1.25,
+                hatch="//",
+                label=(
+                    "Timed-out executions"
+                    if not timeout_label_added
+                    else "_nolegend_"
+                ),
+                zorder=1,
+            )
+            timeout_label_added = True
         bars = ax.bar(
             positions,
             means,
@@ -558,12 +615,16 @@ def plot_vkg_runtime(runs: list[dict[str, Any]]) -> tuple[Any, str]:
             capsize=2.5,
             color=VARIANT_COLORS.get(variant, "#64748B"),
             label=VARIANT_LABELS.get(variant, variant),
+            zorder=2,
         )
-        for bar, annotation in zip(bars, annotations):
-            if bar.get_height() > 0:
+        for bar, annotation, timeout_mean in zip(
+            bars, annotations, timeout_means
+        ):
+            label_height = max(bar.get_height(), timeout_mean)
+            if label_height > 0:
                 ax.text(
                     bar.get_x() + bar.get_width() / 2,
-                    bar.get_height() + 11,
+                    label_height + 11,
                     annotation,
                     ha="center",
                     va="bottom",
@@ -571,29 +632,15 @@ def plot_vkg_runtime(runs: list[dict[str, Any]]) -> tuple[Any, str]:
                     rotation=90,
                 )
 
-    timeout_values = [
-        float(run["timeout_seconds"])
-        for run in runs
-        if run.get("timeout_seconds") is not None
-    ]
-    if timeout_values:
-        timeout = statistics.median(timeout_values)
-        ax.axhline(
-            timeout,
-            color="#B91C1C",
-            linestyle="--",
-            linewidth=1.2,
-            label=f"Timeout ({timeout:g} s)",
-        )
-
-    ax.set_title("VKG observed execution time by query")
-    ax.set_ylabel("Mean elapsed time (seconds)")
+    ax.set_title("VKG valid execution time by query")
+    ax.set_ylabel("Mean valid-run time (seconds)")
     ax.set_xticks(x, [query.upper() for query in queries])
+    ax.set_ylim(0, 690)
     ax.legend(ncols=4, loc="upper center")
     ax.text(
         0.01,
         0.98,
-        "Bar labels show successful/executed runs; timed-out runs are included.",
+        "Solid bars show valid-run means; red hatched bars mark timed-out runs.",
         transform=ax.transAxes,
         ha="left",
         va="top",
@@ -618,7 +665,7 @@ def plot_vkg_success_rate(runs: list[dict[str, Any]]) -> tuple[Any, str]:
                 for run in runs
                 if run["query_id"] == query and run["variant"] == variant
             ]
-            successful = sum(run["status"] == "success" for run in selected)
+            successful = sum(bool(run.get("valid_result")) for run in selected)
             total = len(selected)
             rates[query_index, variant_index] = (
                 100 * successful / total if total else math.nan
@@ -644,7 +691,7 @@ def plot_vkg_success_rate(runs: list[dict[str, Any]]) -> tuple[Any, str]:
                 fontsize=9,
             )
 
-    ax.set_title("VKG successful execution rate")
+    ax.set_title("VKG valid execution rate")
     ax.set_xticks(
         np.arange(len(variants)),
         [VARIANT_LABELS.get(variant, variant) for variant in variants],
@@ -652,7 +699,7 @@ def plot_vkg_success_rate(runs: list[dict[str, Any]]) -> tuple[Any, str]:
     ax.set_yticks(np.arange(len(queries)), [query.upper() for query in queries])
     ax.grid(visible=False)
     colorbar = fig.colorbar(image, ax=ax, shrink=0.86)
-    colorbar.set_label("Successful runs (%)")
+    colorbar.set_label("Valid runs (%)")
     fig.tight_layout()
     return fig, "vkg_success_rate"
 
@@ -694,14 +741,14 @@ def plot_vkg_result_cardinality(
                 for run in runs
                 if run["query_id"] == query
                 and run["variant"] == variant
-                and run["status"] == "success"
+                and run.get("valid_result")
                 and run.get("result_rows") is not None
             ]
             if not selected:
                 ax.text(
                     position,
                     0,
-                    "no success",
+                    "no valid",
                     ha="center",
                     va="bottom",
                     rotation=90,
@@ -756,9 +803,9 @@ def plot_vkg_result_cardinality(
     ax.set_yscale("symlog", linthresh=1)
     ax.set_title(
         "VKG result cardinality and consistency\n"
-        "Points represent successful runs; horizontal lines show means"
+        "Points represent valid runs; horizontal lines show means"
     )
-    ax.set_ylabel("Result rows per successful run (symmetric log scale)")
+    ax.set_ylabel("Result rows per valid run (symmetric log scale)")
     ax.set_xticks(x, [query.upper() for query in queries])
     ax.legend(
         ncols=1,
@@ -813,7 +860,7 @@ def plot_success_metric(
                 ax.text(
                     position,
                     0,
-                    "no success",
+                    "no valid",
                     ha="center",
                     va="bottom",
                     rotation=90,
@@ -851,7 +898,7 @@ def plot_vkg_final_time_breakdown(
     final_runs = [
         run
         for run in runs
-        if run["variant"] == "final" and run["status"] == "success"
+        if run["variant"] == "final" and run.get("valid_result")
     ]
     if not final_runs:
         return None
@@ -938,14 +985,14 @@ def generate_vkg_graphics(
         plot_success_metric(
             runs,
             metric="api_calls",
-            title="VKG API calls for successful runs",
+            title="VKG API calls for valid runs",
             ylabel="Mean API calls",
             stem="vkg_api_calls",
         ),
         plot_success_metric(
             runs,
             metric="intermediate_triples",
-            title="VKG intermediate triples for successful runs",
+            title="VKG intermediate triples for valid runs",
             ylabel="Mean intermediate triples (symmetric log scale)",
             stem="vkg_intermediate_triples",
             scale="symlog",

@@ -40,12 +40,12 @@ export function styleFeatureCollection(
   featureCollection.features.forEach((feature) => {
     const classId = stringProperty(
       feature.properties,
-      "morphgeoClass",
+      "fvkgJsonClass",
       "unclassified",
     );
     const classLabel = stringProperty(
       feature.properties,
-      "morphgeoClassLabel",
+      "fvkgJsonClassLabel",
       "Unclassified",
     );
     const current = counts.get(classId);
@@ -75,7 +75,7 @@ export function styleFeatureCollection(
       features: featureCollection.features.map((feature) => {
         const classId = stringProperty(
           feature.properties,
-          "morphgeoClass",
+          "fvkgJsonClass",
           "unclassified",
         );
 
@@ -83,7 +83,7 @@ export function styleFeatureCollection(
           ...feature,
           properties: {
             ...feature.properties,
-            morphgeoColor: colors.get(classId) ?? FEATURE_COLORS[0],
+            fvkgJsonColor: colors.get(classId) ?? FEATURE_COLORS[0],
           },
         };
       }),

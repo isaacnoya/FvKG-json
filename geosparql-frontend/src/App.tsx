@@ -133,7 +133,7 @@ function App() {
             </div>
             <div className="flex items-baseline gap-2">
               <h1 className="text-sm font-semibold tracking-tight text-slate-100">
-                MorphGEO
+                FvKG-json
               </h1>
               <span className="hidden text-[10px] uppercase tracking-[0.18em] text-slate-600 sm:block">
                 Spatial virtualization workbench

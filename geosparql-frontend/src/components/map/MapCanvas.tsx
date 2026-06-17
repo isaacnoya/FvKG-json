@@ -47,10 +47,10 @@ interface SelectedFeature {
 }
 
 const INTERNAL_PROPERTIES = new Set([
-  "morphgeoClass",
-  "morphgeoClassLabel",
-  "morphgeoColor",
-  "morphgeoLabel",
+  "fvkgJsonClass",
+  "fvkgJsonClassLabel",
+  "fvkgJsonColor",
+  "fvkgJsonLabel",
   "type",
 ]);
 
@@ -215,20 +215,20 @@ export function MapCanvas({
                   className="mt-1 size-2.5 shrink-0 rounded-full"
                   style={{
                     backgroundColor: String(
-                      selectedFeature.properties.morphgeoColor ?? "#22d3ee",
+                      selectedFeature.properties.fvkgJsonColor ?? "#22d3ee",
                     ),
                   }}
                 />
                 <div className="min-w-0">
                   <p className="truncate text-xs font-semibold text-slate-100">
                     {displayValue(
-                      selectedFeature.properties.morphgeoLabel ??
+                      selectedFeature.properties.fvkgJsonLabel ??
                         localName(selectedFeature.id),
                     )}
                   </p>
                   <p className="mt-0.5 truncate text-[10px] text-slate-500">
                     {displayValue(
-                      selectedFeature.properties.morphgeoClassLabel ??
+                      selectedFeature.properties.fvkgJsonClassLabel ??
                         "Unclassified",
                     )}
                   </p>

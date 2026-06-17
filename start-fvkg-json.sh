@@ -15,11 +15,11 @@ FRONTEND_PID=""
 STOPPING=0
 
 log() {
-  printf '[MorphGEO] %s\n' "$*"
+  printf '[FvKG-json] %s\n' "$*"
 }
 
 fail() {
-  printf '[MorphGEO] ERROR: %s\n' "$*" >&2
+  printf '[FvKG-json] ERROR: %s\n' "$*" >&2
   exit 1
 }
 
@@ -115,7 +115,7 @@ fi
 log "Starting backend at http://$BACKEND_HOST:$BACKEND_PORT"
 (
   cd "$ROOT_DIR" &&
-    exec "$UVICORN_BIN" morphgeo.api:app \
+    exec "$UVICORN_BIN" fvkg_json.api:app \
       --reload \
       --host "$BACKEND_HOST" \
       --port "$BACKEND_PORT"
@@ -148,7 +148,7 @@ log "Starting frontend at http://$FRONTEND_HOST:$FRONTEND_PORT"
 ) &
 FRONTEND_PID=$!
 
-log "MorphGEO is running."
+log "FvKG-json is running."
 log "Open http://$FRONTEND_HOST:$FRONTEND_PORT"
 log "Press Ctrl+C to stop both services."
 

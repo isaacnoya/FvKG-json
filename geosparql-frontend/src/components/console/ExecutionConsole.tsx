@@ -247,7 +247,7 @@ export function ExecutionConsole({
           </div>
         )}
         <div className="flex h-7 items-center justify-between border-t border-white/[0.06] px-4 text-[9px] text-slate-600">
-          <span>MorphGEO engine v0.1 - Isaac Noya Vázquez</span>
+          <span>FvKG-json engine v0.1 - Isaac Noya Vázquez</span>
           {!isLoading &&
             logs.some((log) => parseLog(log).level === "success") && (
               <span className="flex items-center gap-1 text-emerald-400/70">

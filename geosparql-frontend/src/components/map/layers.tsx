@@ -6,7 +6,7 @@ const vectorFillLayer: LayerProps = {
   id: "vector-fill",
   type: "fill",
   paint: {
-    "fill-color": ["get", "morphgeoColor"],
+    "fill-color": ["get", "fvkgJsonColor"],
     "fill-opacity": 0.22,
   },
 };
@@ -15,7 +15,7 @@ const vectorLineLayer: LayerProps = {
   id: "vector-line",
   type: "line",
   paint: {
-    "line-color": ["get", "morphgeoColor"],
+    "line-color": ["get", "fvkgJsonColor"],
     "line-width": 2.5,
     "line-opacity": 0.95,
   },
@@ -25,7 +25,7 @@ const vectorCircleLayer: LayerProps = {
   id: "vector-circle",
   type: "circle",
   paint: {
-    "circle-color": ["get", "morphgeoColor"],
+    "circle-color": ["get", "fvkgJsonColor"],
     "circle-radius": 6,
     "circle-stroke-color": "#e2e8f0",
     "circle-stroke-width": 1.5,
@@ -36,7 +36,7 @@ const vectorLabelLayer: LayerProps = {
   id: "vector-label",
   type: "symbol",
   layout: {
-    "text-field": ["get", "morphgeoLabel"],
+    "text-field": ["get", "fvkgJsonLabel"],
     "text-font": ["Open Sans Regular"],
     "text-size": 11,
     "text-offset": [0, 1.2],

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Benchmark configured MorphGEO VKG evaluator variants."""
+"""Benchmark configured FvKG-json VKG evaluator variants."""
 
 from __future__ import annotations
 
@@ -34,10 +34,10 @@ PROJECT_ROOT = SCRIPT_DIR.parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from morphgeo import sparql_virtualizer  # noqa: E402
-from morphgeo import virtual  # noqa: E402
-from morphgeo.classes import geoBindings  # noqa: E402
-from morphgeo.mappings import getMappings  # noqa: E402
+from fvkg_json import sparql_virtualizer  # noqa: E402
+from fvkg_json import virtual  # noqa: E402
+from fvkg_json.classes import geoBindings  # noqa: E402
+from fvkg_json.mappings import getMappings  # noqa: E402
 
 
 SCHEMA_VERSION = 9
@@ -809,7 +809,7 @@ def write_table(path: Path, rows: list[dict[str, Any]]) -> None:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Benchmark configured MorphGEO VKG evaluator variants."
+        description="Benchmark configured FvKG-json VKG evaluator variants."
     )
     parser.add_argument(
         "--queries-dir",
