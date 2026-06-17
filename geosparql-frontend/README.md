@@ -1,4 +1,4 @@
-# FvKG-json Frontend
+# FvKG[json] Frontend
 
 Dark WebGIS dashboard for authoring SPARQL queries and RML mappings, executing
 a just-in-time virtualization pipeline, and visualizing vector and raster
@@ -42,7 +42,7 @@ npm run build
 
 ## Backend integration
 
-`Execute FvKG-json Query` posts the current editor contents to:
+`Execute FvKG[json] Query` posts the current editor contents to:
 
 ```text
 http://localhost:8000/api/execute

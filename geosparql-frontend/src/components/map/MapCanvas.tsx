@@ -31,12 +31,15 @@ import type { MapData, SparqlBinding } from "@/types/api";
 import { INTERACTIVE_VECTOR_LAYER_IDS } from "@/types/map";
 import { RasterOverlay, VectorLayer } from "./layers";
 
-const MAP_STYLE =
+const DARK_MAP_STYLE =
   "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json";
+const LIGHT_MAP_STYLE =
+  "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json";
 
 interface MapCanvasProps {
   mapData: MapData | null;
   isLoading: boolean;
+  theme: "dark" | "light";
 }
 
 interface SelectedFeature {
@@ -74,6 +77,7 @@ function compactBinding(binding: SparqlBinding) {
 export function MapCanvas({
   mapData,
   isLoading,
+  theme,
 }: MapCanvasProps) {
   const mapRef = useRef<MapRef>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
@@ -166,7 +170,7 @@ export function MapCanvas({
   };
 
   return (
-    <section className="relative min-w-0 overflow-hidden bg-[#071015]">
+    <section className="relative min-w-0 overflow-hidden bg-secondary">
       <Map
         attributionControl={false}
         cursor={isHoveringFeature ? "pointer" : "grab"}
@@ -180,7 +184,7 @@ export function MapCanvas({
         interactiveLayerIds={
           vectorVisible && vectorData ? INTERACTIVE_VECTOR_LAYER_IDS : []
         }
-        mapStyle={MAP_STYLE}
+        mapStyle={theme === "light" ? LIGHT_MAP_STYLE : DARK_MAP_STYLE}
         onClick={handleFeatureClick}
         onMouseEnter={() => setIsHoveringFeature(true)}
         onMouseLeave={() => setIsHoveringFeature(false)}
@@ -210,7 +214,7 @@ export function MapCanvas({
             offset={12}
           >
             <div className="max-h-80 min-w-64 overflow-y-auto p-3">
-              <div className="flex items-start gap-2.5 border-b border-white/10 pb-2.5">
+              <div className="flex items-start gap-2.5 border-b border-border pb-2.5">
                 <span
                   className="mt-1 size-2.5 shrink-0 rounded-full"
                   style={{
@@ -220,13 +224,13 @@ export function MapCanvas({
                   }}
                 />
                 <div className="min-w-0">
-                  <p className="truncate text-xs font-semibold text-slate-100">
+                  <p className="truncate text-xs font-semibold text-foreground">
                     {displayValue(
                       selectedFeature.properties.fvkgJsonLabel ??
                         localName(selectedFeature.id),
                     )}
                   </p>
-                  <p className="mt-0.5 truncate text-[10px] text-slate-500">
+                  <p className="mt-0.5 truncate text-[10px] text-muted-foreground">
                     {displayValue(
                       selectedFeature.properties.fvkgJsonClassLabel ??
                         "Unclassified",
@@ -238,11 +242,11 @@ export function MapCanvas({
               <dl className="space-y-1.5 py-2.5 text-[10px]">
                 {selectedProperties.map(([key, value]) => (
                   <div className="grid grid-cols-[90px_1fr] gap-2" key={key}>
-                    <dt className="truncate text-slate-500" title={key}>
+                    <dt className="truncate text-muted-foreground" title={key}>
                       {key}
                     </dt>
                     <dd
-                      className="break-words text-slate-200"
+                      className="break-words text-foreground"
                       title={displayValue(value)}
                     >
                       {displayValue(value)}
@@ -252,14 +256,14 @@ export function MapCanvas({
               </dl>
 
               {matchingRows.length > 0 && (
-                <div className="border-t border-white/10 pt-2.5">
+                <div className="border-t border-border pt-2.5">
                   <p className="mb-2 text-[9px] font-semibold uppercase tracking-[0.14em] text-cyan-300">
                     Matching result rows
                   </p>
                   <div className="space-y-2">
                     {matchingRows.slice(0, 3).map((row, rowIndex) => (
                       <div
-                        className="rounded border border-white/[0.07] bg-black/20 p-2"
+                        className="rounded border border-border bg-secondary/70 p-2"
                         key={rowIndex}
                       >
                         {Object.entries(row)
@@ -272,11 +276,11 @@ export function MapCanvas({
                               className="grid grid-cols-[70px_1fr] gap-2 text-[9px] leading-4"
                               key={variable}
                             >
-                              <span className="text-slate-500">
+                              <span className="text-muted-foreground">
                                 ?{variable}
                               </span>
                               <span
-                                className="truncate text-slate-300"
+                                className="truncate text-foreground"
                                 title={displayValue(binding.value)}
                               >
                                 {compactBinding(binding)}
@@ -287,7 +291,7 @@ export function MapCanvas({
                     ))}
                   </div>
                   {matchingRows.length > 3 && (
-                    <p className="mt-2 text-[9px] text-slate-500">
+                    <p className="mt-2 text-[9px] text-muted-foreground">
                       +{matchingRows.length - 3} more rows in Results
                     </p>
                   )}
@@ -298,9 +302,16 @@ export function MapCanvas({
         )}
       </Map>
 
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_35%,transparent_0%,rgba(5,10,15,0.08)_55%,rgba(5,10,15,0.28)_100%)]" />
+      <div
+        className={cn(
+          "pointer-events-none absolute inset-0",
+          theme === "dark"
+            ? "bg-[radial-gradient(circle_at_50%_35%,transparent_0%,rgba(5,10,15,0.08)_55%,rgba(5,10,15,0.28)_100%)]"
+            : "bg-[radial-gradient(circle_at_50%_35%,transparent_0%,rgba(255,255,255,0.08)_58%,rgba(226,232,240,0.25)_100%)]",
+        )}
+      />
 
-      <div className="absolute left-5 top-5 flex items-center gap-2 rounded-lg border border-white/10 bg-[#090f17]/90 px-3 py-2 shadow-panel backdrop-blur-xl">
+      <div className="absolute left-5 top-5 flex items-center gap-2 rounded-lg border border-border bg-background/90 px-3 py-2 shadow-panel backdrop-blur-xl">
         <span
           className={cn(
             "size-2 rounded-full",
@@ -308,17 +319,17 @@ export function MapCanvas({
           )}
         />
         <div>
-          <p className="text-[9px] uppercase tracking-[0.18em] text-slate-500">
+          <p className="text-[9px] uppercase tracking-[0.18em] text-muted-foreground">
             Map renderer
           </p>
-          <p className="text-[11px] font-medium text-slate-200">
+          <p className="text-[11px] font-medium text-foreground">
             {mapLoaded ? "MapLibre connected" : "Loading basemap..."}
           </p>
         </div>
       </div>
 
       <TooltipProvider delayDuration={200}>
-        <div className="absolute right-5 top-5 flex items-center gap-1 rounded-lg border border-white/10 bg-[#090f17]/90 p-1 shadow-panel backdrop-blur-xl">
+        <div className="absolute right-5 top-5 flex items-center gap-1 rounded-lg border border-border bg-background/90 p-1 shadow-panel backdrop-blur-xl">
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -366,13 +377,13 @@ export function MapCanvas({
         </div>
       </TooltipProvider>
 
-      <div className="absolute right-5 top-20 w-56 rounded-lg border border-white/10 bg-[#090f17]/90 p-3 shadow-panel backdrop-blur-xl">
+      <div className="absolute right-5 top-20 w-56 rounded-lg border border-border bg-background/90 p-3 shadow-panel backdrop-blur-xl">
         <div className="mb-3 flex items-center justify-between">
-          <span className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.15em] text-slate-400">
+          <span className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
             <Layers3 className="size-3.5" />
             Layers
           </span>
-          <span className="rounded bg-white/5 px-1.5 py-0.5 font-mono text-[9px] text-slate-500">
+          <span className="rounded bg-secondary px-1.5 py-0.5 font-mono text-[9px] text-muted-foreground">
             EPSG:4326
           </span>
         </div>
@@ -383,7 +394,7 @@ export function MapCanvas({
             onClick={() => setVectorVisible((visible) => !visible)}
             type="button"
           >
-            <span className="flex items-center gap-2 text-[11px] text-slate-300">
+            <span className="flex items-center gap-2 text-[11px] text-foreground">
               <span className="size-2.5 rounded-sm border border-cyan-300 bg-cyan-400/25" />
               Query GeoJSON
             </span>
@@ -392,21 +403,21 @@ export function MapCanvas({
             )}
           </button>
           {vectorData && vectorVisible && featureClasses.length > 0 && (
-            <div className="max-h-28 space-y-1 overflow-y-auto border-l border-white/[0.07] pl-3">
+            <div className="max-h-28 space-y-1 overflow-y-auto border-l border-border pl-3">
               {featureClasses.map((featureClass) => (
                 <div
                   className="flex items-center justify-between gap-2 text-[9px]"
                   key={featureClass.id}
                   title={featureClass.id}
                 >
-                  <span className="flex min-w-0 items-center gap-2 text-slate-400">
+                  <span className="flex min-w-0 items-center gap-2 text-muted-foreground">
                     <span
                       className="size-2 shrink-0 rounded-full"
                       style={{ backgroundColor: featureClass.color }}
                     />
                     <span className="truncate">{featureClass.label}</span>
                   </span>
-                  <span className="font-mono text-slate-600">
+                  <span className="font-mono text-muted-foreground">
                     {featureClass.count}
                   </span>
                 </div>
@@ -419,7 +430,7 @@ export function MapCanvas({
             onClick={() => setRasterVisible((visible) => !visible)}
             type="button"
           >
-            <span className="flex items-center gap-2 text-[11px] text-slate-300">
+            <span className="flex items-center gap-2 text-[11px] text-foreground">
               <span className="size-2.5 rounded-sm bg-gradient-to-br from-violet-400 to-orange-300" />
               Copernicus WCS
             </span>
@@ -432,25 +443,25 @@ export function MapCanvas({
 
       {!vectorData && !rasterData && !isLoading && (
         <div className="absolute left-1/2 top-[42%] -translate-x-1/2 -translate-y-1/2 text-center">
-          <div className="mx-auto flex size-12 items-center justify-center rounded-xl border border-white/10 bg-[#0a111a]/80 shadow-panel backdrop-blur">
-            <MapIcon className="size-5 text-slate-500" />
+          <div className="mx-auto flex size-12 items-center justify-center rounded-xl border border-border bg-background/85 shadow-panel backdrop-blur">
+            <MapIcon className="size-5 text-muted-foreground" />
           </div>
-          <p className="mt-3 text-xs font-medium text-slate-400">
+          <p className="mt-3 text-xs font-medium text-foreground">
             No spatial result loaded
           </p>
-          <p className="mt-1 text-[10px] text-slate-600">
+          <p className="mt-1 text-[10px] text-muted-foreground">
             Execute the query to visualize its extent
           </p>
         </div>
       )}
 
       {isLoading && (
-        <div className="absolute left-1/2 top-[42%] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-cyan-300/15 bg-[#071018]/90 px-5 py-4 text-center shadow-panel backdrop-blur-xl">
+        <div className="absolute left-1/2 top-[42%] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-cyan-300/20 bg-background/90 px-5 py-4 text-center shadow-panel backdrop-blur-xl">
           <div className="mx-auto size-5 animate-spin rounded-full border-2 border-cyan-300/20 border-t-cyan-300" />
-          <p className="mt-3 text-xs font-medium text-cyan-50">
+          <p className="mt-3 text-xs font-medium text-foreground">
             Materializing spatial result
           </p>
-          <p className="mt-1 font-mono text-[9px] text-cyan-200/50">
+          <p className="mt-1 font-mono text-[9px] text-muted-foreground">
             FILTER - SOURCE - GEOJSON
           </p>
         </div>

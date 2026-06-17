@@ -1,10 +1,12 @@
 import Editor, { type Monaco } from "@monaco-editor/react";
 
 type EditorLanguage = "sparql" | "turtle";
+type EditorTheme = "dark" | "light";
 
 interface CodeEditorProps {
   language: EditorLanguage;
   value: string;
+  theme: EditorTheme;
   onChange: (value: string) => void;
 }
 
@@ -115,11 +117,38 @@ function registerLanguages(monaco: Monaco) {
       "editorWidget.border": "#243244",
     },
   });
+
+  monaco.editor.defineTheme("jit-light", {
+    base: "vs",
+    inherit: true,
+    rules: [
+      { token: "comment", foreground: "64748B", fontStyle: "italic" },
+      { token: "keyword", foreground: "0E7490", fontStyle: "bold" },
+      { token: "variable", foreground: "A16207" },
+      { token: "type.identifier", foreground: "047857" },
+      { token: "string", foreground: "7C3AED" },
+      { token: "number", foreground: "C2410C" },
+    ],
+    colors: {
+      "editor.background": "#F8FAFC",
+      "editor.foreground": "#0F172A",
+      "editorLineNumber.foreground": "#94A3B8",
+      "editorLineNumber.activeForeground": "#334155",
+      "editor.lineHighlightBackground": "#E2E8F066",
+      "editor.selectionBackground": "#BAE6FD88",
+      "editorCursor.foreground": "#0891B2",
+      "editorIndentGuide.background1": "#CBD5E1",
+      "editorIndentGuide.activeBackground1": "#64748B",
+      "editorWidget.background": "#FFFFFF",
+      "editorWidget.border": "#CBD5E1",
+    },
+  });
 }
 
 export function CodeEditor({
   language,
   value,
+  theme,
   onChange,
 }: CodeEditorProps) {
   return (
@@ -128,7 +157,7 @@ export function CodeEditor({
       height="100%"
       language={language}
       onChange={(nextValue) => onChange(nextValue ?? "")}
-      theme="jit-dark"
+      theme={theme === "light" ? "jit-light" : "jit-dark"}
       value={value}
       options={{
         minimap: { enabled: false },

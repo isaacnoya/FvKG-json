@@ -21,6 +21,7 @@ import { CodeEditor } from "./CodeEditor";
 interface QueryPanelProps {
   sparql: string;
   rml: string;
+  theme: "dark" | "light";
   isLoading: boolean;
   onSparqlChange: (value: string) => void;
   onRmlChange: (value: string) => void;
@@ -30,6 +31,7 @@ interface QueryPanelProps {
 export function QueryPanel({
   sparql,
   rml,
+  theme,
   isLoading,
   onSparqlChange,
   onRmlChange,
@@ -61,7 +63,7 @@ export function QueryPanel({
   };
 
   return (
-    <aside className="relative z-20 flex h-full min-h-0 min-w-0 flex-col border-r border-border bg-[#080c12]">
+    <aside className="relative z-20 flex h-full min-h-0 min-w-0 flex-col border-r border-border bg-background">
       <div className="flex h-16 shrink-0 items-center justify-between border-b border-border px-5">
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-cyan-300">
@@ -102,22 +104,23 @@ export function QueryPanel({
           </div>
 
           <TabsContent
-            className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border bg-[#0a0f16]"
+            className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border bg-secondary"
             value="sparql"
           >
             <div className="min-h-0 flex-1">
               <CodeEditor
                 language="sparql"
                 onChange={onSparqlChange}
+                theme={theme}
                 value={sparql}
               />
             </div>
           </TabsContent>
           <TabsContent
-            className="flex min-h-0 flex-col overflow-hidden rounded-lg border border-border bg-[#0a0f16]"
+            className="flex min-h-0 flex-col overflow-hidden rounded-lg border border-border bg-secondary"
             value="rml"
           >
-            <div className="flex shrink-0 items-center justify-between border-b border-border bg-black/20 px-3 py-2">
+            <div className="flex shrink-0 items-center justify-between border-b border-border bg-secondary/70 px-3 py-2">
               <span className="text-[10px] text-muted-foreground">
                 Import Turtle or RML mapping files
               </span>
@@ -143,6 +146,7 @@ export function QueryPanel({
               <CodeEditor
                 language="turtle"
                 onChange={onRmlChange}
+                theme={theme}
                 value={rml}
               />
             </div>
@@ -150,9 +154,9 @@ export function QueryPanel({
         </Tabs>
       </div>
 
-      <div className="shrink-0 border-t border-border bg-[#0a0f16] p-4">
+      <div className="shrink-0 border-t border-border bg-secondary p-4">
         <button
-          className="mb-3 flex w-full items-center justify-between rounded-lg border border-border bg-black/20 px-3 py-2.5 text-left transition-colors hover:border-white/15"
+          className="mb-3 flex w-full items-center justify-between rounded-lg border border-border bg-background/50 px-3 py-2.5 text-left transition-colors hover:border-primary/35"
           type="button"
         >
           <span className="flex items-center gap-2.5">
@@ -161,8 +165,8 @@ export function QueryPanel({
               <span className="block text-[10px] uppercase tracking-wider text-muted-foreground">
                 Target endpoint
               </span>
-              <span className="mt-0.5 block text-xs text-slate-300">
-                Local FvKG-json endpoint
+              <span className="mt-0.5 block text-xs text-foreground">
+                Local FvKG[json] endpoint
               </span>
             </span>
           </span>
@@ -182,8 +186,8 @@ export function QueryPanel({
           ) : (
             <>
               <Play className="size-4 fill-current" />
-              Execute FvKG-json Query
-              <kbd className="ml-auto rounded border border-cyan-900/40 bg-cyan-950/30 px-1.5 py-0.5 font-mono text-[9px] font-normal text-cyan-100/70">
+              Execute FvKG[json] Query
+              <kbd className="ml-auto rounded border border-primary/30 bg-accent px-1.5 py-0.5 font-mono text-[9px] font-normal text-accent-foreground">
                 Cmd Enter
               </kbd>
             </>

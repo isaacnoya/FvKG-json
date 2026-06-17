@@ -5,11 +5,19 @@ import {
   useRef,
   useState,
 } from "react";
-import { Activity, Braces, CircleHelp, Github, RadioTower } from "lucide-react";
+import {
+  Activity,
+  Braces,
+  CircleHelp,
+  Github,
+  Moon,
+  RadioTower,
+  Sun,
+} from "lucide-react";
 import { ExecutionConsole } from "@/components/console/ExecutionConsole";
 import { MapCanvas } from "@/components/map/MapCanvas";
 import { QueryPanel } from "@/components/query/QueryPanel";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Tooltip,
   TooltipContent,
@@ -18,10 +26,14 @@ import {
 } from "@/components/ui/tooltip";
 import { DEFAULT_RML, DEFAULT_SPARQL } from "@/data/mock";
 import { useJitExecution } from "@/hooks/useJitExecution";
+import { cn } from "@/lib/utils";
 
 const MIN_QUERY_PANEL_WIDTH = 24;
 const MAX_QUERY_PANEL_WIDTH = 55;
 const QUERY_PANEL_KEYBOARD_STEP = 2;
+const REPOSITORY_URL = "https://github.com/isaacnoya/FvKG-json";
+
+type ThemeMode = "dark" | "light";
 
 function clampQueryPanelWidth(width: number) {
   return Math.min(
@@ -36,6 +48,15 @@ function App() {
   const [consoleOpen, setConsoleOpen] = useState(true);
   const [queryPanelWidth, setQueryPanelWidth] = useState(30);
   const [isResizingPanels, setIsResizingPanels] = useState(false);
+  const [theme, setTheme] = useState<ThemeMode>(() => {
+    const storedTheme = window.localStorage.getItem("fvkg-theme");
+    if (storedTheme === "light" || storedTheme === "dark") {
+      return storedTheme;
+    }
+    return window.matchMedia("(prefers-color-scheme: light)").matches
+      ? "light"
+      : "dark";
+  });
   const mainRef = useRef<HTMLElement>(null);
   const {
     clearLogs,
@@ -44,6 +65,14 @@ function App() {
     logs,
     mapData,
   } = useJitExecution();
+
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.toggle("light", theme === "light");
+    root.classList.toggle("dark", theme === "dark");
+    root.style.colorScheme = theme;
+    window.localStorage.setItem("fvkg-theme", theme);
+  }, [theme]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -125,35 +154,60 @@ function App() {
   return (
     <TooltipProvider delayDuration={200}>
       <div className="relative h-screen min-h-[640px] overflow-hidden bg-background text-foreground">
-        <header className="relative z-40 flex h-14 items-center justify-between border-b border-border bg-[#080c12]/95 px-4 backdrop-blur">
+        <header className="relative z-40 flex h-14 items-center justify-between border-b border-border bg-background/95 px-4 backdrop-blur">
           <div className="flex items-center gap-3">
-            <div className="relative flex size-8 items-center justify-center rounded-lg border border-cyan-300/20 bg-cyan-300/[0.08]">
+            <div className="relative flex size-8 items-center justify-center rounded-lg border border-cyan-400/25 bg-cyan-400/[0.09]">
               <Braces className="size-4 text-cyan-300" />
-              <span className="absolute -right-0.5 -top-0.5 size-2 rounded-full border-2 border-[#080c12] bg-emerald-400" />
+              <span className="absolute -right-0.5 -top-0.5 size-2 rounded-full border-2 border-background bg-emerald-400" />
             </div>
             <div className="flex items-baseline gap-2">
-              <h1 className="text-sm font-semibold tracking-tight text-slate-100">
-                FvKG-json
+              <h1 className="text-sm font-semibold tracking-tight text-foreground">
+                FvKG[json]
               </h1>
-              <span className="hidden text-[10px] uppercase tracking-[0.18em] text-slate-600 sm:block">
+              <span className="hidden text-[10px] uppercase tracking-[0.18em] text-muted-foreground sm:block">
                 Spatial virtualization workbench
               </span>
-              <span className="hidden text-[10px] text-slate-600 xl:block">
+              <span className="hidden text-[10px] text-muted-foreground xl:block">
                 by Isaac Noya Vázquez
               </span>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="mr-1 hidden items-center gap-2 rounded-md border border-border bg-black/20 px-2.5 py-1.5 lg:flex">
+            <div className="mr-1 hidden items-center gap-2 rounded-md border border-border bg-secondary/55 px-2.5 py-1.5 lg:flex">
               <RadioTower className="size-3 text-emerald-400" />
-              <span className="text-[10px] text-slate-400">
+              <span className="text-[10px] text-muted-foreground">
                 FastAPI endpoint
               </span>
-              <span className="font-mono text-[9px] text-slate-600">
+              <span className="font-mono text-[9px] text-muted-foreground">
                 localhost:8000
               </span>
             </div>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  aria-label={`Switch to ${
+                    theme === "dark" ? "light" : "dark"
+                  } mode`}
+                  onClick={() =>
+                    setTheme((current) =>
+                      current === "dark" ? "light" : "dark",
+                    )
+                  }
+                  size="icon"
+                  variant="ghost"
+                >
+                  {theme === "dark" ? (
+                    <Sun className="size-4" />
+                  ) : (
+                    <Moon className="size-4" />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {theme === "dark" ? "Light mode" : "Dark mode"}
+              </TooltipContent>
+            </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button aria-label="System status" size="icon" variant="ghost">
@@ -164,9 +218,15 @@ function App() {
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button aria-label="Project repository" size="icon" variant="ghost">
+                <a
+                  aria-label="Project repository"
+                  className={cn(buttonVariants({ size: "icon", variant: "ghost" }))}
+                  href={REPOSITORY_URL}
+                  rel="noreferrer"
+                  target="_blank"
+                >
                   <Github className="size-4" />
-                </Button>
+                </a>
               </TooltipTrigger>
               <TooltipContent>Project repository</TooltipContent>
             </Tooltip>
@@ -195,8 +255,9 @@ function App() {
             onSparqlChange={setSparql}
             rml={rml}
             sparql={sparql}
+            theme={theme}
           />
-          <MapCanvas isLoading={isLoading} mapData={mapData} />
+          <MapCanvas isLoading={isLoading} mapData={mapData} theme={theme} />
           <div
             aria-label="Resize query and map panels"
             aria-orientation="vertical"
@@ -226,6 +287,7 @@ function App() {
           onClear={clearLogs}
           onOpenChange={setConsoleOpen}
           results={mapData?.results ?? null}
+          theme={theme}
         />
       </div>
     </TooltipProvider>
