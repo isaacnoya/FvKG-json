@@ -1,17 +1,59 @@
 import os
 import json
 import re
-from groq import Groq
-from dotenv import load_dotenv
 import requests
 from rdflib import Graph, Namespace, Literal, URIRef
 import rdflib
 from rdflib.namespace import OWL, RDF, RDFS, XSD
 
+try:
+    from dotenv import load_dotenv
+except ImportError:
+    def load_dotenv():
+        return False
+
+try:
+    from groq import Groq
+except ImportError:
+    Groq = None
+
 DBO = Namespace("http://dbpedia.org/ontology/")
 GEO = Namespace("http://www.opengis.net/ont/geosparql#")
 
 load_dotenv()
+
+
+def _require_groq():
+    if Groq is None:
+        raise ImportError(
+            "The 'groq' package is required for LLM ontology search. "
+            "Install requirements.txt."
+        )
+    return Groq
+
+
+def _load_sparql_wrapper():
+    try:
+        from SPARQLWrapper import JSON, SPARQLWrapper
+    except ImportError as exc:
+        raise ImportError(
+            "The 'SPARQLWrapper' package is required for external ontology "
+            "lookups. Install requirements.txt."
+        ) from exc
+    return SPARQLWrapper, JSON
+
+
+def _load_vector_dependencies():
+    try:
+        import torch
+        from owlready2 import get_ontology
+        from sentence_transformers import SentenceTransformer, util
+    except ImportError as exc:
+        raise ImportError(
+            "Vector ontology matching requires torch, owlready2, and "
+            "sentence-transformers. Install requirements.txt."
+        ) from exc
+    return torch, get_ontology, SentenceTransformer, util
 
 GPT_OSS_MODELS = {
     "openai/gpt-oss-20b",
@@ -145,7 +187,7 @@ def preprocess_local_search_text(text):
     
 def searchLLM(term, type="class", description="", model="llama-3.3-70b-versatile"):  
     api_key = os.getenv("GROQ_API_KEY")
-    client = Groq(api_key=api_key)
+    client = _require_groq()(api_key=api_key)
 
     prompt_sistema = f"""You are an expert in Semantic Web.
     Map the requested {type} to Wikidata and DBpedia.
@@ -315,7 +357,7 @@ def _safe_fragment(term):
 
 def llm_propose(ontology, term, type="class", description="", model=None, prefix="http://example.org/ontology#", interactive=True):
     api_key = os.getenv("GROQ_API_KEY")
-    client = Groq(api_key=api_key)
+    client = _require_groq()(api_key=api_key)
     existing_classes = _compact_ontology_classes(ontology) 
     default_iri = f"{prefix}{_safe_fragment(term)}"
     prompt_sistema = f"""
@@ -387,7 +429,7 @@ def llm_propose(ontology, term, type="class", description="", model=None, prefix
 
 def llm_propose_property(ontology, term, description="", datatype="", domain_iri="", model=None, prefix="http://example.org/ontology#", interactive=True):
     api_key = os.getenv("GROQ_API_KEY")
-    client = Groq(api_key=api_key)
+    client = _require_groq()(api_key=api_key)
     existing_properties = _compact_graph_properties(ontology)
     default_iri = f"{prefix}{_safe_fragment(term)}"
     prompt_sistema = f"""
@@ -460,7 +502,7 @@ def llm_propose_property(ontology, term, description="", datatype="", domain_iri
 
 def llm_propose_axiom(ontology, model=None, history=None):
     api_key = os.getenv("GROQ_API_KEY")
-    client = Groq(api_key=api_key)
+    client = _require_groq()(api_key=api_key)
     entities = _compact_graph_entities(ontology, max_entities=60)
     existing_axioms_sample = []
     for s, p, o in ontology.triples((None, None, None)):
@@ -560,10 +602,9 @@ def llm_propose_axiom(ontology, model=None, history=None):
         print(f"Error con Groq: {e}")
         return None
 
-from SPARQLWrapper import SPARQLWrapper, JSON
-
 def existe_en_wikidata(id_recurso):
     """Consulta si un ID (ej: Q42, P31) existe en Wikidata."""
+    SPARQLWrapper, JSON = _load_sparql_wrapper()
     sparql = SPARQLWrapper("https://query.wikidata.org/sparql")
     # El User-Agent es obligatorio para Wikidata
     sparql.agent = "MiBotVerificador/1.0" 
@@ -583,6 +624,7 @@ def existe_en_wikidata(id_recurso):
 
 def existe_en_dbpedia(recurso_ontologia):
     """Consulta si una clase o propiedad (ej: City, birthDate) existe en la ontología de DBpedia."""
+    SPARQLWrapper, JSON = _load_sparql_wrapper()
     sparql = SPARQLWrapper("https://dbpedia.org/sparql")
     
     query = f"""
@@ -601,6 +643,7 @@ def existe_en_dbpedia(recurso_ontologia):
 
 def buscar_dbpedia_label(label):
     """Busca una clase o propiedad en DBpedia por su label."""
+    SPARQLWrapper, JSON = _load_sparql_wrapper()
     sparql = SPARQLWrapper("https://dbpedia.org/sparql")
     
     query = f"""
@@ -636,12 +679,11 @@ def searchNotLocal(term, description="", type="class", model="llama-3.3-70b-vers
     else:
         return URIRef(result)
 
-import torch
-from owlready2 import *
-from sentence_transformers import SentenceTransformer, util
-
 class VectorialOntologyMatcher:
     def __init__(self, owl_paths, index_cache="onto_index.pt", model=None):
+        torch, get_ontology, SentenceTransformer, util = _load_vector_dependencies()
+        self._torch = torch
+        self._semantic_util = util
         self.model = SentenceTransformer(model)
         self.cache_path = index_cache
         
@@ -691,7 +733,7 @@ class VectorialOntologyMatcher:
         
         self.ontology_embeddings = self.model.encode(all_texts, convert_to_tensor=True)
 
-        torch.save({
+        self._torch.save({
             'embeddings': self.ontology_embeddings,
             'uris': self.entity_uris,
             'metadata': self.entity_metadata
@@ -699,7 +741,7 @@ class VectorialOntologyMatcher:
     
     def _load_index(self):
         print("Cargando índice desde cache...")
-        data = torch.load(self.cache_path, weights_only=False) 
+        data = self._torch.load(self.cache_path, weights_only=False) 
         self.ontology_embeddings = data['embeddings']
         self.entity_uris = data['uris']
         self.entity_metadata = data['metadata']
@@ -716,7 +758,11 @@ class VectorialOntologyMatcher:
         query_text = f"{search_name}: {search_description}"
         query_embedding = self.model.encode(query_text, convert_to_tensor=True)
 
-        hits = util.semantic_search(query_embedding, self.ontology_embeddings, top_k=top_k)[0]
+        hits = self._semantic_util.semantic_search(
+            query_embedding,
+            self.ontology_embeddings,
+            top_k=top_k,
+        )[0]
         results = []
         for hit in hits:
             if threshold is not None and hit["score"] <= threshold:
