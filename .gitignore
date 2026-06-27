@@ -12,17 +12,18 @@ output_prueba.ttl
 pruebas.ipynb
 tfm.txt
 OGCmappingGenerator/.env
-morphgeo/mappings.txt
-morphgeo/output.ttl
+fvkg_json/mappings.txt
+fvkg_json/output.ttl
 .vscode/*
 .vscode
 .DS_Store
 __pycache__/
+**/__pycache__/
 *.py[cod]
 onto_index.pt
 OGCmappingGenerator/onto_index.pt
-morphgeo/consultas.txt
-morphgeo/pruebasMappingSelection.py
+fvkg_json/consultas.txt
+fvkg_json/pruebasMappingSelection.py
 *.tex
 eval/vkg/queries/q07.rq
 eval/vkg/results/
@@ -31,3 +32,4 @@ eval/vkg/__pycache__
 eval/semantic_annotation/__pycache__
 eval/__pycache__
 memoria/
+tfm.key

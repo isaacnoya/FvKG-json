@@ -1,5 +1,7 @@
 # FvKG[json]
 
+[![DOI](https://zenodo.org/badge/1172477722.svg)](https://doi.org/10.5281/zenodo.20961133)
+
 FvKG[json] is a research prototype for just-in-time GeoSPARQL virtualization over
 JSON-based geospatial web APIs. It combines RML mappings, GeoSPARQL query
 evaluation, OGC API Features metadata extraction, semantic annotation utilities,
