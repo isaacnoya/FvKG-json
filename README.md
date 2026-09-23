@@ -29,7 +29,7 @@ fvkg_json/              Core Python virtualizer and FastAPI backend
 geosparql-frontend/     React/MapLibre WebGIS frontend
 OGCmappingGenerator/    OGC API Features ontology, mapping, and annotation tools
 eval/                   Evaluation data, queries, mappings, results, and figures
-leanProofs/             Lean formalization artifacts
+AgdaFormalization/             Agda formalization 
 tests/                  Python tests
 requirements.txt        Python runtime dependencies
 start-fvkg-json.sh      Helper script to start backend and frontend together
