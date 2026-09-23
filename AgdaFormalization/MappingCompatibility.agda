@@ -6,7 +6,7 @@ open import Data.List using (List; []; _∷_)
 open import Data.Char using (Char)
 open import Data.Char.Properties using (_≡ᵇ_) renaming (_≟_ to _≟ᶜ_)
 open import Data.Maybe using (Maybe; just; nothing)
-open import Relation.Binary.PropositionalEquality using (_≡_; refl;cong;cong₂;sym)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl;cong;cong₂;sym;trans)
 open import Data.Bool using
   (Bool; true; false; _∧_; _∨_)
 open import Data.Unit using (⊤; tt)
@@ -252,6 +252,20 @@ prefix-refl :
   Prefix s s
 prefix-refl s = listPrefix-refl (toList s)
 
+false≢true : false ≡ true → ⊥
+false≢true ()
+
+listPrefix-cons :
+  ∀ x y xs ys →
+  x ≡ y →
+  listPrefix xs ys ≡ true →
+  listPrefix (x ∷ xs) (y ∷ ys) ≡ true
+listPrefix-cons x y xs ys x≡y xs-prefix-ys
+  with x ≟ᶜ y
+... | yes _ =
+  xs-prefix-ys
+... | no x≢y =
+  ⊥-elim (x≢y x≡y)
 
 HasType : RDFTermType → RDFTerm → Set
 HasType iriType (iri _) = ⊤
@@ -349,6 +363,51 @@ or-true-correct false true .backward p =
 or-true-correct false false .backward (inj₁ ())
 or-true-correct false false .backward (inj₂ ())
 
+list-common-prefixes-comparable :
+  ∀ xs ys zs →
+  listPrefix xs zs ≡ true →
+  listPrefix ys zs ≡ true →
+  (listPrefix xs ys ∨ listPrefix ys xs) ≡ true
+list-common-prefixes-comparable [] ys zs xs-prefix-zs ys-prefix-zs =
+  refl
+list-common-prefixes-comparable (x ∷ xs) [] zs xs-prefix-zs ys-prefix-zs =
+  refl
+list-common-prefixes-comparable (x ∷ xs) (y ∷ ys) [] () ys-prefix-zs
+list-common-prefixes-comparable (x ∷ xs) (y ∷ ys) (z ∷ zs) xs-prefix-zs ys-prefix-zs
+  with x ≟ᶜ z
+... | no x≢z =
+  ⊥-elim (false≢true xs-prefix-zs)
+... | yes x≡z
+  with y ≟ᶜ z
+... | no y≢z =
+  ⊥-elim (false≢true ys-prefix-zs)
+... | yes y≡z
+  with x ≟ᶜ y
+... | no x≢y =
+  ⊥-elim (x≢y (trans x≡z (sym y≡z)))
+... | yes x≡y =
+  common-prefixes-step (list-common-prefixes-comparable xs ys zs xs-prefix-zs ys-prefix-zs)
+  where
+    common-prefixes-step :
+      (listPrefix xs ys ∨ listPrefix ys xs) ≡ true →
+      (listPrefix xs ys ∨ listPrefix (y ∷ ys) (x ∷ xs)) ≡ true
+    common-prefixes-step tail-prefixes-comparable
+      with or-true-correct (listPrefix xs ys) (listPrefix ys xs) .forward tail-prefixes-comparable
+    ... | inj₁ xs-prefix-ys =
+      or-true-correct (listPrefix xs ys) (listPrefix (y ∷ ys) (x ∷ xs)) .backward
+        (inj₁ xs-prefix-ys)
+    ... | inj₂ ys-prefix-xs =
+      or-true-correct (listPrefix xs ys) (listPrefix (y ∷ ys) (x ∷ xs)) .backward
+        (inj₂ (listPrefix-cons y x ys xs (sym x≡y) ys-prefix-xs))
+
+common-prefixes-comparable :
+  ∀ p₁ p₂ value →
+  Prefix p₁ value →
+  Prefix p₂ value →
+  (isPrefixOf p₁ p₂ ∨ isPrefixOf p₂ p₁) ≡ true
+common-prefixes-comparable p₁ p₂ value p₁-prefix-value p₂-prefix-value =
+  list-common-prefixes-comparable (toList p₁) (toList p₂) (toList value) p₁-prefix-value p₂-prefix-value
+
 prefix-overlap :
   ∀ p₁ p₂ →
   (isPrefixOf p₁ p₂ ∨ isPrefixOf p₂ p₁) ≡ true →
@@ -427,6 +486,7 @@ tCompatible-sound (rdfTerm (iri i)) (termMap (templateMap tm iriType)) compatibl
 tCompatible-sound (rdfTerm (literal l₁ d₁)) (termMap (templateMap tm (literalType d₂))) compatible = literal l₁ d₁ , (refl , (sym (sameDatatype-correct d₁ d₂ .forward (proj₁ (and-true-correct (sameDatatype d₁ d₂) (isPrefixOf tm l₁) .forward compatible))) , proj₂ (and-true-correct (sameDatatype d₁ d₂) (isPrefixOf tm l₁) .forward compatible)))
 tCompatible-sound (termMap (constantMap (iri i))) (var v) compatible = iri i , (refl , tt)
 tCompatible-sound (termMap (constantMap (literal l d))) (var v) compatible = literal l d , (refl , tt)
+
 tCompatible-sound (termMap (referenceMap rm iriType)) (var v) compatible = iri "" , (tt , tt)
 tCompatible-sound (termMap (referenceMap rm (literalType d))) (var v) compatible = literal "" d , (refl , tt)
 tCompatible-sound (termMap (templateMap tm iriType)) (var v) compatible = iri tm , ((tt , prefix-refl tm ) , tt)
@@ -453,3 +513,78 @@ tCompatible-sound (termMap (templateMap tm iriType)) (termMap (referenceMap rm�
 tCompatible-sound (termMap (templateMap tm (literalType d₁))) (termMap (referenceMap rm₂ (literalType d₂))) compatible = literal tm d₁ , ((refl , prefix-refl tm) , sym (sameDatatype-correct d₁ d₂ .forward compatible))
 tCompatible-sound (termMap (templateMap tm iriType)) (termMap (templateMap tm₂ iriType)) compatible = iri (prefix-overlap-term tm tm₂ (proj₂ (and-true-correct true (isPrefixOf tm tm₂ ∨ isPrefixOf tm₂ tm) .forward compatible))) , ((tt , prefix-overlap-left tm tm₂ (proj₂ (and-true-correct true (isPrefixOf tm tm₂ ∨ isPrefixOf tm₂ tm) .forward compatible))) , (tt , prefix-overlap-right tm tm₂ (proj₂ (and-true-correct true (isPrefixOf tm tm₂ ∨ isPrefixOf tm₂ tm) .forward compatible))))
 tCompatible-sound (termMap (templateMap tm (literalType d₁))) (termMap (templateMap tm₂ (literalType d₂))) compatible = literal (prefix-overlap-term tm tm₂ (proj₂ (and-true-correct (sameDatatype d₁ d₂) (isPrefixOf tm tm₂ ∨ isPrefixOf tm₂ tm) .forward compatible))) d₂ , ((sameDatatype-correct d₁ d₂ .forward (proj₁ (and-true-correct (sameDatatype d₁ d₂) (isPrefixOf tm tm₂ ∨ isPrefixOf tm₂ tm) .forward compatible)) , prefix-overlap-left tm tm₂ (proj₂ (and-true-correct (sameDatatype d₁ d₂) (isPrefixOf tm tm₂ ∨ isPrefixOf tm₂ tm) .forward compatible))) , (refl , prefix-overlap-right tm tm₂ (proj₂ (and-true-correct (sameDatatype d₁ d₂) (isPrefixOf tm tm₂ ∨ isPrefixOf tm₂ tm) .forward compatible))))
+
+
+
+tCompatible-complete : ∀ t₁ t₂ → Overlaps t₁ t₂ → Compatible t₁ t₂
+tCompatible-complete (var _) t₂ o = refl
+tCompatible-complete (rdfTerm x) (var _) o = refl
+tCompatible-complete (termMap x) (var _) o = refl
+tCompatible-complete (rdfTerm x) (rdfTerm x₁) (fst , snd) = sameRDFTerm-correct x x₁ .backward (trans (proj₁ snd) (sym (proj₂ snd)))
+tCompatible-complete (rdfTerm r) (termMap (constantMap c)) (fst , snd) = sameRDFTerm-correct r c .backward (trans (proj₁ snd) (sym (proj₂ snd)))
+tCompatible-complete (rdfTerm (iri i)) (termMap (referenceMap rm iriType)) o = refl
+tCompatible-complete (rdfTerm (literal l d)) (termMap (referenceMap rm iriType)) (_ , (refl , snd)) = ⊥-elim snd
+tCompatible-complete (rdfTerm (iri i)) (termMap (referenceMap rm (literalType d))) (fst , refl , snd) = ⊥-elim snd
+tCompatible-complete (rdfTerm (literal l d₁)) (termMap (referenceMap rm (literalType d₂))) (fst , refl , snd) = sameRDFTermType-correct (literalType d₁) (literalType d₂) .backward (cong literalType (sym snd))
+tCompatible-complete (rdfTerm (iri x)) (termMap (templateMap tm iriType)) (fst , refl , fst₁ , snd) = snd
+tCompatible-complete (rdfTerm (literal x x₁)) (termMap (templateMap tm iriType)) (fst , refl , ())
+tCompatible-complete (rdfTerm (iri x₁)) (termMap (templateMap tm (literalType x))) (fst , refl , ())
+tCompatible-complete (rdfTerm (literal x₁ x₂)) (termMap (templateMap tm (literalType x))) (fst , refl , fst₁ , snd) = and-true-correct (sameRDFTermType (literalType x₂) (literalType x)) (isPrefixOf tm x₁) .backward ( sameRDFTermType-correct (literalType x₂) (literalType x) .backward (cong literalType (sym fst₁)), snd)
+tCompatible-complete (termMap (constantMap c)) (rdfTerm r) (fst , snd) = sameRDFTerm-correct c r .backward (trans (proj₁ snd) (sym (proj₂ snd)))
+tCompatible-complete (termMap (referenceMap rm iriType)) (rdfTerm (iri i)) o = refl
+tCompatible-complete (termMap (referenceMap rm iriType)) (rdfTerm (literal l d)) (_ , (() , refl))
+tCompatible-complete (termMap (referenceMap rm (literalType d))) (rdfTerm (iri i)) (_ , (() , refl))
+tCompatible-complete (termMap (referenceMap rm (literalType d₁))) (rdfTerm (literal l d₂)) (_ , (fst , refl)) = sameRDFTermType-correct (literalType d₁) (literalType d₂) .backward (cong literalType fst)
+tCompatible-complete (termMap (templateMap tm iriType)) (rdfTerm (iri i)) (_ , ((tt , snd) , refl)) = and-true-correct true (isPrefixOf tm i) .backward (refl , snd)
+tCompatible-complete (termMap (templateMap tm iriType)) (rdfTerm (literal l d)) (_ , ((() , snd) , refl))
+tCompatible-complete (termMap (templateMap tm (literalType d))) (rdfTerm (iri i)) (_ , ((() , snd) , refl))
+tCompatible-complete (termMap (templateMap tm (literalType d₁))) (rdfTerm (literal l d₂)) (_ , ((fst , snd) , refl)) = and-true-correct (sameRDFTermType (literalType d₁) (literalType d₂)) (isPrefixOf tm l) .backward (sameRDFTermType-correct (literalType d₁) (literalType d₂) .backward (cong literalType fst) , snd)
+tCompatible-complete (termMap (constantMap x)) (termMap (constantMap x₁)) (fst , snd) = sameRDFTerm-correct x x₁ .backward (trans (proj₁ snd) (sym (proj₂ snd)))
+tCompatible-complete (termMap (constantMap (iri x))) (termMap (referenceMap rm₂ iriType)) o = refl
+tCompatible-complete (termMap (constantMap (literal x x₁))) (termMap (referenceMap rm₂ iriType)) (fst , refl , ())
+tCompatible-complete (termMap (constantMap (iri x₁))) (termMap (referenceMap rm₂ (literalType x))) (fst , refl , ())
+tCompatible-complete (termMap (constantMap (literal l₁ d₁))) (termMap (referenceMap rm₂ (literalType d₂))) (fst , refl , snd) = sameRDFTermType-correct (literalType d₁) (literalType d₂) .backward (cong literalType (sym snd))
+tCompatible-complete (termMap (constantMap (iri i))) (termMap (templateMap tm iriType)) (_ , (refl , (tt , snd))) = and-true-correct true (isPrefixOf tm i) .backward (refl , snd)
+tCompatible-complete (termMap (constantMap (literal l d))) (termMap (templateMap tm iriType)) (_ , (refl , (() , snd)))
+tCompatible-complete (termMap (constantMap (iri i))) (termMap (templateMap tm (literalType d))) (_ , (refl , (() , snd)))
+tCompatible-complete (termMap (constantMap (literal l d₁))) (termMap (templateMap tm (literalType d₂))) (_ , (refl , (fst , snd))) = and-true-correct (sameRDFTermType (literalType d₁) (literalType d₂)) (isPrefixOf tm l) .backward (sameRDFTermType-correct (literalType d₁) (literalType d₂) .backward (cong literalType (sym fst)) , snd)
+tCompatible-complete (termMap (referenceMap rm iriType)) (termMap (constantMap (iri i))) (_ , (tt , refl)) = refl
+tCompatible-complete (termMap (referenceMap rm iriType)) (termMap (constantMap (literal l d))) (_ , (() , refl))
+tCompatible-complete (termMap (referenceMap rm (literalType d))) (termMap (constantMap (iri i))) (_ , (() , refl))
+tCompatible-complete (termMap (referenceMap rm (literalType d₁))) (termMap (constantMap (literal l d₂))) (_ , (fst , refl)) = sameRDFTermType-correct (literalType d₁) (literalType d₂) .backward (cong literalType fst)
+tCompatible-complete (termMap (referenceMap rm₁ iriType)) (termMap (referenceMap rm₂ iriType)) o = refl
+tCompatible-complete (termMap (referenceMap rm₁ iriType)) (termMap (referenceMap rm₂ (literalType x))) (iri x₁ , fst₁ , ())
+tCompatible-complete (termMap (referenceMap rm₁ iriType)) (termMap (referenceMap rm₂ (literalType x))) (literal x₁ x₂ , () , snd)
+tCompatible-complete (termMap (referenceMap rm₁ (literalType d))) (termMap (referenceMap rm₂ iriType)) (iri x , () , tt)
+tCompatible-complete (termMap (referenceMap rm₁ (literalType d))) (termMap (referenceMap rm₂ iriType)) (literal x x₁ , fst₁ , ())
+tCompatible-complete (termMap (referenceMap rm₁ (literalType d₁))) (termMap (referenceMap rm₂ (literalType d₂))) (literal l d₃ , fst₁ , snd) = sameRDFTermType-correct (literalType d₁) (literalType d₂) .backward (cong literalType (trans fst₁ (sym snd)))
+tCompatible-complete (termMap (referenceMap rm iriType)) (termMap (templateMap rm₂ iriType)) o = refl
+tCompatible-complete (termMap (referenceMap rm iriType)) (termMap (templateMap rm₂ (literalType x))) (iri x₁ , fst₁ , () , snd)
+tCompatible-complete (termMap (referenceMap rm iriType)) (termMap (templateMap rm₂ (literalType x))) (literal x₁ x₂ , () , fst₂ , snd)
+tCompatible-complete (termMap (referenceMap rm (literalType x))) (termMap (templateMap rm₂ iriType)) (iri x₁ , ())
+tCompatible-complete (termMap (referenceMap rm (literalType x))) (termMap (templateMap rm₂ iriType)) (literal x₁ x₂ , ())
+tCompatible-complete (termMap (referenceMap rm (literalType d₁))) (termMap (templateMap rm₂ (literalType d₂))) (literal l d₃ , fst₁ , fst₂ , snd) = sameRDFTermType-correct (literalType d₁) (literalType d₂) .backward (cong literalType (trans fst₁ (sym fst₂)))
+tCompatible-complete (termMap (templateMap tm iriType)) (termMap (constantMap (iri i))) (_ , ((tt , snd) , refl)) = and-true-correct true (isPrefixOf tm i) .backward (refl , snd)
+tCompatible-complete (termMap (templateMap tm iriType)) (termMap (constantMap (literal l d))) (_ , ((() , snd) , refl))
+tCompatible-complete (termMap (templateMap tm (literalType d))) (termMap (constantMap (iri i))) (_ , ((() , snd) , refl))
+tCompatible-complete (termMap (templateMap tm (literalType d₁))) (termMap (constantMap (literal l d₂))) (_ , ((fst , snd) , refl)) = and-true-correct (sameRDFTermType (literalType d₁) (literalType d₂)) (isPrefixOf tm l) .backward (sameRDFTermType-correct (literalType d₁) (literalType d₂) .backward (cong literalType fst) , snd)
+tCompatible-complete (termMap (templateMap tm iriType)) (termMap (referenceMap rm iriType)) o = refl
+tCompatible-complete (termMap (templateMap tm iriType)) (termMap (referenceMap rm (literalType d))) (iri i , (tt , fst₂) , ())
+tCompatible-complete (termMap (templateMap tm iriType)) (termMap (referenceMap rm (literalType d))) (literal l d₁ , (() , fst₂) , snd)
+tCompatible-complete (termMap (templateMap tm (literalType d))) (termMap (referenceMap rm iriType)) (iri i , (() , fst₂) , snd)
+tCompatible-complete (termMap (templateMap tm (literalType d))) (termMap (referenceMap rm iriType)) (literal l d₁ , (fst₁ , fst₂) , ())
+tCompatible-complete (termMap (templateMap tm (literalType d₁))) (termMap (referenceMap rm (literalType d₂))) (literal l d₃ , (fst₁ , fst₂) , snd) = sameRDFTermType-correct (literalType d₁) (literalType d₂) .backward (cong literalType (trans fst₁ (sym snd)))
+tCompatible-complete (termMap (templateMap tm iriType)) (termMap (templateMap tm₂ iriType)) (iri i , (tt , pref₁) , tt , pref₂) =
+  and-true-correct true (isPrefixOf tm tm₂ ∨ isPrefixOf tm₂ tm) .backward
+    (refl , common-prefixes-comparable tm tm₂ i pref₁ pref₂)
+tCompatible-complete (termMap (templateMap tm iriType)) (termMap (templateMap tm₂ iriType)) (literal l d , (() , pref₁) , typ₂ , pref₂)
+tCompatible-complete (termMap (templateMap tm iriType)) (termMap (templateMap tm₂ (literalType d))) (iri i , (tt , pref₁) , () , pref₂)
+tCompatible-complete (termMap (templateMap tm iriType)) (termMap (templateMap tm₂ (literalType d))) (literal l d₁ , (() , pref₁) , typ₂ , pref₂)
+tCompatible-complete (termMap (templateMap tm (literalType d))) (termMap (templateMap tm₂ iriType)) (iri i , (() , pref₁) , typ₂ , pref₂)
+tCompatible-complete (termMap (templateMap tm (literalType d))) (termMap (templateMap tm₂ iriType)) (literal l d₁ , (typ₁ , pref₁) , () , pref₂)
+tCompatible-complete (termMap (templateMap tm (literalType d₁))) (termMap (templateMap tm₂ (literalType d₂))) (iri i , (() , pref₁) , typ₂ , pref₂)
+tCompatible-complete (termMap (templateMap tm (literalType d₁))) (termMap (templateMap tm₂ (literalType d₂))) (literal l d₃ , (typ₁ , pref₁) , typ₂ , pref₂) =
+  and-true-correct (sameRDFTermType (literalType d₁) (literalType d₂)) (isPrefixOf tm tm₂ ∨ isPrefixOf tm₂ tm) .backward
+    ( sameRDFTermType-correct (literalType d₁) (literalType d₂) .backward (cong literalType (trans typ₁ (sym typ₂)))
+    , common-prefixes-comparable tm tm₂ l pref₁ pref₂
+    )
