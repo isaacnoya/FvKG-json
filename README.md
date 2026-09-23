@@ -20,7 +20,7 @@ on virtual knowledge graphs for geospatial JSON services.
 - OGC API Features ontology and RML mapping generation utilities.
 - Semantic annotation pipeline for aligning generated ontologies and mappings.
 - Benchmarking and plotting scripts for VKG and semantic annotation evaluation.
-- Lean proof artifacts for selected formal properties.
+- tCompatible formalization in Agda.
 
 ## Repository Layout
 
