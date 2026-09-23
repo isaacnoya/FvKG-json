@@ -38,7 +38,7 @@ except ImportError:
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 mappings = getMappingsFromFolder(
-    PROJECT_ROOT / "eval" / "initialMappingTemplates" / "mappings"
+    PROJECT_ROOT / "eval" / "vkg" / "mappings"
 )
 """
 #TODO:  
@@ -329,19 +329,21 @@ if __name__ == "__main__":
     PREFIX dbo: <http://dbpedia.org/ontology/>
     PREFIX geolinkeddata: <http://geo.linkeddata.es/ontology/> 
 
-    SELECT ?t WHERE {
-        ?y a <http://example.org/ontology/AU_UnidadesAdministrativas> ;
-            ogc:nameunit "Madrid" ;
-            ogc:country "ES" ;
-            geo:hasGeometry ?gy .
-        ?t a ogc:copernicus_wcs ;
-            ogc:coverage "NATURAL-COLOR" ;
+    SELECT ?w ?gw ?t ?gt WHERE {
+        ?s a :administrativeunit ;
+            geolinkeddata:nombre "Lugo" ;
+            :nationallevelname "Provincia" ;
+            geo:hasGeometry ?gs .
+        ?w a :agua:Zif_riesgo_pob_q500 ;
+            geo:hasGeometry ?gw .
+        ?t a geolinkeddata:Humedal ;
             geo:hasGeometry ?gt .
-        FILTER(geof:sfContains(?gt, ?gy))
-    }
+        FILTER (geof:sfWithin(?gw, ?gs))
+        FILTER (geof:sfWithin(?gt, ?gs))
+        FILTER (geof:sfDistance(?gw, ?gt) < 2000)
+    } 
 
     """
-
     qres = g.query(query)
     #qres = g.query(Path("/Users/kekojohns/Library/CloudStorage/OneDrive-Personal/muia/oeg/tfm/eval/vkg/queries/q04.rq").read_text(encoding="utf-8"))
     g_out = rdflib.Graph()

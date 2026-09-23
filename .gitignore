@@ -33,3 +33,5 @@ eval/semantic_annotation/__pycache__
 eval/__pycache__
 memoria/
 tfm.key
+leanProofs/
+leanProofs/*
